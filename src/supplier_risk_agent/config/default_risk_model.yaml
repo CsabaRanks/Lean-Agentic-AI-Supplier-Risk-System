@@ -187,7 +187,9 @@ calibration:
   enabled: false
   method: constrained_least_squares
   min_labels: 8            # labelled suppliers with complete data required
-  regularization: 0.05     # ridge pull towards the prior weights (avoids overfitting)
+  regularization: 0.05     # ridge pull towards the prior weights (avoids overfitting) ...
+  lambda_selection: scaled # ... scaled as 0.05 x 32 / n: constant prior strength, fades as labels accumulate
+  lambda_reference_n: 32   # (fixed = use 0.05 as is; cv = choose by cross-validation, tested, not default)
   min_factor_weight: 0.02  # every criterion keeps a minimum influence
   min_improvement: 0.05    # accept only if MSE drops by at least 5 %
   acceptance: cross_validated  # test the improvement out of sample (in_sample = legacy, accepts overfits)

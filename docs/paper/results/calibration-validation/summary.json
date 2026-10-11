@@ -29,7 +29,10 @@
     "size_lambdas": [
       0.0,
       0.05,
-      0.5
+      0.5,
+      "scaled",
+      "cv",
+      "cv_min"
     ],
     "size_seeds": 30,
     "test_n": 2000,
@@ -62,6 +65,7 @@
     {
       "n": 8.0,
       "lambda": 0.05,
+      "lambda_used_median": 0.05,
       "mse_in_sample_mean": 6.976,
       "mse_test_labels_calibrated_mean": 35.541,
       "mse_test_true_calibrated_mean": 16.731,
@@ -80,6 +84,7 @@
     {
       "n": 12.0,
       "lambda": 0.05,
+      "lambda_used_median": 0.05,
       "mse_in_sample_mean": 9.554,
       "mse_test_labels_calibrated_mean": 30.811,
       "mse_test_true_calibrated_mean": 12.108,
@@ -98,6 +103,7 @@
     {
       "n": 16.0,
       "lambda": 0.05,
+      "lambda_used_median": 0.05,
       "mse_in_sample_mean": 11.975,
       "mse_test_labels_calibrated_mean": 28.549,
       "mse_test_true_calibrated_mean": 9.863,
@@ -116,6 +122,7 @@
     {
       "n": 24.0,
       "lambda": 0.05,
+      "lambda_used_median": 0.05,
       "mse_in_sample_mean": 14.801,
       "mse_test_labels_calibrated_mean": 26.193,
       "mse_test_true_calibrated_mean": 7.532,
@@ -134,6 +141,7 @@
     {
       "n": 32.0,
       "lambda": 0.05,
+      "lambda_used_median": 0.05,
       "mse_in_sample_mean": 16.545,
       "mse_test_labels_calibrated_mean": 24.487,
       "mse_test_true_calibrated_mean": 5.921,
@@ -152,6 +160,7 @@
     {
       "n": 48.0,
       "lambda": 0.05,
+      "lambda_used_median": 0.05,
       "mse_in_sample_mean": 17.323,
       "mse_test_labels_calibrated_mean": 23.541,
       "mse_test_true_calibrated_mean": 4.984,
@@ -170,6 +179,7 @@
     {
       "n": 64.0,
       "lambda": 0.05,
+      "lambda_used_median": 0.05,
       "mse_in_sample_mean": 17.881,
       "mse_test_labels_calibrated_mean": 22.746,
       "mse_test_true_calibrated_mean": 4.191,
@@ -188,6 +198,7 @@
     {
       "n": 96.0,
       "lambda": 0.05,
+      "lambda_used_median": 0.05,
       "mse_in_sample_mean": 18.913,
       "mse_test_labels_calibrated_mean": 21.696,
       "mse_test_true_calibrated_mean": 3.178,
@@ -206,6 +217,7 @@
     {
       "n": 128.0,
       "lambda": 0.05,
+      "lambda_used_median": 0.05,
       "mse_in_sample_mean": 19.247,
       "mse_test_labels_calibrated_mean": 21.384,
       "mse_test_true_calibrated_mean": 2.858,
@@ -224,6 +236,7 @@
     {
       "n": 192.0,
       "lambda": 0.05,
+      "lambda_used_median": 0.05,
       "mse_in_sample_mean": 19.916,
       "mse_test_labels_calibrated_mean": 21.048,
       "mse_test_true_calibrated_mean": 2.523,

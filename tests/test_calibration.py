@@ -171,3 +171,36 @@ def test_uncertainty_threshold_only_ever_rejects_more(model):
     assert all(plain_ok or not strict_ok for plain_ok, strict_ok, _ in decisions)
     assert sum(s for _, s, _ in decisions) < sum(p for p, _, _ in decisions)
     assert any("not clear enough" in msg for _, _, msg in decisions)
+
+
+def test_scaled_lambda_fades_with_number_of_labels(model):
+    from supplier_risk_agent.tools.calibration import build_design_matrix, select_lambda
+    from supplier_risk_agent.tools.synthetic import synthetic_portfolio as portfolio
+
+    settings = CalibrationSettings()  # default: scaled, 0.05 at 32 labels
+    assert settings.lambda_selection == "scaled"
+    for n, expected in [(16, 0.1), (32, 0.05), (64, 0.025)]:
+        X, y, _, _ = build_design_matrix(portfolio(n, 0, model), model, model.default_weights())
+        assert select_lambda(X, y, np.zeros(len(model.factor_keys())), model, settings)[0] == pytest.approx(expected)
+
+
+def test_cv_lambda_selection_reports_curve_and_one_se_is_more_conservative(model):
+    from supplier_risk_agent.tools.synthetic import synthetic_portfolio as portfolio
+
+    profiles = portfolio(40, 2, model)
+    one_se, _ = calibrate_weights(profiles, model, model.default_weights(),
+                                  CalibrationSettings(lambda_selection="cv", lambda_rule="one_se"))
+    best, _ = calibrate_weights(profiles, model, model.default_weights(),
+                                CalibrationSettings(lambda_selection="cv", lambda_rule="min"))
+    grid = CalibrationSettings().lambda_grid
+    assert one_se.lambda_selection == "cv" and set(one_se.lambda_cv_curve) == {f"{g:g}" for g in grid}
+    assert best.regularization_used == min(grid, key=lambda g: best.lambda_cv_curve[f"{g:g}"])
+    assert one_se.regularization_used >= best.regularization_used
+
+
+def test_fixed_lambda_is_used_as_is(model):
+    from supplier_risk_agent.tools.synthetic import synthetic_portfolio as portfolio
+
+    report, _ = calibrate_weights(portfolio(20, 0, model), model, model.default_weights(),
+                                  CalibrationSettings(lambda_selection="fixed", regularization=0.3))
+    assert report.regularization_used == 0.3 and report.lambda_cv_curve == {}

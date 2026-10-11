@@ -115,7 +115,28 @@ class CalibrationSettings(BaseModel):
     enabled: bool = False
     method: Literal["constrained_least_squares"] = "constrained_least_squares"
     min_labels: int = Field(default=8, ge=2, description="Minimum labelled suppliers with complete data")
-    regularization: float = Field(default=0.05, ge=0, description="Pull towards the prior weights (ridge)")
+    regularization: float = Field(
+        default=0.05, ge=0, description="Pull towards the prior weights (ridge); used when lambda_selection = fixed"
+    )
+    lambda_selection: Literal["fixed", "scaled", "cv"] = Field(
+        default="scaled",
+        description=(
+            "'fixed': use regularization as is. 'scaled': regularization x lambda_reference_n / n, i.e. a prior "
+            "of constant strength (like a fixed number of pseudo-observations) that fades as labels accumulate. "
+            "'cv': choose per calibration by cross-validation over lambda_grid (see lambda_rule)"
+        ),
+    )
+    lambda_reference_n: int = Field(
+        default=32, ge=1, description="Label count at which 'scaled' uses exactly `regularization`"
+    )
+    lambda_rule: Literal["min", "one_se"] = Field(
+        default="one_se",
+        description="'min': lambda with the lowest cross-validated error; 'one_se': largest lambda within one SE of it",
+    )
+    lambda_grid: list[float] = Field(
+        default=[0.0, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0], min_length=1,
+        description="Candidate regularisation strengths for lambda_selection = cv",
+    )
     min_factor_weight: float = Field(default=0.02, ge=0, description="Lower bound per factor weight")
     min_improvement: float = Field(default=0.05, ge=0, le=1, description="Relative MSE reduction needed to accept")
     acceptance: Literal["cross_validated", "in_sample"] = Field(

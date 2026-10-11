@@ -206,6 +206,53 @@ def cross_validated_acceptance(
     return passes, before, after, z
 
 
+def select_lambda(
+    X: np.ndarray,
+    y: np.ndarray,
+    theta_anchor: np.ndarray,
+    model: RiskModelConfig,
+    settings: CalibrationSettings,
+    seed: int = 1,
+) -> tuple[float, dict[float, float]]:
+    """Regularisation strength for this calibration. Returns (lambda, cross-validated MSE per candidate).
+
+    With ``lambda_selection = cv``, every candidate in ``lambda_grid`` is
+    cross-validated and the one-standard-error rule picks the *largest* lambda
+    whose error is within one standard error of the best (Hastie, Tibshirani &
+    Friedman, 2009, ch. 7): the most conservative fit that is not clearly worse.
+
+    Selection uses a different fold seed than the acceptance test, which
+    reduces but does not remove the optimism of selecting and testing on the
+    same labels; the validation experiments measure the effect on independent data.
+    """
+    if settings.lambda_selection == "fixed":
+        return settings.regularization, {}
+    if settings.lambda_selection == "scaled":
+        return settings.regularization * settings.lambda_reference_n / max(len(y), 1), {}
+    n = len(y)
+    errors: dict[float, np.ndarray] = {}
+    for lam in sorted(set(settings.lambda_grid)):
+        candidate = settings.model_copy(update={"regularization": lam})
+        errors[lam] = cross_validated_errors(X, y, theta_anchor, theta_anchor, model, candidate, seed)[1]
+    curve = {lam: float(err.mean()) for lam, err in errors.items()}
+    best = min(curve, key=curve.get)
+    se = float(errors[best].std(ddof=1) / np.sqrt(n)) if n > 1 else 0.0
+    if settings.lambda_rule == "min":
+        return best, curve
+    chosen = max(lam for lam, value in curve.items() if value <= curve[best] + se)
+    return chosen, curve
+
+
+def fit_weights(
+    X: np.ndarray, y: np.ndarray, theta_anchor: np.ndarray, model: RiskModelConfig, settings: CalibrationSettings
+) -> tuple[np.ndarray, bool, str, CalibrationSettings, dict[float, float]]:
+    """Select lambda (if configured) and fit. Returns (theta, success, message, settings used, lambda curve)."""
+    lam, curve = select_lambda(X, y, theta_anchor, model, settings)
+    used = settings.model_copy(update={"regularization": lam})
+    theta, success, message = solve_weights(X, y, theta_anchor, model, used)
+    return theta, success, message, used, curve
+
+
 def solve_weights(
     X: np.ndarray, y: np.ndarray, theta0: np.ndarray, model: RiskModelConfig, settings: CalibrationSettings
 ) -> tuple[np.ndarray, bool, str]:
@@ -288,7 +335,10 @@ def calibrate_weights(
             "distort them. Review the class thresholds instead of approving new weights."
         )
 
-    theta, success, solver_msg = solve_weights(X, y, theta_anchor, model, settings)
+    theta, success, solver_msg, settings, curve = fit_weights(X, y, theta_anchor, model, settings)
+    report.regularization_used = settings.regularization
+    report.lambda_selection = settings.lambda_selection
+    report.lambda_cv_curve = {f"{lam:g}": round(v, 3) for lam, v in curve.items()}
 
     before, after = mse(X, y, theta_prior, model), mse(X, y, theta, model)
     improvement = relative_improvement(before, after)

@@ -2,6 +2,30 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Regularisation scaled with 1/n
+
+**D26: Default `lambda_selection: scaled`**, i.e. λ = 0.05 × 32 / n (`lambda_reference_n: 32`).
+
+**Why.** The error term is a mean, so a fixed λ is a prior whose relative weight never fades. In
+E2 it biased the fit at large n (2.5 vs. 0.8 at 192 labels).
+
+**Compared variants** (E2, 30 seeds per n):
+- **Fixed 0.05:** good at small n, biased at large n.
+- **Scaled (chosen):** better than the default weights in 100 % of seeds at every n; equals the
+  unregularised fit at large n; no harmful acceptance at any n. Slightly worse than fixed at
+  16–24 labels (11.5 vs. 9.9).
+- **CV, one-SE rule:** over-regularises in the middle range (10.6 vs. 5.9 at 32).
+- **CV, minimum rule:** good from 32 labels, noisy below (24.5 vs. 18.4 at 8). Both CV variants
+  are about 10× slower. They stay available as options.
+
+**Consequence for D25.** The z ≥ 2 threshold was re-checked with the scaled λ.
+- With 40 seeds, one scenario showed 8 % harm (3/40 runs), which looked like a breach of the 5 %
+  criterion.
+- A rerun with 100 seeds gave 4 % worst case, so z ≥ 2 stays. z ≥ 1.5 has 8 %.
+- E5 now runs with 100 seeds.
+
+**Caveat.** The scaling constant is tuned on the same synthetic data.
+
 ## 2026-10 — Uncertainty-aware acceptance (E5)
 
 **D25: Acceptance also requires z ≥ 2.**

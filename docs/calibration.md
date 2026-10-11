@@ -47,7 +47,7 @@ subject to  θ_f ≥ w_min  for all f
 | Term | Meaning | Config |
 |---|---|---|
 | first term | mean squared error between model and expert | — |
-| λ‖θ − θ_anchor‖² | ridge pull towards the **configured default weights**; stabilises results with few labels | `regularization` (0.05) |
+| λ‖θ − θ_anchor‖² | ridge pull towards the **configured default weights**; stabilises results with few labels | `regularization` (0.05), scaled as 0.05 × 32 / n (`lambda_selection: scaled`) |
 | θ_f ≥ w_min | every criterion keeps a minimum influence | `min_factor_weight` (0.02) |
 | Σθ = 1 | weights stay a proper weighting | — |
 
@@ -193,8 +193,14 @@ Calibration [global] — 32 labelled supplier(s): accepted: MSE 37.8 -> 13.3 (64
     of runs. The cross-validated rule, now the default, cut this to 7 %.
   - **Cost of the cross-validated rule.** It is conservative. With few labels it also rejects some
     calibrations that would have helped.
-  - **Open issue: fixed λ.** A fixed λ becomes a bias at large n. Selecting λ by CV, or scaling it
-    with 1/n, is still open.
+  - **Regularisation strength.** A fixed λ becomes a bias at large n, because the error term is a
+    mean. The default therefore scales λ as 0.05 × 32 / n (`lambda_selection: scaled`), a prior of
+    constant strength.
+    - In E2 the scaled default beat the default weights in every seed from 8 labels upwards, and
+      it matched the unregularised fit at 192 labels.
+    - Choosing λ by cross-validation (`lambda_selection: cv`, with `lambda_rule: one_se | min`) is
+      available. It was not better: one-SE over-regularises around 32 labels, and "min" is noisy
+      below 16.
 
 ## Possible refinements
 

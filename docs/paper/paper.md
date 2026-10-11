@@ -686,7 +686,7 @@ where *s*ᵢ(θ) = (**x**ᵢ · θ − 1) / 4 · 100, and θ_anchor is the confi
 The problem is a convex quadratic program, that is, least squares with linear equality and
 inequality constraints (Lawson & Hanson, 1995). It is solved with a sequential least-squares method
 and an analytic gradient. In the default configuration:
-- λ = 0.05
+- λ = 0.05 × 32 / *n*, i.e. 0.05 at 32 labels, decreasing as labels accumulate (Section 7.4)
 - *w*_min = 0.02
 - at least eight labelled suppliers with complete data are required
 - acceptance requires a relative reduction of the *cross-validated* error of at least 5 %
@@ -836,21 +836,24 @@ Four observations.
 cross-validated error of the default weights, and the irreducible label noise. The gap between the
 solid and dashed green lines is the in-sample optimism. Synthetic data.*
 
-### 7.4 How many labels are needed (E2)
+### 7.4 How many labels are needed, and how strongly to regularise (E2)
 
 Against the noise-free true scores of the independent test set, the default weights have an error
 of 29.7 points². This is their structural misfit to the hidden weighting.
 
-**Table 4.** *Test MSE against true scores (mean over 30 seeds; default weights: 29.7) and share of
-seeds in which calibration beats the default weights. Source: `e2_sample_size_summary.csv`.*
+**Table 4.** *Test MSE against true scores (mean over 30 seeds; default weights: 29.7) and, in
+brackets, the share of seeds in which calibration beats the default weights. Fixed λ values, λ
+scaled with 1/n (current default), and λ chosen per run by cross-validation with the
+one-standard-error rule ("CV 1-SE") or the minimum-error rule ("CV min"). Source:
+`e2_sample_size_summary.csv`.*
 
-| labels *n* | λ = 0 | λ = 0.05 (default) | λ = 0.5 |
-|---:|---|---|---|
-| 8 | 37.7 (50 %) | 16.7 (90 %) | 22.0 (100 %) |
-| 16 | 16.2 (90 %) | 9.9 (100 %) | 20.2 (100 %) |
-| 32 | 6.1 (100 %) | 5.9 (100 %) | 19.0 (100 %) |
-| 64 | 2.8 (100 %) | 4.2 (100 %) | 18.4 (100 %) |
-| 192 | 0.8 (100 %) | 2.5 (100 %) | 18.1 (100 %) |
+| labels *n* | λ = 0 | λ = 0.05 | λ = 0.5 | **0.05 × 32/n (default)** | CV 1-SE | CV min |
+|---:|---|---|---|---|---|---|
+| 8 | 37.7 (50 %) | 16.7 (90 %) | 22.0 (100 %) | **18.4 (100 %)** | 24.4 (93 %) | 24.5 (90 %) |
+| 16 | 16.2 (90 %) | 9.9 (100 %) | 20.2 (100 %) | **11.5 (100 %)** | 15.8 (100 %) | 12.8 (100 %) |
+| 32 | 6.1 (100 %) | 5.9 (100 %) | 19.0 (100 %) | **5.9 (100 %)** | 10.6 (100 %) | 5.6 (100 %) |
+| 64 | 2.8 (100 %) | 4.2 (100 %) | 18.4 (100 %) | **3.0 (100 %)** | 5.8 (100 %) | 3.0 (100 %) |
+| 192 | 0.8 (100 %) | 2.5 (100 %) | 18.1 (100 %) | **0.8 (100 %)** | 1.8 (100 %) | 0.8 (100 %) |
 
 1. **Small samples need regularisation.**
    - With eight labels and no regularisation, calibration is *worse* than the default weights on
@@ -860,20 +863,41 @@ seeds in which calibration beats the default weights. Source: `e2_sample_size_su
    - From 16 labels onwards, it wins in every seed.
 2. **The benefit grows steadily with *n*.** At the reference size of 32 labels, the default
    configuration removes about 80 % of the default weights' structural error (29.7 → 5.9).
-3. **A fixed λ becomes a bias at large *n*.** Beyond about 48 labels, the unregularised fit is
-   better than λ = 0.05 (0.8 vs. 2.5 at *n* = 192). With λ = 0.5, the error plateaus at about 18
-   whatever the sample size. The reason is the form of the objective: the error term is a *mean*
-   over suppliers while the penalty is not scaled, so the penalty's relative weight does not fade
-   as labels accumulate. In practice, λ should be chosen by cross-validation, or scaled down with
-   *n*. This is a concrete design improvement for the demonstrator (Section 11).
+3. **A fixed λ becomes a bias at large *n*.**
+   - **The bias.** Beyond about 48 labels, the unregularised fit is better than λ = 0.05 (0.8 vs.
+     2.5 at *n* = 192). With λ = 0.5, the error plateaus at about 18 whatever the sample size.
+   - **The cause.** The error term is a *mean* over suppliers, while the penalty is not scaled.
+     A fixed λ therefore acts like a prior whose weight, relative to the data, never fades.
+
+4. **Scaling λ with 1/n removes the bias without losing small-sample protection.**
+   - **What the default does.** The demonstrator now uses λ = 0.05 × 32 / *n*. This is a prior of
+     constant strength, comparable to a fixed number of pseudo-observations, anchored so that
+     λ = 0.05 at the reference size of 32 labels.
+   - **Large samples.** It matches the unregularised fit (0.76 vs. 0.78 at *n* = 192).
+   - **Small samples.** It beats the default weights in every seed, from eight labels upwards. At
+     sixteen labels it is slightly less accurate than a fixed λ = 0.05 (11.5 vs. 9.9).
+   - **With the acceptance rule.** Under the default acceptance rule (Section 7.8), it caused no
+     harmful acceptance at any sample size (fixed λ = 0.05: 3 % at twelve labels).
+
+5. **Choosing λ by cross-validation was tested and not adopted.**
+   - **One-standard-error rule** (Hastie, Tibshirani & Friedman, 2009, ch. 7): it over-regularises
+     in the middle range (10.6 vs. 5.9 at 32 labels).
+   - **Minimum-error rule:** it matches the scaled λ from 32 labels upwards, but its choice is too
+     noisy with few labels (24.5 vs. 18.4 at eight labels).
+   - **Cost and simplicity:** both are an order of magnitude more expensive. Both remain available
+     as options (`lambda_selection: cv`).
+   - **Caveat on the default.** The scaling constant (0.05 at 32 labels) was set on the same
+     synthetic data. It is a reasoned default, like the acceptance threshold in Section 7.8.
 
 ![Figure 5](figures/fig05_learning_curve.png)
 
 *Figure 5.*
-- *(a) Test error of calibrated weights against the noise-free true scores, by number of labels
-  and λ (mean over 30 seeds; band to the 90th percentile).*
+- *(a) Test error of calibrated weights against the noise-free true scores, by number of labels,
+  for fixed λ values, the scaled default and λ chosen by cross-validation (mean over 30 seeds;
+  band to the 90th percentile for λ = 0 and the default).*
 - *(b) Share of runs in which the weights actually applied are worse than keeping the defaults,
-  under the in-sample rule and the default cross-validated rule (5 % and z ≥ 2, Section 7.8).*
+  under the in-sample rule and the default cross-validated rule (5 % and z ≥ 2, Section 7.8), for
+  λ = 0 and the scaled default.*
 
 *Synthetic data.*
 
@@ -980,23 +1004,28 @@ replaces that labelling policy with alternatives a real expert panel might follo
 For each policy, an **approximation floor** is computed first. This is the error of the *best*
 constrained linear weighting, fitted to 2,000 noise-free judgements. No calibration can do better
 than this floor. It measures how far the policy lies outside what weights can express. Calibration
-then runs with production settings (λ = 0.05, cross-validated acceptance) on 16, 32 and 64 labels,
+then runs with production settings (λ scaled with 1/n, cross-validated acceptance) on 16, 32 and
+64 labels,
 30 seeds each.
 
-**Table 6.** *Calibration under misspecified expert policies (n = 32 unless stated; error against
-the policy's noise-free judgement, score points²). "Excess removed": share of the default weights'
-error above the floor that calibration removes. Source: `calibration-robustness/SUMMARY.md`.*
+**Table 6.** *Calibration under misspecified expert policies. Errors in score points² against the
+policy's noise-free judgement; "calibrated" at n = 32, where both configurations coincide.
+"Excess removed": share of the default weights' error above the linear floor that calibration
+removes, at n = 16 / 32 / 64. "Harm": share of runs in which the weights in use are worse than the
+defaults, at n = 16 / 32. **Original**: fixed λ = 0.05 and the 5 % cross-validated rule (commit
+`ddcb977`). **Current**: λ scaled with 1/n (Section 7.4) and the rule with z ≥ 2 (Section 7.8).
+Source: `calibration-robustness/SUMMARY.md`.*
 
-| Policy | linear floor | default | calibrated | excess removed (n = 16 / 32 / 64) | harm, 5 % CV rule (n = 16 / 32) | harm, with z ≥ 2 (n = 16 / 32) | class agreement default → calibrated |
-|---|---:|---:|---:|---|---|---|---|
-| linear (reference) | 0 | 29.7 | 5.7 | 69 / 81 / 87 % | 0 / 0 % | 0 / 0 % | 79 → 91 % |
-| linear, σ = 8 | 0 | 29.7 | 11.7 | 30 / 61 / 75 % | 7 / 0 % | 0 / 0 % | 79 → 87 % |
-| linear, steps of 10 | 0 | 29.7 | 7.0 | 63 / 76 / 84 % | 0 / 0 % | 0 / 0 % | 79 → 90 % |
-| level shift +10 | 62.3 | 157.4 | 77.6 | 74 / 84 / 90 % | 0 / 0 % | 0 / 0 % | 44 → 60 % |
-| interaction | 71.9 | 103.1 | 88.0 | 9 / 48 / 68 % | 10 / 0 % | 0 / 0 % | 63 → 65 % |
-| knock-out floor | 98.3 | 127.0 | 118.8 | −24 / 28 / 62 % | 10 / 13 % | 0 / 3 % | 66 → 69 % |
-| worst factor dominates | 284.3 | 418.0 | 328.1 | 57 / 67 / 82 % | 0 / 0 % | 0 / 0 % | 12 → 27 % |
-| two experts disagree | 0 | 5.3 | 5.3 | −84 / 1 / 42 % | 43 / 23 % | 0 / 0 % | 90 → 91 % |
+| Policy | linear floor | default | calibrated | excess removed: original | excess removed: current | harm: original | harm: current | class agreement default → calibrated |
+|---|---:|---:|---:|---|---|---|---|---|
+| linear (reference) | 0 | 29.7 | 5.7 | 69 / 81 / 87 % | 62 / 81 / 91 % | 0 / 0 % | 0 / 0 % | 79 → 91 % |
+| linear, σ = 8 | 0 | 29.7 | 11.7 | 30 / 61 / 75 % | 39 / 61 / 76 % | 7 / 0 % | 0 / 0 % | 79 → 87 % |
+| linear, steps of 10 | 0 | 29.7 | 7.0 | 63 / 76 / 84 % | 58 / 76 / 88 % | 0 / 0 % | 0 / 0 % | 79 → 90 % |
+| level shift +10 | 62.3 | 157.4 | 77.6 | 74 / 84 / 90 % | 77 / 84 / 91 % | 0 / 0 % | 0 / 0 % | 44 → 60 % |
+| interaction | 71.9 | 103.1 | 88.0 | 9 / 48 / 68 % | 24 / 48 / 66 % | 10 / 0 % | 0 / 0 % | 63 → 65 % |
+| knock-out floor | 98.3 | 127.0 | 118.8 | −24 / 28 / 62 % | 8 / 28 / 58 % | 10 / 13 % | 0 / 3 % | 66 → 69 % |
+| worst factor dominates | 284.3 | 418.0 | 328.1 | 57 / 67 / 82 % | 69 / 67 / 78 % | 0 / 0 % | 0 / 0 % | 12 → 27 % |
+| two experts disagree | 0 | 5.3 | 5.3 | −84 / 1 / 42 % | −22 / 1 / 29 % | 43 / 23 % | 0 / 0 % | 90 → 91 % |
 
 ![Figure 7](figures/fig07_robustness.png)
 
@@ -1009,13 +1038,14 @@ error above the floor that calibration removes. Source: `calibration-robustness/
 
 *Synthetic data.*
 
-Five findings. Harm rates in the findings refer to the 5 % rule, as in Section 7.6; the last
-table column and Section 7.8 show the effect of the stricter default.
+Five findings. They refer to the original run, as in Section 7.6. The "current" columns show
+what the scaled λ (Section 7.4) and the stricter acceptance rule (Section 7.8) change.
 
 1. **Noise and rounding cost labels, not validity.** With linear experts, calibration stays
    effective under coarse rounding and under doubled noise (σ = 8), but it needs more labels.
    - At σ = 8, sixteen labels remove 30 % of the excess error and 64 labels remove 75 %.
-   - The acceptance rule mostly holds: the only harm is 7 % of runs at σ = 8 with sixteen labels.
+   - The acceptance rule mostly holds: the only harm is 7 % of runs at σ = 8 with sixteen labels
+     (0 % under the current default).
 
 2. **Non-linear policies leave a floor that no weighting removes.** For the interaction,
    knock-out and worst-factor policies, the best possible linear weighting still has a large
@@ -1026,8 +1056,11 @@ table column and Section 7.8 show the effect of the stricter default.
 
 3. **Knock-outs belong in escalation rules, not in weights.** The knock-out policy is the clearest
    case.
-   - With sixteen labels, calibration is worse than the defaults on average.
-   - Even with the cross-validated rule, 10–13 % of runs at 16–32 labels end with harmful weights.
+   - With sixteen labels and a fixed λ, calibration is worse than the defaults on average. With
+     λ scaled to the number of labels it removes only 8 % of the excess error.
+   - Even with the 5 % cross-validated rule, 10–13 % of runs at 16–32 labels end with harmful
+     weights. Under the current default, this falls to 0–3 %, mostly because such calibrations
+     are no longer accepted.
 
    The demonstrator already has the right mechanism for such judgements: escalation rules that
    set a class floor (Section 6.2). The practical conclusion is to *elicit* knock-outs explicitly
@@ -1067,8 +1100,8 @@ table column and Section 7.8 show the effect of the stricter default.
    label noise.
    - In this scenario, the panel average happens to lie close to the defaults, so there is little
      to gain.
-   - With sixteen labels, the cross-validated rule still accepted harmful weights in 43 % of runs;
-     with 32 labels, in 23 %.
+   - With sixteen labels, the 5 % cross-validated rule still accepted harmful weights in 43 % of
+     runs; with 32 labels, in 23 %.
 
    The cross-validated estimate of the improvement is itself noisy. With a small true gain, a 5 %
    threshold is not enough protection. Two responses follow:
@@ -1108,26 +1141,35 @@ threshold was chosen **empirically**.
 covers 20 scenarios:
 - five expert policies (linear, σ = 8, interaction, knock-out, two experts)
 - 8, 16, 32 or 64 labels each
-- 40 seeds per scenario
 - seven thresholds, z = 0 to 3, applied to the same runs
+- 100 seeds per scenario, with the current default regularisation (λ scaled with 1/n)
 
-**Table 7.** *Effect of the uncertainty threshold, averaged over 20 scenarios. "Missed gain": error
-of the weights in use minus the better of default and calibrated weights, as a share of the
-default error. Source: `acceptance-threshold/SUMMARY.md`.*
+**Table 7.** *Effect of the uncertainty threshold, averaged over 20 scenarios (100 seeds each).
+"Missed gain": error of the weights in use minus the better of default and calibrated weights, as a
+share of the default error. Source: `acceptance-threshold/SUMMARY.md`.*
 
 | cv_min_z | harm rate: mean / worst scenario | acceptance | missed gain | error in use / default error |
 |---:|---|---:|---:|---:|
-| 0 (5 % rule only) | 8.8 % / 35 % | 60 % | 13.7 % | 0.83 |
-| 1 | 5.5 % / 22 % | 45 % | 14.2 % | 0.84 |
-| 1.5 | 3.1 % / 15 % | 33 % | 15.9 % | 0.85 |
-| **2 (default)** | **1.1 % / 5 %** | 23 % | 18.0 % | 0.88 |
-| 3 | 0.4 % / 2 % | 10 % | 23.7 % | 0.93 |
+| 0 (5 % rule only) | 7.4 % / 30 % | 61 % | 10.1 % | 0.78 |
+| 1 | 4.2 % / 17 % | 46 % | 12.4 % | 0.80 |
+| 1.5 | 2.2 % / 8 % | 34 % | 15.2 % | 0.83 |
+| **2 (default)** | **1.1 % / 4 %** | 24 % | 18.7 % | 0.87 |
+| 2.5 | 0.4 % / 3 % | 15 % | 22.2 % | 0.90 |
+| 3 | 0.1 % / 1 % | 10 % | 25.1 % | 0.93 |
 
 **Choice of threshold.** The selection criterion was the *smallest threshold for which no
-scenario exceeds 5 % harmful acceptances*. That is z ≥ 2. Against the 5 % rule alone, it trades
-about five percentage points of the default error, in expected improvement forgone, for a
-worst-case harm rate that falls from 35 % to 5 %. The threshold was selected and evaluated on the
-same synthetic scenarios. It should be treated as a reasoned default, not as a validated constant.
+scenario exceeds 5 % harmful acceptances*.
+- **Result.** That is z ≥ 2. Against the 5 % rule alone, it trades about nine percentage points
+  of the default error, in expected improvement forgone (error in use 0.78 → 0.87), for a
+  worst-case harm rate that falls from 30 % to 4 %.
+- **First run.** The criterion was first applied with 40 seeds per scenario and a fixed λ. That
+  run also gave z ≥ 2, at a worst case of 5 %.
+- **Rerun with scaled λ.** With the scaled λ and 40 seeds, z ≥ 2 briefly appeared to miss the
+  criterion (8 % in one scenario, i.e. 3 of 40 runs). The rerun with 100 seeds showed this was
+  sampling noise (4 %).
+
+The threshold was selected and evaluated on the same synthetic scenarios. It should be treated as
+a reasoned default, not as a validated constant.
 
 **Effect in the earlier experiments** (re-run with the new default):
 
@@ -1137,6 +1179,7 @@ same synthetic scenarios. It should be treated as a reasoned default, not as a v
 | E2, 12–16 labels, λ = 0.05 | harm 0–3 %; error in use 11.8–16.3 | harm 0–3 %; error in use 19.5–25.1; acceptance 27–50 % |
 | E2, 32 labels, λ = 0.05 | accepted 100 %; error in use 5.9 | accepted 87 %; error in use 8.5 |
 | E2, ≥ 64 labels, λ = 0.05 | accepted 100 % | accepted 100 % (identical) |
+| E2, default λ (scaled), 8 / 16 / 32 / ≥ 64 labels | — | accepted 17 / 50 / 87 / 100 %; harm 0 % at every size |
 | E3, 32 labels | accepted 100 % | accepted 82 % |
 | E4, two experts, 16 / 32 labels | harm 43 / 23 % | harm 0 / 0 % |
 | E4, knock-out, 16 / 32 labels | harm 10 / 13 % | harm 0 / 3 % |
@@ -1145,8 +1188,8 @@ same synthetic scenarios. It should be treated as a reasoned default, not as a v
 
 **Calibration now has to be earned.** With the default rule, calibration is rarely harmful in any
 scenario tested. It is also often withheld when labels are few, noisy or inconsistent:
-- with linear experts and λ = 0.05, 13 % of calibrations are applied at 8 labels, 50 % at 16 and
-  63 % at 24
+- with linear experts and the default λ, 17 % of calibrations are applied at 8 labels, 50 % at
+  16 and 63 % at 24
 - with σ = 8, 10 % are applied at 32 labels
 - with disagreeing experts, none are applied at 16 or 32 labels
 
@@ -1178,7 +1221,6 @@ The demonstration also says nothing about **predictive validity**: whether calib
 anticipate real disruptions better than default scores.
 
 > **[TBD-RESULT] Still missing for Section 7:**
-> - **λ selection by cross-validation** (or λ scaled with 1/*n*), and its effect on Table 4
 > - Optional: a scatter of label vs. score before and after calibration for the reference
 >   portfolio
 
@@ -1435,9 +1477,10 @@ already run:
   policies cannot be learned by weights (Section 7.7). The demonstrator diagnoses level offsets
   and withholds such calibrations for review. It does not yet diagnose knock-outs or
   non-additivity directly, and disagreement between experts is not detected at all.
-- **Fixed regularisation strength.** Because the penalty is not scaled with the number of labels,
-  λ = 0.05 becomes a bias once labels are plentiful (Section 7.4). λ is not yet selected by
-  cross-validation.
+- **Regularisation strength.** λ is scaled with the number of labels (0.05 × 32 / *n*). That
+  removes the large-sample bias of a fixed λ (Section 7.4). The scaling constant was set on
+  synthetic data. Cross-validated selection was tested and not adopted, and it remains available
+  as an option.
 - **Default template.** The criteria, weights and thresholds are illustrative, not recommended.
 - **Not production-hardened.** The demonstrator has:
   - no roles or permissions
@@ -1452,9 +1495,10 @@ Future work is grouped by what it would establish. Within each group, items are 
 value relative to effort.
 
 **Method: making calibration robust.**
-1. **Choose λ by cross-validation, or scale it with the number of labels.** This removes the bias
-   at large samples (Section 7.4) while keeping protection at small ones. It is the most direct
-   improvement suggested by the validation.
+1. **Validate the regularisation default on field data.** λ is now scaled with 1/*n*, and
+   cross-validated selection is available as an option (Section 7.4). The scaling constant was set
+   on synthetic data. With real labels, it should be checked whether the same constant holds,
+   possibly per material group.
 2. **Further diagnostics for misspecification** (from E4). The level-offset check is
    implemented (Section 7.7). Two diagnostics remain:
    - the residual error left after calibration, reported as a share of the label variance

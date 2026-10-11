@@ -73,6 +73,8 @@ def _print_calibration(rep: CalibrationReport) -> None:
           f"{rep.class_agreement_before:.0%} -> {rep.class_agreement_after:.0%}  |  applied: {rep.applied}")
     if rep.stored_as:
         print(f"  stored as: {rep.stored_as}")
+    if rep.regularization_used is not None:
+        print(f"  regularisation λ = {rep.regularization_used:.4g} ({rep.lambda_selection})")
     if rep.level_offset is not None:
         print(f"  mean label - score: {rep.level_offset:+.1f} points (t = {rep.level_offset_t:+.1f})")
     for warning in rep.warnings:

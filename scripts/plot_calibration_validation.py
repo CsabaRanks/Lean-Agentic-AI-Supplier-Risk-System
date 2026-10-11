@@ -35,7 +35,20 @@ DEFAULT_LAMBDA = 0.05
 
 # palette shared with the radar chart (scripts/generate_spider.py)
 GREEN, RED, BLUE, GREY = "#1f7a5a", "#b03a2e", "#3b6ea8", "#5f6368"
-LAMBDA_STYLE = {0.0: (BLUE, "D", (0, (1.2, 2.2))), 0.05: (GREEN, "o", "-"), 0.5: (GREY, "^", (0, (5, 3)))}
+LAMBDA_STYLE = {
+    0.0: (BLUE, "D", (0, (1.2, 2.2))),
+    0.05: ("#7fb8a1", "v", (0, (3, 2))),
+    0.5: (GREY, "^", (0, (5, 3))),
+    "scaled": (GREEN, "o", "-"),
+    "cv": (RED, "s", (0, (5, 2, 1, 2))),
+    "cv_min": ("#d98c84", "P", (0, (2, 2))),
+}
+LAMBDA_ORDER = [0.0, 0.05, 0.5, "cv", "cv_min", "scaled"]  # default last, drawn on top
+
+
+def lambda_label(lam) -> str:
+    names = {"scaled": "λ = 0.05 × 32 / n (default)", "cv": "λ by CV, one-SE rule", "cv_min": "λ by CV, minimum"}
+    return names[lam] if isinstance(lam, str) else f"λ = {lam:g}"
 
 
 def read(name: str, results: Path) -> list[dict]:
@@ -105,7 +118,8 @@ def fig_lambda(results: Path, out: Path) -> list[Path]:
 
 def fig_learning(results: Path, out: Path) -> list[Path]:
     rows = read("e2_sample_size_summary", results)
-    lambdas = sorted({r["lambda"] for r in rows})
+    present = {r["lambda"] for r in rows}
+    lambdas = [lam for lam in LAMBDA_ORDER if lam in present]
     default_err = rows[0]["mse_test_true_default"]
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.4, 4.0), gridspec_kw={"width_ratios": [1.25, 1]})
@@ -114,9 +128,10 @@ def fig_learning(results: Path, out: Path) -> list[Path]:
         r = sorted((x for x in rows if x["lambda"] == lam), key=lambda x: x["n"])
         n = [x["n"] for x in r]
         ax1.plot(n, [x["mse_test_true_calibrated_mean"] for x in r], color=color, marker=marker, ls=ls,
-                 mfc="white", lw=2.0, label=f"λ = {lam:g}")
-        ax1.fill_between(n, [x["mse_test_true_calibrated_mean"] for x in r],
-                         [x["mse_test_true_calibrated_p90"] for x in r], color=color, alpha=0.10, lw=0)
+                 mfc="white", lw=2.4 if lam == "scaled" else 1.6, label=lambda_label(lam))
+        if lam in (0.0, "scaled"):
+            ax1.fill_between(n, [x["mse_test_true_calibrated_mean"] for x in r],
+                             [x["mse_test_true_calibrated_p90"] for x in r], color=color, alpha=0.10, lw=0)
     ax1.axhline(default_err, color=GREY, lw=1.6, label=f"Default weights ({default_err:.1f})")
     ax1.set_xscale("log")
     ax1.set_xticks(sorted({r["n"] for r in rows}))
@@ -124,17 +139,18 @@ def fig_learning(results: Path, out: Path) -> list[Path]:
     ax1.minorticks_off()
     ax1.set_xlabel("Labelled suppliers n (log scale)")
     ax1.set_ylabel("Test MSE vs. true scores (score points²)")
-    ax1.set_title("(a) Calibrated weights: mean, band to p90", fontsize=10, loc="left")
-    ax1.legend(fontsize=8.5)
+    ax1.set_title("(a) Calibrated weights: mean (band to p90 for λ = 0 and default)", fontsize=10, loc="left")
+    ax1.legend(fontsize=8)
 
-    for lam in [x for x in lambdas if x in (0.0, DEFAULT_LAMBDA)]:
+    for lam in [x for x in lambdas if x in (0.0, "scaled")]:
         color, marker, _ = LAMBDA_STYLE[lam]
+        short = "default λ" if lam == "scaled" else f"λ = {lam:g}"
         r = sorted((x for x in rows if x["lambda"] == lam), key=lambda x: x["n"])
         n = [x["n"] for x in r]
         ax2.plot(n, [100 * x["harm_rate_in_sample"] for x in r], color=color, marker=marker, mfc="white",
-                 ls=(0, (4, 3)), lw=1.6, label=f"in-sample rule, λ = {lam:g}")
+                 ls=(0, (4, 3)), lw=1.6, label=f"in-sample rule, {short}")
         ax2.plot(n, [100 * x["harm_rate_cv"] for x in r], color=color, marker=marker, ls="-", lw=2.0,
-                 label=f"cross-validated rule, λ = {lam:g}")
+                 label=f"cross-validated rule, {short}")
     ax2.set_xscale("log")
     ax2.set_xticks(sorted({r["n"] for r in rows}))
     ax2.set_xticklabels([f"{int(v)}" for v in sorted({r["n"] for r in rows})], fontsize=8.5)

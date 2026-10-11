@@ -47,6 +47,7 @@ from supplier_risk_agent.tools.calibration import (
     build_design_matrix,
     class_agreement,
     cross_validated_acceptance,
+    fit_weights,
     level_offset,
     mse,
     solve_weights,
@@ -144,8 +145,8 @@ def labels(X: np.ndarray, policy: Policy, rng: np.random.Generator) -> np.ndarra
 
 
 def fit(X: np.ndarray, y: np.ndarray, settings: CalibrationSettings) -> tuple[np.ndarray, bool]:
-    theta, success = solve_weights(X, y, THETA_DEFAULT, MODEL, settings)[:2]
-    passes = cross_validated_acceptance(X, y, THETA_DEFAULT, THETA_DEFAULT, MODEL, settings)[0]
+    theta, success, _, used, _ = fit_weights(X, y, THETA_DEFAULT, MODEL, settings)
+    passes = cross_validated_acceptance(X, y, THETA_DEFAULT, THETA_DEFAULT, MODEL, used)[0]
     return theta, bool(success and passes)
 
 

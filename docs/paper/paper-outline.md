@@ -16,8 +16,8 @@ Status: outline with bullet points. Sources: `research/` files, linked per secti
 ### Remaining gaps (draft v0.3)
 
 - **[TBD-RESULT] Section 7:**
-  - λ selected by cross-validation
   - optional label-vs-score scatter
+  - λ: done. Scaled with 1/n by default; CV selection tested and not adopted (Section 7.4).
   - E4 (misspecification, noise) is done: Section 7.7, Table 6, Figure 7
 - Section 7.7: the level-offset diagnostic is implemented and evaluated on E4. Residual and
   knock-out diagnostics remain future work.

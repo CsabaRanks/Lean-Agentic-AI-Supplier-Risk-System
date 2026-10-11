@@ -125,6 +125,11 @@ class CalibrationReport(BaseModel):
     )
     class_agreement_after: float | None = None
     acceptance_basis: str = "in_sample"
+    regularization_used: float | None = Field(default=None, description="Lambda used for the fit")
+    lambda_selection: str = "fixed"
+    lambda_cv_curve: dict[str, float] = Field(
+        default_factory=dict, description="Cross-validated MSE per candidate lambda (lambda_selection = cv)"
+    )
     cv_mse_before: float | None = Field(default=None, description="Out-of-fold MSE of the prior weights")
     cv_mse_after: float | None = Field(default=None, description="Out-of-fold MSE of weights refitted per fold")
     cv_improvement: float | None = None

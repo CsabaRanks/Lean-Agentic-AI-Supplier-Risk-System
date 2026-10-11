@@ -32,17 +32,17 @@ from robustness_calibration import MODEL, POLICIES, THETA_DEFAULT, labels, ratin
 
 from supplier_risk_agent.tools.calibration import (
     cross_validated_errors,
+    fit_weights,
     improvement_z,
     mse,
     relative_improvement,
-    solve_weights,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "docs" / "paper" / "results" / "acceptance-threshold"
 
 FULL = {"policies": ["linear", "noise_high", "interaction", "knockout", "two_experts"],
-        "sizes": [8, 16, 32, 64], "seeds": 40, "test_n": 2000,
+        "sizes": [8, 16, 32, 64], "seeds": 100, "test_n": 2000,
         "z_grid": [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0]}
 QUICK = {"policies": ["linear", "two_experts"], "sizes": [16], "seeds": 3, "test_n": 200,
          "z_grid": [0.0, 1.0, 2.0]}
@@ -60,8 +60,8 @@ def run(cfg: dict) -> tuple[list[dict], list[dict], list[dict]]:
             for seed in range(cfg["seeds"]):
                 X = ratings(n, 50_000 + seed, "CAL")
                 y = labels(X, policy, np.random.default_rng(20_000 * (p_idx + 1) + 97 * n + seed))
-                theta = solve_weights(X, y, THETA_DEFAULT, MODEL, settings)[0]
-                err_prior, err_refit = cross_validated_errors(X, y, THETA_DEFAULT, THETA_DEFAULT, MODEL, settings)
+                theta, _, _, used, _ = fit_weights(X, y, THETA_DEFAULT, MODEL, settings)
+                err_prior, err_refit = cross_validated_errors(X, y, THETA_DEFAULT, THETA_DEFAULT, MODEL, used)
                 runs.append({
                     "policy": name, "n": n, "seed": seed,
                     "rel_improvement": relative_improvement(float(err_prior.mean()), float(err_refit.mean())),

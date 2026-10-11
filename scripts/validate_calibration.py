@@ -36,9 +36,9 @@ from supplier_risk_agent.tools.calibration import (
     build_design_matrix,
     class_agreement,
     cross_validated_acceptance,
+    fit_weights,
     mse,
     relative_improvement,
-    solve_weights,
 )
 from supplier_risk_agent.tools.data_sources import JsonFileSource
 from supplier_risk_agent.tools.synthetic import (
@@ -57,13 +57,15 @@ FULL = {
     "cv_k": 5, "cv_repeats": 20,
     "lambdas": [0.0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0, 5.0],
     "sizes": [8, 12, 16, 24, 32, 48, 64, 96, 128, 192],
-    "size_lambdas": [0.0, 0.05, 0.5],
+    # "scaled" = 0.05 x 32 / n (default); "cv" / "cv_min" = lambda chosen per run by cross-validation
+    # with the one-standard-error rule / the minimum-error rule
+    "size_lambdas": [0.0, 0.05, 0.5, "scaled", "cv", "cv_min"],
     "size_seeds": 30, "test_n": 2000,
     "stability_n": 32, "stability_seeds": 100, "stability_lambda": 0.05,
 }
 QUICK = {
     "cv_k": 4, "cv_repeats": 1, "lambdas": [0.0, 0.05],
-    "sizes": [12], "size_lambdas": [0.05], "size_seeds": 2, "test_n": 100,
+    "sizes": [12], "size_lambdas": [0.05, "scaled"], "size_seeds": 2, "test_n": 100,
     "stability_n": 32, "stability_seeds": 3, "stability_lambda": 0.05,
 }
 
@@ -81,24 +83,30 @@ class Context:
     def vector(self, weights) -> np.ndarray:
         return np.array([weights.factor_weights[k] for k in self.keys])
 
-    def settings(self, lam: float) -> CalibrationSettings:
-        return self.base.model_copy(update={"regularization": lam})
+    def settings(self, lam: float | str) -> CalibrationSettings:
+        if lam == "cv_min":
+            return self.base.model_copy(update={"lambda_selection": "cv", "lambda_rule": "min"})
+        if lam == "cv":
+            return self.base.model_copy(update={"lambda_selection": "cv", "lambda_rule": "one_se"})
+        if lam == "scaled":
+            return self.base.model_copy(update={"lambda_selection": "scaled"})
+        return self.base.model_copy(update={"regularization": lam, "lambda_selection": "fixed"})
 
     def design(self, profiles) -> tuple[np.ndarray, np.ndarray]:
         X, y, _, _ = build_design_matrix(profiles, self.model, self.default)
         return X, y
 
-    def fit(self, X: np.ndarray, y: np.ndarray, lam: float) -> tuple[np.ndarray, bool, bool]:
-        """Calibrate on (X, y). Returns (weights, accepted by the in-sample rule, accepted by the CV rule).
+    def fit(self, X: np.ndarray, y: np.ndarray, lam: float | str) -> tuple[np.ndarray, bool, bool, float]:
+        """Calibrate on (X, y).
 
-        Both rules are evaluated exactly as in ``tools.calibration.calibrate_weights``.
+        Returns (weights, accepted by the in-sample rule, accepted by the CV rule, lambda used).
+        Fit and acceptance use the same library functions as ``calibrate_weights``.
         """
-        settings = self.settings(lam)
-        theta, success = solve_weights(X, y, self.theta_default, self.model, settings)[:2]
+        theta, success, _, settings, _ = fit_weights(X, y, self.theta_default, self.model, self.settings(lam))
         in_sample = relative_improvement(mse(X, y, self.theta_default, self.model), mse(X, y, theta, self.model))
         cv_passes = cross_validated_acceptance(X, y, self.theta_default, self.theta_default, self.model, settings)[0]
         threshold = settings.min_improvement
-        return theta, bool(success and in_sample >= threshold), bool(success and cv_passes)
+        return theta, bool(success and in_sample >= threshold), bool(success and cv_passes), settings.regularization
 
     def l1_to_hidden(self, theta: np.ndarray) -> float:
         return float(np.abs(theta - self.theta_hidden).sum())
@@ -119,7 +127,7 @@ def run_cv(ctx: Context, cfg: dict) -> tuple[list[dict], list[dict]]:
         for f, test in enumerate(folds):
             train = [i for i in idx if i not in set(test)]
             for lam in cfg["lambdas"]:
-                theta, acc_in, acc_cv = ctx.fit(X[train], y[train], lam)
+                theta, acc_in, acc_cv, _lam_used = ctx.fit(X[train], y[train], lam)
                 rows.append({
                     "lambda": lam, "repeat": rep, "fold": f, "n_train": len(train), "n_test": len(test),
                     "mse_train_default": mse(X[train], y[train], ctx.theta_default, ctx.model),
@@ -170,11 +178,11 @@ def run_sample_size(ctx: Context, cfg: dict) -> tuple[list[dict], list[dict]]:
         for seed in range(cfg["size_seeds"]):
             X, y = ctx.design(synthetic_portfolio(n, seed, ctx.model))
             for lam in cfg["size_lambdas"]:
-                theta, acc_in, acc_cv = ctx.fit(X, y, lam)
+                theta, acc_in, acc_cv, lam_used = ctx.fit(X, y, lam)
                 true_default = mse(X_test, y_true, ctx.theta_default, ctx.model)
                 true_calibrated = mse(X_test, y_true, theta, ctx.model)
                 rows.append({
-                    "n": n, "seed": seed, "lambda": lam,
+                    "n": n, "seed": seed, "lambda": lam, "lambda_used": lam_used,
                     "mse_in_sample": mse(X, y, theta, ctx.model),
                     "mse_test_labels_default": mse(X_test, y_test, ctx.theta_default, ctx.model),
                     "mse_test_labels_calibrated": mse(X_test, y_test, theta, ctx.model),
@@ -193,6 +201,7 @@ def run_sample_size(ctx: Context, cfg: dict) -> tuple[list[dict], list[dict]]:
             r = [row for row in rows if row["n"] == n and row["lambda"] == lam]
             summary.append({
                 "n": n, "lambda": lam,
+                "lambda_used_median": statistics.median(row["lambda_used"] for row in r),
                 **{f"{m}_mean": statistics.mean(row[m] for row in r) for m in (
                     "mse_in_sample", "mse_test_labels_calibrated", "mse_test_true_calibrated", "l1_to_hidden")},
                 "mse_test_true_calibrated_p90": float(np.percentile([row["mse_test_true_calibrated"] for row in r], 90)),
@@ -218,7 +227,7 @@ def run_stability(ctx: Context, cfg: dict) -> tuple[list[dict], list[dict]]:
     rows = []
     for seed in range(cfg["stability_seeds"]):
         X, y = ctx.design(synthetic_portfolio(cfg["stability_n"], seed, ctx.model))
-        theta, acc_in, acc_cv = ctx.fit(X, y, cfg["stability_lambda"])
+        theta, acc_in, acc_cv, _lam_used = ctx.fit(X, y, cfg["stability_lambda"])
         rows.append({"seed": seed, "accepted_in_sample": acc_in, "accepted_cv": acc_cv,
                      "l1_to_hidden": ctx.l1_to_hidden(theta),
                      **{k: float(v) for k, v in zip(ctx.keys, theta)}})
@@ -281,6 +290,10 @@ def headline(ctx: Context, cfg: dict, cv: list[dict], size: list[dict], stab_row
     }
 
 
+def fmt_lambda(lam) -> str:
+    return lam if isinstance(lam, str) else f"{lam:g}"
+
+
 def markdown_summary(h: dict, cv: list[dict], size: list[dict], stab: list[dict], default_lam: float) -> str:
     lines = [
         "<!-- GENERATED by scripts/validate_calibration.py: do not edit by hand -->",
@@ -299,7 +312,7 @@ def markdown_summary(h: dict, cv: list[dict], size: list[dict], stab: list[dict]
     ]
     for s in cv:
         lines.append(
-            f"| {s['lambda']:g} | {s['cv_mse_default']:.2f} | {s['cv_mse_calibrated']:.2f} "
+            f"| {fmt_lambda(s['lambda'])} | {s['cv_mse_default']:.2f} | {s['cv_mse_calibrated']:.2f} "
             f"(± {s['cv_mse_calibrated_sd_over_repeats']:.2f}) | {s['cv_relative_improvement']:.1%} | "
             f"{s['in_sample_mse_calibrated']:.2f} | {s['class_agreement_test_default']:.0%} → "
             f"{s['class_agreement_test_calibrated']:.0%} | {s['l1_to_hidden']:.3f} | "
@@ -314,7 +327,7 @@ def markdown_summary(h: dict, cv: list[dict], size: list[dict], stab: list[dict]
     ]
     for s in size:
         lines.append(
-            f"| {s['n']} | {s['lambda']:g} | {s['mse_in_sample_mean']:.2f} | {s['mse_test_labels_calibrated_mean']:.2f} | "
+            f"| {s['n']} | {fmt_lambda(s['lambda'])} | {s['mse_in_sample_mean']:.2f} | {s['mse_test_labels_calibrated_mean']:.2f} | "
             f"{s['mse_test_true_default']:.2f} → {s['mse_test_true_calibrated_mean']:.2f} "
             f"(p90 {s['mse_test_true_calibrated_p90']:.2f}) | {s['share_better_than_default_true']:.0%} | "
             f"{s['l1_to_hidden_mean']:.3f} |")
@@ -331,7 +344,7 @@ def markdown_summary(h: dict, cv: list[dict], size: list[dict], stab: list[dict]
     ]
     for s in size:
         lines.append(
-            f"| {s['n']} | {s['lambda']:g} | {s['acceptance_rate_in_sample']:.0%} / {s['acceptance_rate_cv']:.0%} | "
+            f"| {s['n']} | {fmt_lambda(s['lambda'])} | {s['acceptance_rate_in_sample']:.0%} / {s['acceptance_rate_cv']:.0%} | "
             f"{s['mse_test_true_applied_in_sample_mean']:.2f} / {s['mse_test_true_applied_cv_mean']:.2f} "
             f"({s['mse_test_true_default']:.2f}) | {s['harm_rate_in_sample']:.0%} / {s['harm_rate_cv']:.0%} |")
     st = h["stability"]

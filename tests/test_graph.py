@@ -75,13 +75,13 @@ def test_proposed_weights_need_approval_when_auto_apply_off(calibration_evaluato
 
 
 def test_material_group_run_rejects_overfit_on_few_labels(calibration_evaluator):
-    """10 plastics labels: in-sample the fit looks excellent, out of sample it is worse."""
+    """10 plastics labels: in-sample the fit looks excellent, out of sample the gain is not clear."""
     state = calibration_evaluator.run(material_group="plastics", calibrate=True)
     report = state["calibration_report"]
     assert {r.material_group for r in state["results"].values()} == {"plastics"}
     assert report.scope == "plastics" and report.n_samples == 10
-    assert report.mse_after < report.mse_before  # in-sample "improvement"
-    assert report.cv_mse_after > report.cv_mse_before  # but worse out of sample
+    assert report.mse_after < 0.5 * report.mse_before  # large in-sample "improvement"
+    assert report.cv_improvement_z < 2  # out of sample: not distinguishable from noise
     assert not report.accepted and "plastics" not in state["active_weights"]
 
 
