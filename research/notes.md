@@ -2,6 +2,26 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Calibration validation (paper section 7)
+
+**D20: Calibration validated on synthetic data** (`scripts/validate_calibration.py`):
+- **E1:** repeated 5-fold CV on the reference portfolio
+- **E2:** sample size × λ against an independent test set
+- **E3:** stability across 100 seeds
+
+At λ = 0.05 and 32 labels:
+- CV MSE is 37.8 → 20.6, against a noise floor of 18.1
+- the in-sample MSE of 12.4 is optimistic
+- weights move about half-way to the hidden weighting
+
+**Issues found, not yet fixed:**
+1. **The acceptance rule uses in-sample improvement.** It accepts almost everything, including
+   overfitted fits on 8 labels. A cross-validated acceptance rule is needed.
+2. **A fixed λ does not fade with n.** The error term is a mean and the penalty is unscaled, so
+   λ becomes a bias at large n. Choose λ by CV or scale it with 1/n.
+3. **The synthetic labels are the best case.** They come from the fitted linear model family.
+   Misspecification experiments are still missing.
+
 ## 2026-10 — Factor model v0.2, single source of truth, radar chart
 
 **D16: Factor model v0.2 adopted.** Key changes from v0.1:

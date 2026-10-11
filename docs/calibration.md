@@ -147,7 +147,14 @@ Calibration [global] — 32 labelled supplier(s): accepted: MSE 37.8 -> 13.3 (64
 - **Label quality.** Collect labels *before* experts see the model score, to avoid anchoring.
 - **Treat weights like a model release.** Review the proposal, approve it, and commit the new
   weight file.
-- **Overfitting check.** Planned: k-fold cross-validated MSE in the report.
+- **Overfitting.** `scripts/validate_calibration.py` runs repeated k-fold cross-validation, a
+  sample-size study and a seed-stability study on synthetic data. Results are in
+  `docs/paper/results/calibration-validation/SUMMARY.md`. Key findings:
+  - **In-sample optimism.** The in-sample MSE is optimistic by about 8 points² at 32 labels.
+  - **Regularisation.** λ = 0.05 is near-optimal at that size. Without regularisation, 8 labels
+    are often worse than the defaults.
+  - **Acceptance rule.** The current rule is based on in-sample error and is **not** an
+    overfitting safeguard. A cross-validated acceptance rule is planned.
 
 ## Possible refinements
 
