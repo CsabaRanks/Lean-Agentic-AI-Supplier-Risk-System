@@ -11,6 +11,7 @@ series), whose formal conventions are reused:
 - **Section order.** Limitations, then Future work, then Conclusion.
 
 Status: outline with bullet points. Sources: `research/` files, linked per section.
+**Draft text:** sections 1–6 are written in [paper.md](paper.md) (working draft v0.1).
 
 ---
 
