@@ -72,6 +72,18 @@ away from the methodology. A test covers this.
    - this is repeated with reshuffled folds (`cv_folds: 5`, `cv_repeats: 3`, deterministic)
    - the pooled out-of-fold MSE is compared with that of the active weights
 
+   **And the improvement must be clear** (`cv_min_z`, default 2):
+   - Cross-validation gives each labelled supplier an out-of-fold error under the active and the
+     refitted weights.
+   - The mean per-supplier reduction must be at least two standard errors above zero.
+   - The threshold was chosen in study E5 (`scripts/acceptance_study.py`). It is the smallest
+     value that keeps harmful acceptances at or below 5 % in every simulated scenario, including
+     disagreeing experts.
+   - **Optimistic standard error.** It ignores the dependence between folds, so treat z as a
+     screening statistic.
+   - **Cost.** The rule is conservative. Below about 24 labels, or with noisy or inconsistent
+     labels, it often keeps the default weights.
+
    The legacy option `acceptance: in_sample` compares training error only. It accepts practically
    every fit, including fits on a handful of labels that mostly reproduce label noise. Use it only
    for experiments.

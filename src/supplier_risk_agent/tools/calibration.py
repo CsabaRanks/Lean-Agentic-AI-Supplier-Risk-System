@@ -124,6 +124,35 @@ def relative_improvement(before: float, after: float) -> float:
     return (before - after) / before if before - after > ABS_TOL else 0.0
 
 
+def cross_validated_errors(
+    X: np.ndarray,
+    y: np.ndarray,
+    theta_prior: np.ndarray,
+    theta_anchor: np.ndarray,
+    model: RiskModelConfig,
+    settings: CalibrationSettings,
+    seed: int = 0,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Out-of-fold squared error per supplier: (prior weights, weights refitted without that supplier).
+
+    Each repeat reshuffles the folds (fixed seed, deterministic) and tests every
+    supplier exactly once; errors are averaged over repeats, so each supplier
+    contributes one value per array.
+    """
+    n = len(y)
+    k = min(settings.cv_folds, n)
+    rng = np.random.default_rng(seed)
+    err_prior = np.zeros(n)
+    err_refit = np.zeros(n)
+    for _ in range(settings.cv_repeats):
+        for test in np.array_split(rng.permutation(n), k):
+            train = np.setdiff1d(np.arange(n), test)
+            theta = solve_weights(X[train], y[train], theta_anchor, model, settings)[0]
+            err_prior[test] += (_predict(X[test], theta_prior, model) - y[test]) ** 2
+            err_refit[test] += (_predict(X[test], theta, model) - y[test]) ** 2
+    return err_prior / settings.cv_repeats, err_refit / settings.cv_repeats
+
+
 def cross_validated_mse(
     X: np.ndarray,
     y: np.ndarray,
@@ -133,24 +162,48 @@ def cross_validated_mse(
     settings: CalibrationSettings,
     seed: int = 0,
 ) -> tuple[float, float]:
-    """Pooled out-of-fold MSE of (prior weights, weights refitted on each training fold).
+    """Pooled out-of-fold MSE of (prior weights, weights refitted on each training fold)."""
+    err_prior, err_refit = cross_validated_errors(X, y, theta_prior, theta_anchor, model, settings, seed)
+    return float(err_prior.mean()), float(err_refit.mean())
 
-    Folds are reshuffled ``settings.cv_repeats`` times with a fixed seed, so the
-    result is deterministic for a given dataset.
+
+def improvement_z(err_prior: np.ndarray, err_refit: np.ndarray) -> float:
+    """Mean per-supplier error reduction divided by its standard error.
+
+    Out-of-fold errors are not independent (training sets overlap), so this
+    standard error is optimistic: z is a screening statistic, not a test with
+    nominal coverage. The acceptance threshold ``cv_min_z`` was therefore chosen
+    empirically (see docs/calibration.md).
     """
-    n = len(y)
-    k = min(settings.cv_folds, n)
-    rng = np.random.default_rng(seed)
-    sse_prior = sse_refit = 0.0
-    count = 0
-    for _ in range(settings.cv_repeats):
-        for test in np.array_split(rng.permutation(n), k):
-            train = np.setdiff1d(np.arange(n), test)
-            theta = solve_weights(X[train], y[train], theta_anchor, model, settings)[0]
-            sse_prior += mse(X[test], y[test], theta_prior, model) * len(test)
-            sse_refit += mse(X[test], y[test], theta, model) * len(test)
-            count += len(test)
-    return sse_prior / count, sse_refit / count
+    diff = err_prior - err_refit
+    if len(diff) < 2:
+        return 0.0
+    se = float(diff.std(ddof=1) / np.sqrt(len(diff)))
+    mean = float(diff.mean())
+    if se == 0:
+        return float("inf") if mean > 0 else 0.0
+    return mean / se
+
+
+def cross_validated_acceptance(
+    X: np.ndarray,
+    y: np.ndarray,
+    theta_prior: np.ndarray,
+    theta_anchor: np.ndarray,
+    model: RiskModelConfig,
+    settings: CalibrationSettings,
+) -> tuple[bool, float, float, float]:
+    """The cross-validated acceptance test. Returns (passes, cv_mse_before, cv_mse_after, z).
+
+    Passes if the pooled out-of-fold error falls by at least ``min_improvement``
+    AND the mean per-supplier reduction is at least ``cv_min_z`` standard errors.
+    Shared by ``calibrate_weights`` and the validation scripts.
+    """
+    err_prior, err_refit = cross_validated_errors(X, y, theta_prior, theta_anchor, model, settings)
+    before, after = float(err_prior.mean()), float(err_refit.mean())
+    z = improvement_z(err_prior, err_refit)
+    passes = relative_improvement(before, after) >= settings.min_improvement and z >= settings.cv_min_z
+    return passes, before, after, z
 
 
 def solve_weights(
@@ -257,20 +310,29 @@ def calibrate_weights(
 
     basis_improvement, basis_text = improvement, f"MSE {before:.1f} -> {after:.1f}"
     if settings.acceptance == "cross_validated":
-        cv_before, cv_after = cross_validated_mse(X, y, theta_prior, theta_anchor, model, settings)
+        _, cv_before, cv_after, z = cross_validated_acceptance(X, y, theta_prior, theta_anchor, model, settings)
         basis_improvement = relative_improvement(cv_before, cv_after)
         report.cv_mse_before = round(cv_before, 3)
         report.cv_mse_after = round(cv_after, 3)
         report.cv_improvement = round(basis_improvement, 4)
-        basis_text = f"cross-validated MSE {cv_before:.1f} -> {cv_after:.1f} (in-sample {before:.1f} -> {after:.1f})"
+        report.cv_improvement_z = round(z, 2) if np.isfinite(z) else 99.0
+        basis_text = (f"cross-validated MSE {cv_before:.1f} -> {cv_after:.1f}, z = {z:.1f} "
+                      f"(in-sample {before:.1f} -> {after:.1f})")
 
-    report.accepted = success and basis_improvement >= settings.min_improvement
+    large_enough = basis_improvement >= settings.min_improvement
+    certain_enough = settings.acceptance != "cross_validated" or z >= settings.cv_min_z
+    report.accepted = success and large_enough and certain_enough
     if not success:
         report.message = f"solver did not converge: {solver_msg}"
-    elif not report.accepted:
+    elif not large_enough:
         report.message = (
             f"rejected: {basis_text}, improvement {basis_improvement:.1%} below required "
             f"{settings.min_improvement:.0%}"
+        )
+    elif not certain_enough:
+        report.message = (
+            f"rejected: {basis_text}, improvement {basis_improvement:.1%} is not clear enough "
+            f"(z below required {settings.cv_min_z:g})"
         )
     else:
         report.message = f"accepted: {basis_text}, {basis_improvement:.1%} better"

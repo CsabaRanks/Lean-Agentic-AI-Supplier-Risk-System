@@ -67,7 +67,8 @@ def _print_calibration(rep: CalibrationReport) -> None:
     if rep.new_weights is None:
         return
     if rep.cv_mse_before is not None:
-        print(f"  cross-validated MSE {rep.cv_mse_before} -> {rep.cv_mse_after}  (acceptance basis)")
+        print(f"  cross-validated MSE {rep.cv_mse_before} -> {rep.cv_mse_after}, z = {rep.cv_improvement_z} "
+              "(acceptance basis)")
     print(f"  in-sample MSE {rep.mse_before} -> {rep.mse_after}  |  class agreement "
           f"{rep.class_agreement_before:.0%} -> {rep.class_agreement_after:.0%}  |  applied: {rep.applied}")
     if rep.stored_as:

@@ -46,10 +46,9 @@ from supplier_risk_agent.models import CalibrationSettings
 from supplier_risk_agent.tools.calibration import (
     build_design_matrix,
     class_agreement,
-    cross_validated_mse,
+    cross_validated_acceptance,
     level_offset,
     mse,
-    relative_improvement,
     solve_weights,
 )
 from supplier_risk_agent.tools.synthetic import HIDDEN_EXPERT_WEIGHTS, synthetic_portfolio
@@ -146,8 +145,8 @@ def labels(X: np.ndarray, policy: Policy, rng: np.random.Generator) -> np.ndarra
 
 def fit(X: np.ndarray, y: np.ndarray, settings: CalibrationSettings) -> tuple[np.ndarray, bool]:
     theta, success = solve_weights(X, y, THETA_DEFAULT, MODEL, settings)[:2]
-    cv_before, cv_after = cross_validated_mse(X, y, THETA_DEFAULT, THETA_DEFAULT, MODEL, settings)
-    return theta, bool(success and relative_improvement(cv_before, cv_after) >= settings.min_improvement)
+    passes = cross_validated_acceptance(X, y, THETA_DEFAULT, THETA_DEFAULT, MODEL, settings)[0]
+    return theta, bool(success and passes)
 
 
 def run(cfg: dict) -> tuple[list[dict], list[dict]]:

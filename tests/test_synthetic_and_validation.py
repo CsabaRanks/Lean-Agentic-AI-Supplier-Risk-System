@@ -67,6 +67,17 @@ def test_validation_script_quick_run(tmp_path):
         assert (figures / f"{name}.svg").exists()
 
 
+def test_acceptance_study_quick_run(tmp_path):
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "acceptance_study.py"), "--quick", "--out", str(tmp_path)],
+        check=False, capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    overall = json.loads((tmp_path / "summary.json").read_text())["overall"]
+    rates = [o["acceptance_rate_mean"] for o in sorted(overall, key=lambda o: o["z_min"])]
+    assert rates == sorted(rates, reverse=True)  # a stricter threshold never accepts more
+
+
 def test_robustness_script_quick_run(tmp_path):
     result = subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "robustness_calibration.py"), "--quick", "--out", str(tmp_path)],

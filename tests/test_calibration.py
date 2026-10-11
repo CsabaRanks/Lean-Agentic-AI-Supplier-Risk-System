@@ -144,3 +144,30 @@ def test_no_level_flag_without_offset(model):
         for seed in range(10)
     )
     assert flagged == 0
+
+
+def test_improvement_z():
+    from supplier_risk_agent.tools.calibration import improvement_z
+
+    prior = np.array([10.0, 12.0, 9.0, 11.0])
+    assert improvement_z(prior, prior - np.array([1.0, 3.0, 2.0, 2.0])) == pytest.approx(2.0 / (0.8165 / 2), rel=1e-3)
+    assert improvement_z(prior, prior) == 0.0
+    assert improvement_z(prior, prior - 1.0) == float("inf")  # identical improvement for every supplier
+
+
+def test_uncertainty_threshold_only_ever_rejects_more(model):
+    """cv_min_z adds a condition: whatever it accepts, the plain 5 % rule accepts too, and it rejects noisy fits."""
+    from supplier_risk_agent.tools.synthetic import synthetic_portfolio as portfolio
+
+    plain = CalibrationSettings(cv_min_z=0.0)
+    strict = CalibrationSettings(cv_min_z=2.0)
+    decisions = []
+    for seed in range(15):
+        profiles = portfolio(12, seed, model, noise_sd=12.0)
+        a = calibrate_weights(profiles, model, model.default_weights(), plain)[0]
+        b = calibrate_weights(profiles, model, model.default_weights(), strict)[0]
+        assert b.cv_improvement_z == a.cv_improvement_z
+        decisions.append((a.accepted, b.accepted, b.message))
+    assert all(plain_ok or not strict_ok for plain_ok, strict_ok, _ in decisions)
+    assert sum(s for _, s, _ in decisions) < sum(p for p, _, _ in decisions)
+    assert any("not clear enough" in msg for _, _, msg in decisions)

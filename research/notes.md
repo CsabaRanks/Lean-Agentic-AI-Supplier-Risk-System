@@ -2,6 +2,26 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Uncertainty-aware acceptance (E5)
+
+**D25: Acceptance also requires z ≥ 2.**
+- **Statistic.** z = mean per-supplier out-of-fold error reduction divided by its standard error
+  (`cv_min_z`, default 2.0).
+- **Selection.** Study E5 (`scripts/acceptance_study.py`: 5 policies × n 8–64 × 40 seeds,
+  thresholds 0–3). The criterion was the smallest z with ≤ 5 % harm in every scenario: z = 2.
+  - Mean harm falls from 8.8 % to 1.1 %, worst scenario from 35 % to 5 %.
+  - Error in use rises from 0.83 to 0.88 of the default error.
+- **Effect in the re-runs.**
+  - E4: two experts 43/23 % → 0/0 % harm; knock-out 10/13 % → 0/3 %; all other policies 0 %.
+  - E2: harm ≤ 3 % everywhere.
+  - Acceptance at 32 labels: 87 %. At 16 labels: 50 %.
+- **Caveats.**
+  - The SE ignores fold dependence, so z is a screening statistic.
+  - The threshold was chosen and evaluated on the same synthetic scenarios.
+
+The acceptance logic now lives in one library function (`cross_validated_acceptance`) that the
+agent and all experiment scripts share, so the scripts cannot drift from production behaviour.
+
 ## 2026-10 — Level-offset diagnostic
 
 **D24: The calibration report flags a level offset.** The flag fires when the mean of

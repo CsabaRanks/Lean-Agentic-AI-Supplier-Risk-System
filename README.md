@@ -89,8 +89,9 @@ or decided by an LLM. Nobody checks them against reality. This project adds a
 3. **Constraints.** Weights stay ≥ a minimum and sum to 1, with regularisation towards the configured defaults. Calibration *refines* the methodology. It does not replace it.
 4. **Feedback loop.** If the improvement is significant, the new weights are applied and the **Scoring Agent re-runs**. They are applied either automatically or after a reviewer approves them at the human-review pause.
 5. **Safeguards.**
-   - Acceptance is tested out of sample (cross-validation), so fits that only memorise label
-     noise are rejected.
+   - Acceptance is tested out of sample (cross-validation). The improvement must also be clear
+     relative to its own uncertainty, so fits that only memorise label noise, or that rest on
+     inconsistent labels, are rejected.
    - A level-offset check stops weights from being distorted when experts are systematically
      stricter or more lenient than the model's scale. Such cases go to review.
 6. **Logging and persistence.** Old vs. new weights, MSE and class agreement before/after are logged. Applied weights are saved as a new version in the weight store (`data/weights/global_v002.yaml`, …).

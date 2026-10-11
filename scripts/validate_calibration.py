@@ -35,7 +35,7 @@ from supplier_risk_agent.models import CalibrationSettings
 from supplier_risk_agent.tools.calibration import (
     build_design_matrix,
     class_agreement,
-    cross_validated_mse,
+    cross_validated_acceptance,
     mse,
     relative_improvement,
     solve_weights,
@@ -96,10 +96,9 @@ class Context:
         settings = self.settings(lam)
         theta, success = solve_weights(X, y, self.theta_default, self.model, settings)[:2]
         in_sample = relative_improvement(mse(X, y, self.theta_default, self.model), mse(X, y, theta, self.model))
-        cv_before, cv_after = cross_validated_mse(X, y, self.theta_default, self.theta_default, self.model, settings)
-        cv = relative_improvement(cv_before, cv_after)
+        cv_passes = cross_validated_acceptance(X, y, self.theta_default, self.theta_default, self.model, settings)[0]
         threshold = settings.min_improvement
-        return theta, bool(success and in_sample >= threshold), bool(success and cv >= threshold)
+        return theta, bool(success and in_sample >= threshold), bool(success and cv_passes)
 
     def l1_to_hidden(self, theta: np.ndarray) -> float:
         return float(np.abs(theta - self.theta_hidden).sum())

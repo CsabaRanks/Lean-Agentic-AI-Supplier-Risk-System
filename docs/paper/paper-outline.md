@@ -21,6 +21,8 @@ Status: outline with bullet points. Sources: `research/` files, linked per secti
   - E4 (misspecification, noise) is done: Section 7.7, Table 6, Figure 7
 - Section 7.7: the level-offset diagnostic is implemented and evaluated on E4. Residual and
   knock-out diagnostics remain future work.
+- **[TBD-LIT] Section 7.8:** a reference on the variance of k-fold cross-validation estimates
+  (dependence between folds).
 - **[TBD-INPUT] Figure 3:** static rendering for the typeset version (currently Mermaid).
 - **Section 9, Table 7:** source versioning for external indicators is not implemented.
 - **References:** verify wording against full texts (read at abstract level).

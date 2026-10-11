@@ -128,6 +128,9 @@ class CalibrationReport(BaseModel):
     cv_mse_before: float | None = Field(default=None, description="Out-of-fold MSE of the prior weights")
     cv_mse_after: float | None = Field(default=None, description="Out-of-fold MSE of weights refitted per fold")
     cv_improvement: float | None = None
+    cv_improvement_z: float | None = Field(
+        default=None, description="Mean per-supplier out-of-fold error reduction / its standard error"
+    )
     accepted: bool = False
     applied: bool = False
     stored_as: str | None = Field(default=None, description="Weight store file, if persisted")

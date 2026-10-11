@@ -128,6 +128,13 @@ class CalibrationSettings(BaseModel):
     )
     cv_folds: int = Field(default=5, ge=2, description="Folds for cross-validated acceptance")
     cv_repeats: int = Field(default=3, ge=1, description="Repeats with reshuffled folds (deterministic)")
+    cv_min_z: float = Field(
+        default=2.0, ge=0,
+        description=(
+            "Cross-validated acceptance also requires the mean per-supplier error reduction to be at least "
+            "this many standard errors above zero (0 = relative threshold only)"
+        ),
+    )
     level_bias_threshold: float = Field(
         default=5.0, ge=0,
         description="Flag a level offset if labels differ from scores by at least this many points on average",

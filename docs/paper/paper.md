@@ -55,8 +55,10 @@ On synthetic portfolios whose labels were generated from a hidden weighting plus
   uniformly stricter or disagree, calibration degrades in characteristic ways. These are the
   limits of what weights can express. Each points to a design response other than calibration.
 - **A weakness found and fixed.** The validation exposed that the demonstrator's original
-  acceptance rule, based on in-sample error, let through harmful calibrations. A cross-validated
-  rule now replaces it. With eight labels it cut harmful acceptances from 50 % to 7 % of runs.
+  acceptance rule, based on in-sample error, let through harmful calibrations. It is now replaced
+  by a cross-validated rule that also requires the improvement to be clear relative to its own
+  uncertainty. Across all simulated scenarios, harmful acceptances fell from up to 50 % of runs to
+  at most 3 %. The price is that calibration is withheld when labels are few or inconsistent.
 
 The paper states what this does not establish:
 - the labels are synthetic, and even the robustness experiments use constructed expert policies
@@ -688,8 +690,8 @@ and an analytic gradient. In the default configuration:
 - *w*_min = 0.02
 - at least eight labelled suppliers with complete data are required
 - acceptance requires a relative reduction of the *cross-validated* error of at least 5 %
-  (5 folds × 3 repeats; the in-sample variant is kept only as an experimental option, see
-  Section 7.6)
+  (5 folds × 3 repeats) **and** a per-supplier error reduction of at least two standard errors
+  (z ≥ 2). See Sections 7.6 and 7.8. The in-sample variant is kept only as an experimental option.
 
 Only suppliers with complete data are used. Missing-data re-weighting would make the score
 non-linear in θ.
@@ -871,7 +873,7 @@ seeds in which calibration beats the default weights. Source: `e2_sample_size_su
 - *(a) Test error of calibrated weights against the noise-free true scores, by number of labels
   and λ (mean over 30 seeds; band to the 90th percentile).*
 - *(b) Share of runs in which the weights actually applied are worse than keeping the defaults,
-  under the in-sample and the cross-validated acceptance rule.*
+  under the in-sample rule and the default cross-validated rule (5 % and z ≥ 2, Section 7.8).*
 
 *Synthetic data.*
 
@@ -879,7 +881,8 @@ seeds in which calibration beats the default weights. Source: `e2_sample_size_su
 
 Across 100 independent portfolios of 32 labelled suppliers (λ = 0.05):
 - the mean L1 distance to the hidden weighting is 0.170, against 0.345 for the default weights
-- every calibration was accepted
+- every calibration passed the 5 % cross-validated rule; 82 of 100 also passed the default rule
+  with z ≥ 2 (Section 7.8)
 
 **Large deviations are recovered reliably.**
 
@@ -924,8 +927,12 @@ The in-sample rule remains available as a configuration option for experiments. 
 rules on the same runs and reports the error of the weights that *end up in use*: the calibrated
 weights if accepted, otherwise the defaults.
 
-**Table 5.** *Acceptance rules on the E2 runs (30 seeds each; error against true scores; default
-weights 29.7). Source: `SUMMARY.md`, section E2b.*
+The numbers in this section refer to this **5 % cross-validated rule** (commit `ddcb977`).
+Section 7.8 adds a second condition, which is now the default.
+
+**Table 5.** *In-sample versus 5 % cross-validated acceptance on the E2 runs (30 seeds each; error
+against true scores; default weights 29.7). Source: `SUMMARY.md`, section E2b, at commit
+`ddcb977`.*
 
 | labels *n* | λ | accepted: in-sample / CV | error in use: in-sample / CV rule | harm rate: in-sample / CV |
 |---:|---:|---|---|---|
@@ -980,28 +987,30 @@ then runs with production settings (λ = 0.05, cross-validated acceptance) on 16
 the policy's noise-free judgement, score points²). "Excess removed": share of the default weights'
 error above the floor that calibration removes. Source: `calibration-robustness/SUMMARY.md`.*
 
-| Policy | linear floor | default | calibrated | excess removed (n = 16 / 32 / 64) | harm, CV rule (n = 16 / 32) | class agreement default → calibrated |
-|---|---:|---:|---:|---|---|---|
-| linear (reference) | 0 | 29.7 | 5.7 | 69 / 81 / 87 % | 0 / 0 % | 79 → 91 % |
-| linear, σ = 8 | 0 | 29.7 | 11.7 | 30 / 61 / 75 % | 7 / 0 % | 79 → 87 % |
-| linear, steps of 10 | 0 | 29.7 | 7.0 | 63 / 76 / 84 % | 0 / 0 % | 79 → 90 % |
-| level shift +10 | 62.3 | 157.4 | 77.6 | 74 / 84 / 90 % | 0 / 0 % | 44 → 60 % |
-| interaction | 71.9 | 103.1 | 88.0 | 9 / 48 / 68 % | 10 / 0 % | 63 → 65 % |
-| knock-out floor | 98.3 | 127.0 | 118.8 | −24 / 28 / 62 % | 10 / 13 % | 66 → 69 % |
-| worst factor dominates | 284.3 | 418.0 | 328.1 | 57 / 67 / 82 % | 0 / 0 % | 12 → 27 % |
-| two experts disagree | 0 | 5.3 | 5.3 | −84 / 1 / 42 % | 43 / 23 % | 90 → 91 % |
+| Policy | linear floor | default | calibrated | excess removed (n = 16 / 32 / 64) | harm, 5 % CV rule (n = 16 / 32) | harm, with z ≥ 2 (n = 16 / 32) | class agreement default → calibrated |
+|---|---:|---:|---:|---|---|---|---|
+| linear (reference) | 0 | 29.7 | 5.7 | 69 / 81 / 87 % | 0 / 0 % | 0 / 0 % | 79 → 91 % |
+| linear, σ = 8 | 0 | 29.7 | 11.7 | 30 / 61 / 75 % | 7 / 0 % | 0 / 0 % | 79 → 87 % |
+| linear, steps of 10 | 0 | 29.7 | 7.0 | 63 / 76 / 84 % | 0 / 0 % | 0 / 0 % | 79 → 90 % |
+| level shift +10 | 62.3 | 157.4 | 77.6 | 74 / 84 / 90 % | 0 / 0 % | 0 / 0 % | 44 → 60 % |
+| interaction | 71.9 | 103.1 | 88.0 | 9 / 48 / 68 % | 10 / 0 % | 0 / 0 % | 63 → 65 % |
+| knock-out floor | 98.3 | 127.0 | 118.8 | −24 / 28 / 62 % | 10 / 13 % | 0 / 3 % | 66 → 69 % |
+| worst factor dominates | 284.3 | 418.0 | 328.1 | 57 / 67 / 82 % | 0 / 0 % | 0 / 0 % | 12 → 27 % |
+| two experts disagree | 0 | 5.3 | 5.3 | −84 / 1 / 42 % | 43 / 23 % | 0 / 0 % | 90 → 91 % |
 
 ![Figure 7](figures/fig07_robustness.png)
 
 *Figure 7.*
 - *(a) Share of the default weights' excess error, above the linear floor, that calibration
   removes, by expert policy and number of labels.*
-- *(b) Share of runs in which the weights in use after the cross-validated acceptance rule are
-  worse than the defaults.*
+- *(b) Share of runs in which the weights in use are worse than the defaults, under the default
+  cross-validated rule (5 % and z ≥ 2). Almost all bars are zero. The 5 % rule alone is shown
+  in Table 6.*
 
 *Synthetic data.*
 
-Five findings.
+Five findings. Harm rates in the findings refer to the 5 % rule, as in Section 7.6; the last
+table column and Section 7.8 show the effect of the stricter default.
 
 1. **Noise and rounding cost labels, not validity.** With linear experts, calibration stays
    effective under coarse rounding and under doubled noise (σ = 8), but it needs more labels.
@@ -1046,8 +1055,8 @@ Five findings.
    never auto-applied: it goes to human review with a warning to check the class thresholds. In
    the E4 runs, the flag:
    - caught **every** level-shift and worst-factor run (100 %)
-   - caught 30–37 % of knock-out runs, whose floors also lift the average label. This halved
-     harmful applications under the knock-out policy (16 labels: 10 % → 3 %; 32 labels:
+   - caught 30–37 % of knock-out runs, whose floors also lift the average label. Under the 5 % rule
+     this halved harmful applications for the knock-out policy (16 labels: 10 % → 3 %; 32 labels:
      13 % → 7 %).
    - fired in at most 7 % of runs with purely linear experts (σ = 8, 16 labels), and in no run at
      32 labels or more
@@ -1066,7 +1075,7 @@ Five findings.
    - **measure disagreement first**, with two labels for a subset of suppliers, before treating
      labels as a single policy
    - **require the cross-validated improvement to exceed its own uncertainty** rather than a fixed
-     percentage (Section 11)
+     percentage. This is now the default (Section 7.8). It removes the harm in this scenario.
 
 **What E4 adds.** It turns the main limitation of E1–E3 ("best-case labels") into a map of where
 calibration works and where it does not:
@@ -1078,7 +1087,78 @@ calibration works and where it does not:
 E4 cannot say which of these policies real category managers follow. All policies are
 constructed.
 
-### 7.8 What the demonstration shows, and what it does not
+### 7.8 Requiring a clear improvement (E5)
+
+E4 showed that a fixed 5 % threshold on the cross-validated error cannot tell a real improvement
+from a lucky one when the estimate itself is noisy. The acceptance rule therefore has a second
+condition.
+
+**The second condition.**
+- Cross-validation yields an out-of-fold error for every labelled supplier, once under the active
+  weights and once under weights refitted without that supplier, averaged over the repeats.
+- From the per-supplier differences, the rule computes the mean improvement and its standard error.
+- Their ratio *z* must reach a threshold `cv_min_z`, in addition to the 5 % relative improvement.
+
+**This standard error is optimistic.** Out-of-fold errors are not independent, because training
+sets overlap. *z* is therefore a screening statistic, not a test with a nominal error rate
+[TBD-LIT: cite work on the variance of k-fold cross-validation estimates]. For this reason the
+threshold was chosen **empirically**.
+
+**E5** (`scripts/acceptance_study.py`, results in `docs/paper/results/acceptance-threshold/`)
+covers 20 scenarios:
+- five expert policies (linear, σ = 8, interaction, knock-out, two experts)
+- 8, 16, 32 or 64 labels each
+- 40 seeds per scenario
+- seven thresholds, z = 0 to 3, applied to the same runs
+
+**Table 7.** *Effect of the uncertainty threshold, averaged over 20 scenarios. "Missed gain": error
+of the weights in use minus the better of default and calibrated weights, as a share of the
+default error. Source: `acceptance-threshold/SUMMARY.md`.*
+
+| cv_min_z | harm rate: mean / worst scenario | acceptance | missed gain | error in use / default error |
+|---:|---|---:|---:|---:|
+| 0 (5 % rule only) | 8.8 % / 35 % | 60 % | 13.7 % | 0.83 |
+| 1 | 5.5 % / 22 % | 45 % | 14.2 % | 0.84 |
+| 1.5 | 3.1 % / 15 % | 33 % | 15.9 % | 0.85 |
+| **2 (default)** | **1.1 % / 5 %** | 23 % | 18.0 % | 0.88 |
+| 3 | 0.4 % / 2 % | 10 % | 23.7 % | 0.93 |
+
+**Choice of threshold.** The selection criterion was the *smallest threshold for which no
+scenario exceeds 5 % harmful acceptances*. That is z ≥ 2. Against the 5 % rule alone, it trades
+about five percentage points of the default error, in expected improvement forgone, for a
+worst-case harm rate that falls from 35 % to 5 %. The threshold was selected and evaluated on the
+same synthetic scenarios. It should be treated as a reasoned default, not as a validated constant.
+
+**Effect in the earlier experiments** (re-run with the new default):
+
+| Experiment | 5 % rule | with z ≥ 2 |
+|---|---|---|
+| E2, 8 labels, λ = 0 | harm 7 % | harm 0 % |
+| E2, 12–16 labels, λ = 0.05 | harm 0–3 %; error in use 11.8–16.3 | harm 0–3 %; error in use 19.5–25.1; acceptance 27–50 % |
+| E2, 32 labels, λ = 0.05 | accepted 100 %; error in use 5.9 | accepted 87 %; error in use 8.5 |
+| E2, ≥ 64 labels, λ = 0.05 | accepted 100 % | accepted 100 % (identical) |
+| E3, 32 labels | accepted 100 % | accepted 82 % |
+| E4, two experts, 16 / 32 labels | harm 43 / 23 % | harm 0 / 0 % |
+| E4, knock-out, 16 / 32 labels | harm 10 / 13 % | harm 0 / 3 % |
+| E4, all other policies | harm ≤ 10 % | harm 0 % |
+| Reference portfolio (32 labels) | accepted | accepted (z = 2.4) |
+
+**Calibration now has to be earned.** With the default rule, calibration is rarely harmful in any
+scenario tested. It is also often withheld when labels are few, noisy or inconsistent:
+- with linear experts and λ = 0.05, 13 % of calibrations are applied at 8 labels, 50 % at 16 and
+  63 % at 24
+- with σ = 8, 10 % are applied at 32 labels
+- with disagreeing experts, none are applied at 16 or 32 labels
+
+When it withholds a calibration, the rule keeps the default weights and states why. For practice, this
+means:
+- roughly **30 or more consistent labels per calibration scope**
+- a measurement of expert agreement before calibrating a scope where several experts label
+
+A rule that sometimes forgoes an improvement is the right failure mode for weights that drive
+supplier decisions. A rule that sometimes makes them worse is not.
+
+### 7.9 What the demonstration shows, and what it does not
 
 **It shows that, under controlled conditions,** the calibration procedure:
 - generalises: the cross-validated error approaches the noise floor
@@ -1151,9 +1231,9 @@ These are empirical questions for future work (Section 11), not conclusions of t
 ### 8.2 The hybrid reading: signals from outside, method in-house
 
 The most useful reading of Figure 1 is not "which approach is best" but "which layer each approach
-should provide". Supplier risk evaluation involves three layers with different owners (Table 7).
+should provide". Supplier risk evaluation involves three layers with different owners (Table 8).
 
-**Table 7.** *A layered reading of supplier risk evaluation.*
+**Table 8.** *A layered reading of supplier risk evaluation.*
 
 | Layer | Question it answers | Who is strong here (Figure 1) | Suggested provider |
 |---|---|---|---|
@@ -1253,7 +1333,7 @@ demonstrator does not enforce roles (Section 10).
 
 ### 9.1 Who owns what
 
-**Table 8.** *Proposed ownership of the elements of the method.*
+**Table 9.** *Proposed ownership of the elements of the method.*
 
 | Element | Owner (proposed) | Changed how | Recorded where |
 |---|---|---|---|
@@ -1342,10 +1422,15 @@ already run:
 
 **Method limitations, including known limitations of the demonstrator.**
 - **Acceptance rule.** The original in-sample rule did not protect against overfitting
-  (Section 7.6). It has been replaced by a cross-validated rule, which reduces but does not
-  eliminate harmful acceptances with very few labels. The cross-validated rule is also
-  conservative and forgoes some useful calibrations. The in-sample rule remains available as an
-  option and should not be used for real decisions.
+  (Section 7.6). The default is now a cross-validated rule with an uncertainty threshold
+  (z ≥ 2; Section 7.8).
+  - **Conservative.** It withholds half or more of all calibrations with 16 or fewer labels, and
+    most calibrations on noisy or inconsistent labels.
+  - **Threshold not independently validated.** The threshold was chosen and evaluated on the same
+    synthetic scenarios.
+  - **Optimistic statistic.** *z* uses a standard error that ignores the dependence between folds.
+  - **Legacy option.** The in-sample rule remains available as an option and should not be used
+    for real decisions.
 - **Policies weights cannot express.** Knock-out judgements, level offsets and non-additive
   policies cannot be learned by weights (Section 7.7). The demonstrator diagnoses level offsets
   and withholds such calibrations for review. It does not yet diagnose knock-outs or
@@ -1378,9 +1463,11 @@ value relative to effort.
 
    The levers that respond to these diagnostics are escalation rules, class thresholds or an
    offset term, not weights.
-3. **A stricter acceptance test.** Require the cross-validated improvement to exceed its own
-   standard error rather than a fixed 5 %. In E4, disagreeing experts defeated the fixed
-   threshold with up to 32 labels.
+3. **A better-founded acceptance test.** The uncertainty threshold (z ≥ 2) is implemented, but
+   it was chosen on the synthetic scenarios it is evaluated on, and it ignores the dependence
+   between folds. Two improvements are open:
+   - variance estimators that account for this dependence
+   - validation of the threshold on field data
 4. **Measuring expert disagreement.** Collect two labels for a subset of suppliers, report
    inter-rater agreement, and calibrate only where agreement is adequate.
 5. **Uncertainty of weights.** Report bootstrap intervals for calibrated weights, so that
