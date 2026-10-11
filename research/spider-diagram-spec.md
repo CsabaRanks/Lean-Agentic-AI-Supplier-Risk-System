@@ -2,8 +2,8 @@
 
 The radar chart is the project's signature figure. It appears in the README in the section
 "Where this approach sits", after the problem statement. It is also Figure 1 of the paper. It
-places the Lean Agentic approach relative to three other approaches across the 15 success factors
-of model v0.2.
+places the Lean Agentic approach relative to three other approaches across the 16 success factors
+of model v0.3.
 
 > **The values are illustrative and must stay defensible.**
 > - Every value has a rationale, evidence and a confidence mark in the single source of truth,
@@ -32,7 +32,7 @@ research/comparison-matrix.yaml        ← edit ratings here only
   It also fails if the Markdown is stale. The test suite runs this check, and so does CI.
 - Rendering needs matplotlib (`pip install -e ".[research]"`). The check does not.
 
-## Axes (model v0.2, in this order)
+## Axes (model v0.3, in this order)
 
 The order puts related factors next to each other so that the shapes are readable:
 - method (1–5)
@@ -40,6 +40,7 @@ The order puts related factors next to each other so that the shapes are readabl
 - data and compliance (8–9)
 - economics and adoption (10–12)
 - operations (13–15)
+- integration of risk and performance (16)
 
 This is an ordering for the eye only. It is not a hierarchy, and it carries no weights.
 
@@ -54,12 +55,13 @@ This is an ordering for the eye only. It is not a hierarchy, and it carries no w
 | 7 | Human-in-the-loop | Human-in-the-loop & governance |
 | 8 | External signals & coverage | External signals & data coverage |
 | 9 | Regulatory evidence | Regulatory evidence (due-diligence documentation) |
-| 10 | Cost | Cost / accessibility |
+| 10 | Cost / TCO | Cost / total cost of ownership |
 | 11 | Time-to-value | Time-to-value / ease of adoption |
 | 12 | Customisability & data sovereignty | Customisability & data sovereignty |
 | 13 | Scalability | Scalability |
-| 14 | Extensibility | Extensibility & automation potential |
+| 14 | Agentic orchestration & extensibility | Agentic orchestration & extensibility |
 | 15 | Operational maturity | Operational maturity & support |
+| 16 | Risk & performance integration | Integration of risk management and performance evaluation |
 
 Values: see the generated [comparison-matrix.md](comparison-matrix.md).
 
@@ -84,17 +86,17 @@ Values: see the generated [comparison-matrix.md](comparison-matrix.md).
 ## Expected shape (sanity check after every change)
 
 - **Lean Agentic** spans the method side: transparency, calibration, material-group fit,
-  customisability.
+  customisability, agentic orchestration and risk & performance integration.
 - **SaaS** spans external signals, regulatory evidence, scalability and operational maturity.
-- **Excel** is strong only on cost, time-to-value and transparency.
-- **Open repos** are low except for cost and extensibility.
-- **Lean Agentic visibly dips at external signals (1), regulatory evidence (2) and operational
-  maturity (2).** These dips are part of the honest message and must not be hidden.
+- **Excel** is strong only on transparency and customisability.
+- **Open repos** are low except for cost and agentic orchestration.
+- **Lean Agentic visibly dips at regulatory evidence (2) and operational maturity (2), and stays
+  in the middle on external signals (2.5).** These dips are part of the honest message and must not be hidden.
 
 ## Paper caption (draft)
 
-> *Figure 1. Four approaches to supplier risk evaluation profiled on 15 success factors (model
-> v0.2). Illustrative assessment based on public information and code review (October 2026).
+> *Figure 1. Four approaches to supplier risk management and performance evaluation profiled on
+> 16 success factors (model v0.3). Illustrative assessment based on public information and code review (October 2026).
 > Proprietary SaaS is plotted as the mean of Prewave and Sphera; shaded bars show where the two
 > differ. Rationale and confidence for every value are given in Table 2 / the comparison matrix.
 > No weighting is applied and no total or ranking is derived.*

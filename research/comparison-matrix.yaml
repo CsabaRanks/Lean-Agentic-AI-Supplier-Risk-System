@@ -10,7 +10,8 @@
 # Edit ratings HERE only. Ratings are a reasoned, illustrative assessment, not a measurement.
 #
 # Rating format per approach:
-#   value:       1..5 (1 weak / absent, 2 rudimentary, 3 adequate, 4 strong, 5 very strong)
+#   value:       1..5 (1 weak / absent, 2 rudimentary, 3 adequate, 4 strong, 5 very strong); a half point
+#                (e.g. 3.5) marks a profile clearly between two levels
 #   by_example:  optional per-example values when the rated examples differ (SaaS: Prewave, Sphera);
 #                the plotted value is then their mean and the chart shows the spread
 #   confidence:  H = verified from code / primary documentation, M = plausible / partly documented,
@@ -18,12 +19,13 @@
 #   rationale:   short justification; sources are listed under approaches.<key>.evidence
 
 meta:
-  title: Supplier risk evaluation approaches profiled on 15 success factors
-  model_version: "0.2"
+  title: Supplier risk management and performance evaluation approaches profiled on 16 success factors
+  model_version: "0.3"
   evidence_date: "2026-10"
   scale: {min: 1, max: 5}
   caption: >-
-    Four approaches to supplier risk evaluation profiled on 15 success factors (model v0.2).
+    Four approaches to supplier risk management and performance evaluation profiled on 16 success factors
+    (model v0.3).
     Illustrative assessment based on public information and code review (October 2026);
     rationale and confidence for every value in research/comparison-matrix.md.
     Proprietary SaaS plotted as the mean of Prewave and Sphera, with the spread marked where they differ.
@@ -218,11 +220,12 @@ factors:
         confidence: H
         rationale: Narrative recommendations.
       lean:
-        value: 3
+        value: 3.5
         confidence: H
         rationale: >-
-          Configurable actions per class, per elevated dimension and per factor level, with review cycles and
-          owners; exportable action plan. Not 4: no action tracking / closure.
+          Configurable action framework on three levels (risk class, elevated dimension, factor level), each
+          action with owner and review cycle; filterable, exportable action plan per material group. Below the
+          platforms: no tracking of actions to closure, no supplier collaboration.
 
   - id: 7
     key: hitl
@@ -244,11 +247,12 @@ factors:
         confidence: H
         rationale: One repo has a human-review exit.
       lean:
-        value: 3
+        value: 3.5
         confidence: H
         rationale: >-
-          Graph interrupt with weight approval and class overrides, recorded and surviving re-scoring;
-          no roles / permissions, in-memory pauses only.
+          Graph-based review pause (interrupt / resume) for weight approval and class overrides with comment,
+          recorded with the reviewer, surviving re-scoring and snapshotted to the history; review also in the UI.
+          Below the platforms: no roles / permissions, in-memory pauses only.
 
   - id: 8
     key: signals
@@ -272,11 +276,14 @@ factors:
         confidence: H
         rationale: Internal databases, retrieval, mocks.
       lean:
-        value: 1
-        confidence: H
+        value: 2.5
+        confidence: M
         rationale: >-
-          No signal monitoring. A provider interface fills indicators from files (e.g. a downloaded governance
-          indicator table, system exports); API feeds are placeholders.
+          A provider interface is in place and reads open data and system exports (e.g. a downloaded governance
+          indicator table, ERP or ESG exports), filling indicators with recorded origin and vintage. Live APIs
+          are still placeholders and there is no continuous monitoring, so coverage is about half of a
+          monitoring platform. The architecture allows further providers, and the agentic design leaves
+          long-term upside in signal processing (e.g. an external-signal agent); that potential is not rated.
 
   - id: 9
     key: regulatory
@@ -306,27 +313,33 @@ factors:
 
   - id: 10
     key: cost
-    label: Cost / accessibility
-    short_label: Cost
+    label: Cost / total cost of ownership
+    short_label: Cost / TCO
     v01: [9]
     ratings:
       xls:
-        value: 5
+        value: 3
         confidence: M
-        rationale: No additional licence; hidden labour cost.
+        rationale: >-
+          No additional licence, but high recurring manual effort: collecting data, consolidating sheets per
+          category, keeping versions and weights consistent, rebuilding reports each cycle.
       saas:
         value: 2
         by_example: {Prewave: 2, Sphera: 2}
         confidence: M
         rationale: Pricing not public; quote-based enterprise subscriptions by supplier count and modules.
       oss:
-        value: 5
-        confidence: H
-        rationale: Free (licence restrictions are rated under customisability).
+        value: 4
+        confidence: M
+        rationale: >-
+          Free licence (restrictions rated under customisability), but demo-grade: turning them into a usable
+          scoring system needs substantial development.
       lean:
         value: 4
         confidence: M
-        rationale: MIT licence, runs locally; implementation and data integration still need internal effort.
+        rationale: >-
+          MIT licence, runs locally; scoring, actions and reports are automated once data is mapped. Not 5:
+          ownership, data integration and maintenance still need internal effort.
 
   - id: 11
     key: time_to_value
@@ -335,9 +348,11 @@ factors:
     v01: [14]
     ratings:
       xls:
-        value: 4
+        value: 3
         confidence: M
-        rationale: Immediate start.
+        rationale: >-
+          A simple sheet starts immediately; a governed scorecard with definitions, weights and consolidation
+          across categories takes weeks to build by hand.
       saas:
         value: 3
         by_example: {Prewave: 3, Sphera: 3}
@@ -350,9 +365,11 @@ factors:
         confidence: H
         rationale: Demo-grade; one repo does not run as committed.
       lean:
-        value: 3
+        value: 4
         confidence: M
-        rationale: First results in minutes on sample data; mapping real data takes effort.
+        rationale: >-
+          Ready template, sample data, empty CSV template and spreadsheet UI: a first portfolio assessment in
+          hours. Not 5: Python installation and mapping real data take effort.
 
   - id: 12
     key: customisability
@@ -404,8 +421,8 @@ factors:
 
   - id: 14
     key: extensibility
-    label: Extensibility & automation potential
-    short_label: Extensibility
+    label: Agentic orchestration & extensibility
+    short_label: Agentic orchestration & extensibility
     v01: [15]
     ratings:
       xls:
@@ -417,18 +434,23 @@ factors:
         by_example: {Prewave: 3, Sphera: 2}
         confidence: M
         rationale: >-
-          Prewave: REST APIs, ERP write-back and connectors for AI agents; Sphera: workflow embedding stated,
-          public API documentation not found. Both closed.
+          Prewave: REST APIs, ERP write-back and connectors for external AI agents; Sphera: "agentic AI"
+          capabilities marketed, workflow embedding stated, public API documentation not found. Neither documents
+          a customer-inspectable multi-agent workflow (specialised agents over a shared state, calibration agent,
+          graph-based review pause). Both closed.
       oss:
         value: 4
         confidence: H
-        rationale: Agent architectures are their main asset.
+        rationale: >-
+          Agent architectures are their main asset: specialised agents over a typed shared state, graph or
+          supervisor orchestration; review pauses rare, no calibration agent.
       lean:
         value: 4
         confidence: H
         rationale: >-
-          Supervisor graph with documented extension points (data sources, data providers, rating sources, views,
-          agents); few agents yet.
+          LangGraph supervisor over a typed shared state with specialised agents (data collection, scoring,
+          calibration, recommendation, human review as graph interrupt); documented extension points (data
+          sources, data providers, rating sources, views, agents). Not 5: rule-based supervisor, no LLM agents yet.
 
   - id: 15
     key: operations
@@ -454,22 +476,57 @@ factors:
         confidence: H
         rationale: Tests and CI exist, but no production deployment, security hardening or support organisation.
 
+  - id: 16
+    key: dual_view
+    label: Integration of risk management and performance evaluation
+    short_label: Risk & performance integration
+    v01: []
+    ratings:
+      xls:
+        value: 2
+        confidence: M
+        rationale: >-
+          Both are often kept in spreadsheets, but as separate files with their own criteria, scales and update
+          cycles; no shared criteria or data base. Common practice: risk on a platform, evaluation in Excel.
+      saas:
+        value: 2
+        by_example: {Prewave: 2, Sphera: 2}
+        confidence: L
+        rationale: >-
+          Risk platforms; supplier performance evaluation (delivery, quality, price, responsiveness with its own
+          grades) is not documented as part of the platform in public sources. Performance data can enter as input.
+      oss:
+        value: 2
+        confidence: H
+        rationale: Single repos cover either risk assessment or vendor / bid evaluation; none combines both.
+      lean:
+        value: 4
+        confidence: H
+        rationale: >-
+          Two views on one shared criteria catalogue and one data sheet: performance (A/B/C) and risk
+          (low-critical), each with its own weights, classes, actions, labels and review. Not 5: no joint
+          portfolio reading (performance x risk) yet; performance view not calibrated in the template.
+
 narrative:
   reading_profiles:
     - >-
-      **Excel:** cheap, transparent and quick to start; weak audit trail, no learning, no external signals,
-      no extensibility.
+      **Excel:** no licence, transparent and quick to start for a simple sheet; recurring manual effort, weak
+      audit trail, no learning, no external signals, no extensibility. Risk and performance usually live in
+      separate files.
     - >-
       **Proprietary SaaS:** strongest on data coverage, scale, workflows, regulatory evidence and operational
       maturity; weaker on cost, self-determined customisation, recomputability by the user and, depending on the
-      vendor, methodological transparency (Prewave publishes its score composition, Sphera does not).
+      vendor, methodological transparency (Prewave publishes its score composition, Sphera does not). Both are
+      risk platforms: supplier performance evaluation typically stays outside, often in Excel.
     - >-
       **Open repos:** strong architecture ideas and free, but demonstrators: scoring often absent, hard-coded or
       LLM-judged; unclear or copyleft licences; no tests.
     - >-
       **Lean Agentic:** strongest where the method itself matters (transparency, reproducibility, calibration,
-      material-group weights, customisability); deliberately weak today on external signals, regulatory evidence
-      and operational maturity.
+      material-group weights, customisability), on agentic orchestration and on integrating risk management with
+      performance evaluation; close to the platforms on actions and human review; partial on external signals
+      (provider interface for open data and exports, live APIs still placeholders); weak today on regulatory
+      evidence and operational maturity.
     - >-
       The profiles are **complementary rather than ranked**. A realistic target architecture combines them:
       a SaaS subscription or open data as signal source feeding a transparent, calibrated in-house model.
@@ -477,7 +534,8 @@ narrative:
     - >-
       **Author bias.** Factors and ratings come from the authors of the Lean Agentic approach. Mitigations:
       factors where SaaS is stronger are included (v0.2), Lean Agentic is rated as implemented, every rating
-      carries rationale and confidence. Recommended: independent re-rating by 3-5 practitioners, reporting the spread.
+      carries rationale and confidence. v0.3 adds a factor (risk and performance integration) on which the
+      proposed approach is strong, and re-rates five factors after practitioner feedback; both are disclosed. Recommended: independent re-rating by 3-5 practitioners, reporting the spread.
     - "**The Excel profile is a stereotype.** Real spreadsheet practices vary widely."
     - >-
       **SaaS rated on public information only.** Hands-on evaluation could move several ratings, especially

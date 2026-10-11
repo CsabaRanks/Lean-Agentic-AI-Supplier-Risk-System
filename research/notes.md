@@ -2,6 +2,34 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Factor model v0.3 after practitioner feedback
+
+**D31: Factor model v0.3: risk & performance integration added, factor 14 sharpened, five
+re-ratings.**
+- **Positioning.** The combination of supplier risk management and performance evaluation is the
+  main difference from pure risk platforms. Practice example: risk on a platform, evaluation in
+  spreadsheets.
+- **Factors.**
+  - New factor 16: integration of risk management and performance evaluation.
+  - Factor 14 renamed "agentic orchestration & extensibility". It is kept as an outcome, not a
+    separate "multi-agent" factor, so the v0.2 correction (no means as ends) is only partly reversed.
+  - Factor 10 is now "cost / TCO".
+- **Agentic claim, checked.** Sphera markets "agentic AI" capabilities and Prewave offers
+  connectors for external AI agents. The paper therefore claims only what public sources support:
+  no publicly documented, customer-inspectable multi-agent workflow (calibration agent, graph-based
+  review pause, shared state).
+- **Re-ratings (Lean Agentic unless noted).**
+  - Action framework 3 → 3.5; human-in-the-loop 3 → 3.5. Half points mark "between levels".
+  - Time-to-value 3 → 4; Excel 4 → 3.
+  - Cost / TCO: Excel 5 → 3, and for consistency open repos 5 → 4.
+  - External signals 1 → 2.5 (about half of the strongest platform, 5). The provider interface
+    for open data and system exports exists; live APIs are placeholders and there is no
+    monitoring. 3 ("adequate") was considered and not used, since the scale reserves it for
+    adequate coverage. The upside from the agentic architecture is named in the rationale but not
+    rated, in line with rating the implementation rather than the roadmap.
+- **Disclosed bias.** Factor 16 favours the proposed approach. This is stated in
+  `success-factors.md`, in the matrix's known weaknesses and in the paper (Sections 3.1 and 4.4).
+
 ## 2026-10 — Supply chain risk, change complexity, actions, providers, history
 
 **D30: Practice features on top of the method, all generic and configurable.**

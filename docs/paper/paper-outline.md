@@ -11,9 +11,9 @@ series), whose formal conventions are reused:
 - **Section order.** Limitations, then Future work, then Conclusion.
 
 Status: outline with bullet points. Sources: `research/` files, linked per section.
-**Draft text:** all sections 1–12 are drafted in [paper.md](paper.md) (working draft v0.4).
+**Draft text:** all sections 1–12 are drafted in [paper.md](paper.md) (working draft v0.5).
 
-### Remaining gaps (draft v0.4)
+### Remaining gaps (draft v0.5)
 
 - **[TBD-RESULT] Section 7:**
   - optional label-vs-score scatter
@@ -21,14 +21,14 @@ Status: outline with bullet points. Sources: `research/` files, linked per secti
   - E4 (misspecification, noise) is done: Section 7.7, Table 6, Figure 7
 - Section 7.7: the level-offset diagnostic is implemented and evaluated on E4. Residual and
   knock-out diagnostics remain future work.
-- **[TBD-LIT] Section 7.8:** a reference on the variance of k-fold cross-validation estimates
-  (dependence between folds).
-- **[TBD-INPUT] Figure 3:** static rendering for the typeset version (currently Mermaid).
+- **Figure 3 (workflow):** rendered as a static TikZ figure in the typeset version (`paper.tex`,
+  Figure 2 there); `paper.md` keeps the Mermaid version.
 - **Section 9, Table 9:** provider and data vintage are recorded per indicator; the source data
   itself is not versioned.
 - **References:** verify wording against full texts (read at abstract level).
-- **Typesetting:** convert to LaTeX in the companion paper's template; insert the generated Table 2
-  in Appendix A.
+- **Typesetting:** done. `paper.tex` is a condensed version of `paper.md` in the two-column
+  template of the companion paper, built to `paper.pdf` (18 pages). The appendix table is generated
+  by `scripts/generate_spider.py`. Keep both files in step when the content changes.
 
 ---
 

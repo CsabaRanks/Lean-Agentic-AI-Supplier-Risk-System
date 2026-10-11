@@ -3,7 +3,7 @@
 
 # Comparison matrix: four approaches × success factors
 
-Rates four approaches to supplier risk evaluation against the **15 success factors of model v0.2** (see [success-factors.md](success-factors.md)). Evidence as of 2026-10.
+Rates four approaches to supplier risk evaluation against the **16 success factors of model v0.3** (see [success-factors.md](success-factors.md)). Evidence as of 2026-10.
 
 > **Read this as a reasoned, illustrative assessment, not a measurement.** Every rating has a
 > rationale and a confidence mark. No weights are applied, no total is formed and no ranking is
@@ -25,30 +25,31 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 
 ## Matrix
 
-| # | Success factor (v0.2) | Excel | SaaS | Open repos | Lean Agentic | from v0.1 |
+| # | Success factor (v0.3) | Excel | SaaS | Open repos | Lean Agentic | from v0.1 |
 |---|---|:-:|:-:|:-:|:-:|:-:|
 | 1 | Structured criteria & weights (objective + subjective) | 3 | 4 | 2 | 4 | 1, 5 |
 | 2 | Traceability & reproducibility | 2 | 2.5 (P 3 · S 2) | 2 | 4 | 2, 8 |
 | 3 | Methodological transparency | 4 | 2.5 (P 3 · S 2) | 3 | 5 | 13 |
 | 4 | Expert calibration / ability to learn | 1 | 2 | 1 | 4 | 3 |
 | 5 | Material-group-specific adaptation | 3 | 3 | 1 | 4 | 4 |
-| 6 | Action framework | 2 | 4 | 2 | 3 | 6 |
-| 7 | Human-in-the-loop & governance | 2 | 4 | 2 | 3 | 7 |
-| 8 | External signals & data coverage | 1 | 5 | 2 | 1 | 11 |
+| 6 | Action framework | 2 | 4 | 2 | 3.5 | 6 |
+| 7 | Human-in-the-loop & governance | 2 | 4 | 2 | 3.5 | 7 |
+| 8 | External signals & data coverage | 1 | 5 | 2 | 2.5 | 11 |
 | 9 | Regulatory evidence (due-diligence documentation) | 2 | 4.5 (P 5 · S 4) | 1 | 2 | new |
-| 10 | Cost / accessibility | 5 | 2 | 5 | 4 | 9 |
-| 11 | Time-to-value / ease of adoption | 4 | 3 | 2 | 3 | 14 |
+| 10 | Cost / total cost of ownership | 3 | 2 | 4 | 4 | 9 |
+| 11 | Time-to-value / ease of adoption | 3 | 3 | 2 | 4 | 14 |
 | 12 | Customisability & data sovereignty | 4 | 2 | 3 | 5 | 10 |
 | 13 | Scalability | 2 | 5 | 2 | 3 | 12 |
-| 14 | Extensibility & automation potential | 1 | 2.5 (P 3 · S 2) | 4 | 4 | 15 |
+| 14 | Agentic orchestration & extensibility | 1 | 2.5 (P 3 · S 2) | 4 | 4 | 15 |
 | 15 | Operational maturity & support | 3 | 5 | 1 | 2 | new |
+| 16 | Integration of risk management and performance evaluation | 2 | 2 | 2 | 4 | new |
 
 ## Reading the profiles (without aggregation)
 
-- **Excel:** cheap, transparent and quick to start; weak audit trail, no learning, no external signals, no extensibility.
-- **Proprietary SaaS:** strongest on data coverage, scale, workflows, regulatory evidence and operational maturity; weaker on cost, self-determined customisation, recomputability by the user and, depending on the vendor, methodological transparency (Prewave publishes its score composition, Sphera does not).
+- **Excel:** no licence, transparent and quick to start for a simple sheet; recurring manual effort, weak audit trail, no learning, no external signals, no extensibility. Risk and performance usually live in separate files.
+- **Proprietary SaaS:** strongest on data coverage, scale, workflows, regulatory evidence and operational maturity; weaker on cost, self-determined customisation, recomputability by the user and, depending on the vendor, methodological transparency (Prewave publishes its score composition, Sphera does not). Both are risk platforms: supplier performance evaluation typically stays outside, often in Excel.
 - **Open repos:** strong architecture ideas and free, but demonstrators: scoring often absent, hard-coded or LLM-judged; unclear or copyleft licences; no tests.
-- **Lean Agentic:** strongest where the method itself matters (transparency, reproducibility, calibration, material-group weights, customisability); deliberately weak today on external signals, regulatory evidence and operational maturity.
+- **Lean Agentic:** strongest where the method itself matters (transparency, reproducibility, calibration, material-group weights, customisability), on agentic orchestration and on integrating risk management with performance evaluation; close to the platforms on actions and human review; partial on external signals (provider interface for open data and exports, live APIs still placeholders); weak today on regulatory evidence and operational maturity.
 - The profiles are **complementary rather than ranked**. A realistic target architecture combines them: a SaaS subscription or open data as signal source feeding a transparent, calibrated in-house model.
 
 ## Rationale per factor
@@ -88,26 +89,26 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 - **Open repos** *(H)*: None.
 - **Lean Agentic** *(H)*: Material-group weights in the config, per-group calibration, most-specific weight resolution.
 
-### 6. Action framework: Excel 2 · SaaS 4 · Open repos 2 · Lean Agentic 3
+### 6. Action framework: Excel 2 · SaaS 4 · Open repos 2 · Lean Agentic 3.5
 
 - **Excel** *(M)*: Actions are usually free text.
 - **SaaS** *(M)*: Response playbooks, action planners and tracked closure are described on product pages.
 - **Open repos** *(H)*: Narrative recommendations.
-- **Lean Agentic** *(H)*: Configurable actions per class, per elevated dimension and per factor level, with review cycles and owners; exportable action plan. Not 4: no action tracking / closure.
+- **Lean Agentic** *(H)*: Configurable action framework on three levels (risk class, elevated dimension, factor level), each action with owner and review cycle; filterable, exportable action plan per material group. Below the platforms: no tracking of actions to closure, no supplier collaboration.
 
-### 7. Human-in-the-loop & governance: Excel 2 · SaaS 4 · Open repos 2 · Lean Agentic 3
+### 7. Human-in-the-loop & governance: Excel 2 · SaaS 4 · Open repos 2 · Lean Agentic 3.5
 
 - **Excel** *(M)*: Fully manual, but without structured review or approval points.
 - **SaaS** *(M)*: Incident management, ownership and approval workflows are described.
 - **Open repos** *(H)*: One repo has a human-review exit.
-- **Lean Agentic** *(H)*: Graph interrupt with weight approval and class overrides, recorded and surviving re-scoring; no roles / permissions, in-memory pauses only.
+- **Lean Agentic** *(H)*: Graph-based review pause (interrupt / resume) for weight approval and class overrides with comment, recorded with the reviewer, surviving re-scoring and snapshotted to the history; review also in the UI. Below the platforms: no roles / permissions, in-memory pauses only.
 
-### 8. External signals & data coverage: Excel 1 · SaaS 5 · Open repos 2 · Lean Agentic 1
+### 8. External signals & data coverage: Excel 1 · SaaS 5 · Open repos 2 · Lean Agentic 2.5
 
 - **Excel** *(H)*: Manual research only.
 - **SaaS** *(M)*: Core strength: continuous multi-source monitoring, many languages, Tier-N mapping (feature verified; volumes are vendor claims).
 - **Open repos** *(H)*: Internal databases, retrieval, mocks.
-- **Lean Agentic** *(H)*: No signal monitoring. A provider interface fills indicators from files (e.g. a downloaded governance indicator table, system exports); API feeds are placeholders.
+- **Lean Agentic** *(M)*: A provider interface is in place and reads open data and system exports (e.g. a downloaded governance indicator table, ERP or ESG exports), filling indicators with recorded origin and vintage. Live APIs are still placeholders and there is no continuous monitoring, so coverage is about half of a monitoring platform. The architecture allows further providers, and the agentic design leaves long-term upside in signal processing (e.g. an external-signal agent); that potential is not rated.
 
 ### 9. Regulatory evidence (due-diligence documentation): Excel 2 · SaaS 4.5 · Open repos 1 · Lean Agentic 2
 
@@ -116,19 +117,19 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 - **Open repos** *(H)*: Not addressed.
 - **Lean Agentic** *(H)*: Audit trail and an ESG / compliance factor help, but no regulation-specific workflows or reports.
 
-### 10. Cost / accessibility: Excel 5 · SaaS 2 · Open repos 5 · Lean Agentic 4
+### 10. Cost / total cost of ownership: Excel 3 · SaaS 2 · Open repos 4 · Lean Agentic 4
 
-- **Excel** *(M)*: No additional licence; hidden labour cost.
+- **Excel** *(M)*: No additional licence, but high recurring manual effort: collecting data, consolidating sheets per category, keeping versions and weights consistent, rebuilding reports each cycle.
 - **SaaS** *(M)*: Pricing not public; quote-based enterprise subscriptions by supplier count and modules.
-- **Open repos** *(H)*: Free (licence restrictions are rated under customisability).
-- **Lean Agentic** *(M)*: MIT licence, runs locally; implementation and data integration still need internal effort.
+- **Open repos** *(M)*: Free licence (restrictions rated under customisability), but demo-grade: turning them into a usable scoring system needs substantial development.
+- **Lean Agentic** *(M)*: MIT licence, runs locally; scoring, actions and reports are automated once data is mapped. Not 5: ownership, data integration and maintenance still need internal effort.
 
-### 11. Time-to-value / ease of adoption: Excel 4 · SaaS 3 · Open repos 2 · Lean Agentic 3
+### 11. Time-to-value / ease of adoption: Excel 3 · SaaS 3 · Open repos 2 · Lean Agentic 4
 
-- **Excel** *(M)*: Immediate start.
+- **Excel** *(M)*: A simple sheet starts immediately; a governed scorecard with definitions, weights and consolidation across categories takes weeks to build by hand.
 - **SaaS** *(L)*: Fast onboarding is claimed by vendors, but enterprise procurement and integration cycles apply; no public implementation timelines.
 - **Open repos** *(H)*: Demo-grade; one repo does not run as committed.
-- **Lean Agentic** *(M)*: First results in minutes on sample data; mapping real data takes effort.
+- **Lean Agentic** *(M)*: Ready template, sample data, empty CSV template and spreadsheet UI: a first portfolio assessment in hours. Not 5: Python installation and mapping real data take effort.
 
 ### 12. Customisability & data sovereignty: Excel 4 · SaaS 2 · Open repos 3 · Lean Agentic 5
 
@@ -144,12 +145,12 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 - **Open repos** *(H)*: Demonstrators.
 - **Lean Agentic** *(L)*: Deterministic batch scoring is cheap, but untested at scale; in-memory checkpoints; no automated feeds.
 
-### 14. Extensibility & automation potential: Excel 1 · SaaS 2.5 · Open repos 4 · Lean Agentic 4
+### 14. Agentic orchestration & extensibility: Excel 1 · SaaS 2.5 · Open repos 4 · Lean Agentic 4
 
 - **Excel** *(H)*: None beyond macros.
-- **SaaS** *(M)*: Prewave: REST APIs, ERP write-back and connectors for AI agents; Sphera: workflow embedding stated, public API documentation not found. Both closed.
-- **Open repos** *(H)*: Agent architectures are their main asset.
-- **Lean Agentic** *(H)*: Supervisor graph with documented extension points (data sources, data providers, rating sources, views, agents); few agents yet.
+- **SaaS** *(M)*: Prewave: REST APIs, ERP write-back and connectors for external AI agents; Sphera: "agentic AI" capabilities marketed, workflow embedding stated, public API documentation not found. Neither documents a customer-inspectable multi-agent workflow (specialised agents over a shared state, calibration agent, graph-based review pause). Both closed.
+- **Open repos** *(H)*: Agent architectures are their main asset: specialised agents over a typed shared state, graph or supervisor orchestration; review pauses rare, no calibration agent.
+- **Lean Agentic** *(H)*: LangGraph supervisor over a typed shared state with specialised agents (data collection, scoring, calibration, recommendation, human review as graph interrupt); documented extension points (data sources, data providers, rating sources, views, agents). Not 5: rule-based supervisor, no LLM agents yet.
 
 ### 15. Operational maturity & support: Excel 3 · SaaS 5 · Open repos 1 · Lean Agentic 2
 
@@ -158,9 +159,16 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 - **Open repos** *(H)*: No maintenance commitment.
 - **Lean Agentic** *(H)*: Tests and CI exist, but no production deployment, security hardening or support organisation.
 
+### 16. Integration of risk management and performance evaluation: Excel 2 · SaaS 2 · Open repos 2 · Lean Agentic 4
+
+- **Excel** *(M)*: Both are often kept in spreadsheets, but as separate files with their own criteria, scales and update cycles; no shared criteria or data base. Common practice: risk on a platform, evaluation in Excel.
+- **SaaS** *(L)*: Risk platforms; supplier performance evaluation (delivery, quality, price, responsiveness with its own grades) is not documented as part of the platform in public sources. Performance data can enter as input.
+- **Open repos** *(H)*: Single repos cover either risk assessment or vendor / bid evaluation; none combines both.
+- **Lean Agentic** *(H)*: Two views on one shared criteria catalogue and one data sheet: performance (A/B/C) and risk (low-critical), each with its own weights, classes, actions, labels and review. Not 5: no joint portfolio reading (performance x risk) yet; performance view not calibrated in the template.
+
 ## Known weaknesses of this comparison
 
-- **Author bias.** Factors and ratings come from the authors of the Lean Agentic approach. Mitigations: factors where SaaS is stronger are included (v0.2), Lean Agentic is rated as implemented, every rating carries rationale and confidence. Recommended: independent re-rating by 3-5 practitioners, reporting the spread.
+- **Author bias.** Factors and ratings come from the authors of the Lean Agentic approach. Mitigations: factors where SaaS is stronger are included (v0.2), Lean Agentic is rated as implemented, every rating carries rationale and confidence. v0.3 adds a factor (risk and performance integration) on which the proposed approach is strong, and re-rates five factors after practitioner feedback; both are disclosed. Recommended: independent re-rating by 3-5 practitioners, reporting the spread.
 - **The Excel profile is a stereotype.** Real spreadsheet practices vary widely.
 - **SaaS rated on public information only.** Hands-on evaluation could move several ratings, especially traceability, material-group fit, action framework, human-in-the-loop and time-to-value.
 - **No factor measures predictive validity**, i.e. whether a score anticipates real disruptions (see research/success-factors.md).

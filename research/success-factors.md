@@ -1,9 +1,10 @@
-# Success factors for supplier risk evaluation
+# Success factors for supplier risk management and performance evaluation
 
-**Status: model v0.2 adopted (October 2026).** The factors remain a working model, a reasoned
+**Status: model v0.3 adopted (October 2026).** The factors remain a working model, a reasoned
 hypothesis for comparing approaches, not a validated or final framework. v0.2 came out of a critical
-review of the initial working model v0.1, which is kept further down for traceability.
-Ratings against v0.2 live in [comparison-matrix.yaml](comparison-matrix.yaml), the single source of
+review of the initial working model v0.1, which is kept further down for traceability. v0.3 adds one
+factor and sharpens another after practitioner feedback (see "Changes from v0.2 to v0.3").
+Ratings against v0.3 live in [comparison-matrix.yaml](comparison-matrix.yaml), the single source of
 truth. The generated [comparison-matrix.md](comparison-matrix.md) and the radar chart are built from it.
 
 **Conventions**
@@ -19,7 +20,7 @@ truth. The generated [comparison-matrix.md](comparison-matrix.md) and the radar 
 
 ---
 
-## Current model v0.2: 15 factors
+## Current model v0.3: 16 factors
 
 | # | Factor | Definition (short) | Assessable by | v0.1 |
 |---|---|---|---|---|
@@ -32,12 +33,13 @@ truth. The generated [comparison-matrix.md](comparison-matrix.md) and the radar 
 | 7 | Human-in-the-loop & governance | Defined review and approval points; decisions recorded; roles | Review/approval steps; recorded overrides; approval of model changes; roles and permissions | 7 |
 | 8 | External signals & data coverage | Use of current external data and breadth of supplier coverage | Sources and update frequency; languages and regions; Tier-N visibility | 11 |
 | 9 | Regulatory evidence | Support for due-diligence documentation duties | Regulation-specific workflows and reports; evidence export | new |
-| 10 | Cost / accessibility | Total cost of use and access barriers | Licence model and prices; implementation effort; minimum contract size | 9 |
+| 10 | Cost / total cost of ownership | Total cost of use, including recurring internal effort, and access barriers | Licence model and prices; implementation effort; recurring manual effort per cycle; minimum contract size | 9 |
 | 11 | Time-to-value / ease of adoption | Time and effort until the first usable result | Time to first portfolio assessment; integrations and training needed | 14 |
 | 12 | Customisability & data sovereignty | The organisation can change method and implementation itself and keeps control of data and model | Configurable without the vendor; code and licence; data location | 10 |
 | 13 | Scalability | Works at acceptable effort as suppliers, users, groups or update frequency grow | Suppliers handled in practice; marginal effort; automated updates | 12 |
-| 14 | Extensibility & automation potential | New capabilities can be added without rebuilding the core | Extension points; effort to add a source or agent; APIs | 15 |
+| 14 | Agentic orchestration & extensibility | Work is orchestrated as an explicit workflow of specialised agents, and new capabilities can be added without rebuilding the core | Specialised agents over a shared, inspectable state; bounded loops; review pauses in the workflow; extension points; APIs | 15 |
 | 15 | Operational maturity & support | Production readiness: support, hosting, security, service levels | Support organisation; SLAs; security and permission model; release process | new |
+| 16 | Integration of risk management and performance evaluation | Supplier risk (forward-looking exposure) and supplier performance (delivery, quality, price, responsiveness) are evaluated on one consistent basis, each with its own logic | Shared criteria and data; separate weights, classes and actions per view; both results side by side per supplier | new (v0.3) |
 
 ## Changes from v0.1 to v0.2, and why
 
@@ -55,6 +57,19 @@ truth. The generated [comparison-matrix.md](comparison-matrix.md) and the radar 
 
 Net effect: still 15 axes. The model is more balanced, and the radar now shows where platforms are
 genuinely stronger (factors 8, 9, 13, 15). That makes the comparison more credible.
+
+## Changes from v0.2 to v0.3, and why
+
+| Change | v0.2 → v0.3 | Rationale |
+|---|---|---|
+| **Added** | **16 integration of risk management and performance evaluation** | Practitioner feedback: organisations often license a risk platform but keep supplier performance evaluation in spreadsheets. Two inconsistent pictures of the same supplier are a real problem, and none of the earlier factors captured it. |
+| **Sharpened** | 14 *extensibility & automation potential* → **14 agentic orchestration & extensibility** | Practitioner feedback: "uses AI" and "is an agentic workflow" were not distinguishable. The factor stays an outcome (explicit, inspectable and extensible orchestration), but its evidence now names agent workflows with shared state and review pauses. |
+| **Sharpened** | 10 *cost / accessibility* → **10 cost / total cost of ownership** | Recurring internal effort is part of the cost of use. Spreadsheets have no licence cost but high manual effort per cycle. |
+
+**Disclosed bias.** Factor 16 is one on which the proposed approach is strong, and the sharpened
+factor 14 moves back towards an architecture property that v0.2 had deliberately reframed (see the
+v0.1 → v0.2 table). Both changes were made on practitioner feedback and are disclosed here and in
+the paper. Factors on which platforms are stronger (8, 9, 13, 15) are unchanged.
 
 ---
 

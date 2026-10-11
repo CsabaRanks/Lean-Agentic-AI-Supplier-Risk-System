@@ -3,7 +3,9 @@
 The YAML file is the single source of truth. This script renders:
 
 * research/comparison-matrix.md   tables and rationale (generated, do not edit by hand)
-* docs/images/spider-diagram.png  radar chart for README and paper (plus .svg)
+* docs/images/spider-diagram.png  radar chart for README (plus .svg)
+* docs/paper/figures/fig01_benchmark_profile.png  print variant for the typeset paper: circular web,
+  thin lines, legend only; the disclaimer belongs in the caption
 
 Usage:
     python scripts/generate_spider.py            # validate, write Markdown and chart
@@ -28,6 +30,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "research" / "comparison-matrix.yaml"
 MARKDOWN = ROOT / "research" / "comparison-matrix.md"
 IMAGE = ROOT / "docs" / "images" / "spider-diagram.png"
+PAPER_IMAGE = ROOT / "docs" / "paper" / "figures" / "fig01_benchmark_profile.png"
+PAPER_TABLE = ROOT / "docs" / "paper" / "generated" / "comparison_matrix.tex"
 
 CONFIDENCE = {"H": "verified from code / primary documentation",
               "M": "plausible, partly documented",
@@ -39,6 +43,15 @@ STYLE = {
     "oss": {"color": "#3b6ea8", "ls": (0, (1.2, 2.2)), "marker": "D", "lw": 2.0, "z": 4},
     "saas": {"color": "#b03a2e", "ls": "-", "marker": "s", "lw": 2.0, "z": 5},
     "lean": {"color": "#1f7a5a", "ls": "-", "marker": "o", "lw": 2.8, "z": 6},
+}
+
+# Print variant (typeset paper): the visual language of the companion paper's benchmark profile.
+PAPER_INK, PAPER_INK3, PAPER_RULE = "#14181B", "#6E7B82", "#C9D1D5"
+PAPER_STYLE = {
+    "xls": {"color": "#14181B", "ls": (0, (4, 2.2)), "marker": "^", "z": 3},
+    "oss": {"color": "#2E5A87", "ls": (0, (1, 1.8)), "marker": "D", "z": 4},
+    "saas": {"color": "#B3372C", "ls": "-", "marker": "s", "z": 5},
+    "lean": {"color": "#3E8F63", "ls": "-", "marker": "o", "z": 6},
 }
 
 
@@ -247,6 +260,103 @@ def render_chart(data: dict, out: Path = IMAGE) -> list[Path]:
     return [out, svg]
 
 
+def render_paper_chart(data: dict, out: Path = PAPER_IMAGE) -> list[Path]:
+    """Circular engineering radar for print: thin unfilled profiles, labels outside the web."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.lines import Line2D
+
+    plt.rcParams["font.family"] = _font_family()
+    factors = data["factors"]
+    lo, hi = data["meta"]["scale"]["min"], data["meta"]["scale"]["max"]
+    n = len(factors)
+    angles = [2 * math.pi * i / n for i in range(n)]
+
+    fig = plt.figure(figsize=(8.8, 7.9), dpi=300)
+    ax = fig.add_axes([0.16, 0.15, 0.68, 0.68], polar=True)
+    ax.set_theta_direction(-1)
+    ax.set_theta_zero_location("N")
+    ax.set_ylim(0, hi + 0.35)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.spines["polar"].set_visible(False)
+    ax.grid(False)
+
+    fine = [2 * math.pi * k / 360 for k in range(361)]
+    for level in range(lo, hi + 1):
+        ax.plot(fine, [level] * len(fine), color=PAPER_RULE if level < hi else PAPER_INK3,
+                lw=0.7 if level < hi else 1.0, zorder=1)
+        ax.text(math.pi / n, level, str(level), fontsize=7.2, color=PAPER_INK3, ha="center", va="center",
+                zorder=2, bbox={"boxstyle": "square,pad=0.14", "fc": "white", "ec": "none"})
+    for a in angles:
+        ax.plot([a, a], [0, hi], color=PAPER_RULE, lw=0.7, zorder=1)
+
+    for f, a in zip(factors, angles):
+        deg = math.degrees(a) % 360
+        ha = "left" if 10 < deg < 170 else "right" if 190 < deg < 350 else "center"
+        ax.text(a, hi + 0.62, "\n".join(textwrap.wrap(f["short_label"], 18)), fontsize=8.6,
+                color=PAPER_INK, ha=ha, va="center", linespacing=1.22, clip_on=False)
+
+    full = angles + angles[:1]
+    for ap in sorted(data["approaches"], key=lambda ap: PAPER_STYLE[ap["key"]]["z"]):
+        st = PAPER_STYLE[ap["key"]]
+        values = [f["ratings"][ap["key"]]["value"] for f in factors]
+        ax.plot(full, values + values[:1], color=st["color"], ls=st["ls"], lw=1.4, zorder=st["z"])
+        ax.plot(angles, values, ls="none", marker=st["marker"], ms=4.2, mfc="white", mec=st["color"],
+                mew=1.3, zorder=st["z"])
+        for f, a in zip(factors, angles):
+            examples = f["ratings"][ap["key"]].get("by_example") or {}
+            if len(set(examples.values())) > 1:
+                ax.plot([a, a], [min(examples.values()), max(examples.values())], color=st["color"],
+                        lw=4, alpha=0.25, solid_capstyle="round", zorder=st["z"] - 0.5)
+
+    labels = {a["key"]: a["label"] for a in data["approaches"]}
+    handles = [Line2D([], [], color=PAPER_STYLE[k]["color"], ls=PAPER_STYLE[k]["ls"], lw=1.4,
+                      marker=PAPER_STYLE[k]["marker"], ms=4.2, mfc="white", mec=PAPER_STYLE[k]["color"],
+                      mew=1.3, label=labels[k]) for k in ("lean", "saas", "oss", "xls")]
+    fig.legend(handles=handles, loc="lower center", ncol=2, frameon=False, fontsize=8.6,
+               bbox_to_anchor=(0.5, 0.035), handlelength=2.8, columnspacing=2.2)
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out, dpi=300, metadata={"Software": None}, bbox_inches="tight", pad_inches=0.12,
+                facecolor="white")
+    plt.close(fig)
+    return [out]
+
+
+def render_latex_table(data: dict, out: Path = PAPER_TABLE) -> list[Path]:
+    """Values and confidence per factor and approach, for the paper's appendix (rationales: Markdown)."""
+    order = ["xls", "saas", "oss", "lean"]
+    head = {"xls": "Excel", "saas": "SaaS", "oss": "OSS", "lean": "Lean"}
+
+    def cell(r: dict) -> str:
+        examples = r.get("by_example") or {}
+        spread = f" ({'/'.join(str(v) for v in examples.values())})" if len(set(examples.values())) > 1 else ""
+        value = f"{r['value']:g}"
+        return f"{value}{spread}\\,\\textsuperscript{{{r['confidence']}}}"
+
+    def tex(text: str) -> str:
+        return text.replace("&", "\\&")
+
+    rows = [f"{f['id']} & {tex(f['label'])} & " + " & ".join(cell(f["ratings"][k]) for k in order) + " \\\\"
+            for f in data["factors"]]
+    lines = [
+        "% generated by scripts/generate_spider.py from research/comparison-matrix.yaml -- do not edit",
+        "\\begin{tabular}{@{}r>{\\raggedright\\arraybackslash}p{0.36\\columnwidth}cccc@{}}",
+        "\\toprule",
+        "\\# & Success factor & " + " & ".join(head[k] for k in order) + " \\\\",
+        "\\midrule",
+        *rows,
+        "\\bottomrule",
+        "\\end{tabular}",
+    ]
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return [out]
+
+
 # --- CLI ---------------------------------------------------------------------------
 
 
@@ -268,7 +378,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     MARKDOWN.write_text(markdown, encoding="utf-8")
-    written = render_chart(data)
+    written = render_chart(data) + render_paper_chart(data) + render_latex_table(data)
     for path in [MARKDOWN, *written]:
         print(f"wrote {path.relative_to(ROOT)}")
     return 0

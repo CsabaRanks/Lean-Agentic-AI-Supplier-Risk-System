@@ -26,9 +26,9 @@ runs locally.
 
 ## Where this approach sits
 
-![Radar chart profiling Excel, proprietary SaaS, open-source repos and this Lean Agentic approach on 15 success factors](docs/images/spider-diagram.png)
+![Radar chart profiling Excel, proprietary SaaS, open-source repos and this Lean Agentic approach on 16 success factors](docs/images/spider-diagram.png)
 
-The chart compares four approaches to supplier risk evaluation:
+The chart compares four approaches to supplier risk management and performance evaluation:
 
 - spreadsheet practice
 - proprietary SCRM platforms (Prewave and Sphera as examples)
@@ -40,14 +40,19 @@ It shows each approach's **relative position**, factor by factor:
 - **Platforms** lead on external signals, data coverage, scale, regulatory evidence and
   operational maturity.
 - **This project** leads where the *method* matters:
+  - **integration of risk management and performance evaluation** on one criteria catalogue
   - **expert calibration**
   - **configurable, material-group-specific weights**
-  - reproducibility
-  - methodological transparency
+  - **agentic orchestration**: specialised agents over a shared state, including a calibration
+    agent and a review pause in the graph
+  - reproducibility and methodological transparency
 
-  Calibration and configurable weights are deliberate differentiators, described below.
-- **External signals** are deliberately not covered (yet). This project is designed to
-  *complement* a signal source, not to replace one.
+  Calibration, the two views and configurable weights are deliberate differentiators, described below.
+  In practice, organisations often license a risk platform but keep supplier performance evaluation
+  in spreadsheets; this project evaluates both on one basis.
+- **External signals** are covered in part: a provider interface reads open data and system
+  exports; live APIs are still placeholders, and the agent architecture is designed to take more
+  sources. This project is designed to *complement* a signal source, not to replace one.
 
 > Values are **illustrative and justified, not measured**.
 >
