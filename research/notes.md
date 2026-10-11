@@ -2,6 +2,40 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Supply chain risk, change complexity, actions, providers, history
+
+**D30: Practice features on top of the method, all generic and configurable.**
+- **Supply chain risk.** It stays a dimension sub-score: political stability, sourcing strategy
+  and transport dependency. Political stability uses the World Bank WGI percentile rank (bands of
+  20 → 1..5) and falls back to a generic country risk index.
+- **Change complexity.** It can be derived from the time to exit in months (≤3/6/12/24/>24 →
+  1..5). Expert ratings still win. It is named descriptively ("change complexity (time to exit)")
+  rather than as an index of its own.
+- **External data providers.**
+  - Providers deliver raw indicators only. Rating stays in the rating sources.
+  - `enrich` fills missing values only, and records provenance per indicator
+    (`indicator_sources`).
+  - A failing or unconnected provider becomes a message, not an abort.
+  - The WGI mock table is fictional, by design. Real data come from a user download via
+    `from_csv`.
+  - API integrations (WGI online, ESG platform, ERP, credit agency) are placeholders raising
+    `NotImplementedError`. Vendors are named only as examples of a kind of system.
+- **Rating sources declare their inputs.** `register_source(..., reads=...)` makes the input
+  columns of the spreadsheet derive from the catalogue. A source may read several indicators,
+  e.g. WGI plus fallback.
+- **Action framework.**
+  - `factor_actions` per factor and level; the most specific level wins. This is a third level
+    next to class actions and dimension triggers.
+  - Each action carries an owner, so the plan can be distributed.
+- **History.**
+  - Explicit snapshots (CLI flag, UI button, automatically after an approved review), not every
+    recalculation; the latter would add noise while data are being edited.
+  - Stored as append-only JSONL per view. It is git-ignored because it can hold real data.
+- **Dashboards.** Pure functions in `tools/reporting.py` over finished assessments: group summary,
+  top risks, action plan.
+  - Factor contributions `w_f·(R_f−1)/4·100` add up to the score with complete data, so the
+    "main drivers" can be shown in points.
+
 ## 2026-10 — Two views: performance and risk
 
 **D29: Supplier performance evaluation and supplier risk management are separate views.**

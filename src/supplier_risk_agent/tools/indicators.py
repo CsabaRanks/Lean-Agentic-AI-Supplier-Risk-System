@@ -19,14 +19,23 @@ RatingResult = tuple[int | None, str]
 RatingFn = Callable[[SupplierProfile, str], RatingResult]
 
 _SOURCES: dict[str, RatingFn] = {}
+_READS: dict[str, tuple[str, ...]] = {}
 
 
-def register_source(name: str) -> Callable[[RatingFn], RatingFn]:
+def register_source(name: str, reads: tuple[str, ...] | None = None) -> Callable[[RatingFn], RatingFn]:
+    """Register a rating source. ``reads`` names the raw indicators it uses (default: its own name)."""
+
     def decorator(fn: RatingFn) -> RatingFn:
         _SOURCES[name] = fn
+        _READS[name] = (name,) if reads is None else reads
         return fn
 
     return decorator
+
+
+def source_inputs(source: str) -> tuple[str, ...]:
+    """Raw indicator columns a rating source reads (empty for expert assessments)."""
+    return _READS.get(source, (source,))
 
 
 def available_sources() -> list[str]:
@@ -67,7 +76,7 @@ def _missing(profile: SupplierProfile, key: str) -> bool:
 # --- registered sources ------------------------------------------------------
 
 
-@register_source("expert_assessment")
+@register_source("expert_assessment", reads=())
 def _expert(profile: SupplierProfile, factor_key: str) -> RatingResult:
     # Reached only if no expert rating exists (see rate_factor).
     return None, "expert assessment pending"
@@ -92,6 +101,40 @@ def _distress(profile: SupplierProfile, factor_key: str) -> RatingResult:
     return rating, f"{count} negative financial signal(s) in observation window"
 
 
+WGI_INDICATOR = "wgi_political_stability"
+
+
+@register_source("political_stability", reads=(WGI_INDICATOR, "country_risk_index"))
+def _political_stability(profile: SupplierProfile, factor_key: str) -> RatingResult:
+    """Country risk from political stability.
+
+    Preferred input: the World Bank Worldwide Governance Indicators (WGI) estimate
+    "Political Stability and Absence of Violence/Terrorism", as a percentile rank
+    0..100 (higher = more stable), e.g. filled by ``providers.WorldBankWgiProvider``.
+    Fallback: a generic country risk index 0..100 (higher = riskier).
+    """
+    if not _missing(profile, WGI_INDICATOR):
+        pr = float(profile.indicators[WGI_INDICATOR])
+        rating = 6 - _band(pr, [20, 40, 60, 80])  # >= 80 -> 1 ... < 20 -> 5
+        return rating, f"political stability percentile {pr:g} (WGI)"
+    return _country(profile, factor_key)
+
+
+@register_source("time_to_exit", reads=("time_to_exit_months",))
+def _time_to_exit(profile: SupplierProfile, factor_key: str) -> RatingResult:
+    """Change complexity from the time needed to exit the supplier.
+
+    Months until an alternative source would be qualified and running
+    (search, qualification, tooling, approvals): <= 3 -> 1, <= 6 -> 2, <= 12 -> 3,
+    <= 24 -> 4, longer -> 5. Bands are illustrative.
+    """
+    if _missing(profile, "time_to_exit_months"):
+        return None, "time to exit not assessed"
+    months = float(profile.indicators["time_to_exit_months"])
+    rating = 1 if months <= 3 else 2 if months <= 6 else 3 if months <= 12 else 4 if months <= 24 else 5
+    return rating, f"time to exit {months:g} months"
+
+
 @register_source("country_risk_index")
 def _country(profile: SupplierProfile, factor_key: str) -> RatingResult:
     if _missing(profile, "country_risk_index"):
@@ -113,7 +156,7 @@ def _sourcing(profile: SupplierProfile, factor_key: str) -> RatingResult:
 TRANSPORT_RATINGS = {"road": 1, "rail": 2, "air": 3, "sea": 4}
 
 
-@register_source("transport_mode")
+@register_source("transport_mode", reads=("transport_mode", "intercontinental"))
 def _transport(profile: SupplierProfile, factor_key: str) -> RatingResult:
     mode = profile.indicators.get("transport_mode")
     if mode is None:

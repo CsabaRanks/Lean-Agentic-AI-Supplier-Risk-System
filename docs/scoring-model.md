@@ -63,10 +63,36 @@ The model is a two-level hierarchy: **dimensions** made up of **factors**.
 
 | Dimension | Default weight | Factors (weight within dimension) | Typical data |
 |---|---|---|---|
-| Severity Index | 35 % | availability of alternatives (30 %), change complexity (30 %), business consequence (40 %) | expert assessment by category manager |
+| Severity Index | 35 % | availability of alternatives (30 %), change complexity (30 %), business consequence (40 %) | expert assessment by category manager; change complexity also from the time to exit |
 | Financial Stability | 20 % | credit risk (70 %), insolvency / distress signals (30 %) | credit score, negative signals |
-| Supply Chain Risk | 25 % | country / geopolitical risk (40 %), sourcing strategy (35 %), transport dependency (25 %) | country risk index, number of qualified sources, transport mode |
+| Supply Chain Risk | 25 % | political stability / country risk (40 %), sourcing strategy (35 %), transport dependency (25 %) | WGI political stability percentile (or a country risk index), number of qualified sources, transport mode |
 | ESG & Compliance | 20 % | ESG rating (60 %), compliance status (40 %) | ESG score, code-of-conduct / audit status |
+
+### Supply chain risk as a sub-score
+
+*Supply Chain Risk* is a weighted sub-score of three factors, and it is shown on its own in the
+results:
+
+- **Political stability.** Rating source `political_stability`. It uses the World Bank WGI
+  *Political Stability* percentile rank if available (≥ 80 → 1, 60–80 → 2, 40–60 → 3,
+  20–40 → 4, < 20 → 5). Otherwise it falls back to a generic `country_risk_index`. Data come from
+  an external data provider; see [data-providers.md](data-providers.md). The bundled WGI table is
+  a fictional **placeholder**.
+- **Sourcing strategy.** Number of qualified sources (single, dual, multi).
+- **Transport dependency.** Transport mode and intercontinental routes.
+
+### Change complexity from the time to exit
+
+The criterion `switching_complexity` ("change complexity") measures how long it would take to
+move the volume to another source. That covers qualification, tooling, approvals and ramp-up.
+Rating source `time_to_exit`, with input `time_to_exit_months`:
+
+| Months to exit | ≤ 3 | ≤ 6 | ≤ 12 | ≤ 24 | > 24 |
+|---|---|---|---|---|---|
+| Rating | 1 | 2 | 3 | 4 | 5 |
+
+An expert rating entered for the criterion takes precedence over the derived rating. The bands
+are illustrative; adapt them to your lead times.
 
 The *Severity Index* is a weighted sub-score of how replaceable a supplier is and how much a
 failure would hurt; the other dimensions describe the likelihood and structure of a disruption.
@@ -150,6 +176,29 @@ They only ever raise the class. The class before escalation is kept as `calculat
 
 Independently of the overall class, a dimension score above a threshold (default 60) adds a
 targeted action, e.g. *“Evaluate regional or second-source alternatives”* for supply chain risk.
+
+## Action framework per factor
+
+`factor_actions` in the view YAML define concrete measures per factor and level, each with a
+typical owner:
+
+```yaml
+factor_actions:
+  - {factor: availability, min_rating: 4, owner: category manager,
+     action: "Run a market scan for alternative sources and keep a shortlist of candidates."}
+  - {factor: availability, min_rating: 5, owner: category manager,
+     action: "Start qualifying an alternative source; consider redesign to widen the supply base."}
+```
+
+For each factor, the most specific entry applies: the one with the highest `min_rating` that is
+not above the factor's rating. Recommendations therefore come from three levels:
+
+1. the risk class (`actions`, with review cycle)
+2. elevated dimensions (`dimension_triggers`)
+3. individual factors (`factor_actions`)
+
+The UI collects all of them in the **🛠 Actions** tab as a filterable action plan with CSV
+export.
 
 ## Worked example
 

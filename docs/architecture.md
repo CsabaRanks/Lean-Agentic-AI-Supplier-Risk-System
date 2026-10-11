@@ -79,7 +79,7 @@ Use the same serializer for a persistent checkpointer, e.g. to resume a run in a
 | Agent | Module | Responsibility |
 |---|---|---|
 | Supervisor | `agents/supervisor.py` | Rule-based routing; single extension point for an LLM supervisor. |
-| Data Collection | `agents/data_collection.py` | Loads suppliers in scope (optionally one material group) and expert labels from a `SupplierDataSource`. |
+| Data Collection | `agents/data_collection.py` | Loads suppliers in scope (optionally one material group) and expert labels from a `SupplierDataSource`, then fills missing indicators from external data providers (`providers/`, see [data-providers.md](data-providers.md)). |
 | Scoring | `agents/scoring.py` | Resolves the weight set per supplier, computes factor ratings, dimension scores, overall score, class, escalations, completeness checks. |
 | Calibration | `agents/calibration.py` | Fits weights to expert labels (min. MSE, constraints), logs old vs. new weights and MSE, applies (and stores) or proposes them. |
 | Action & Recommendation | `agents/recommendation.py` | Maps class, elevated dimensions and escalations to actions and a review cycle. |

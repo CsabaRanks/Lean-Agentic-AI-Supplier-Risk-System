@@ -1,5 +1,6 @@
 from .calibration import calibrate_weights
 from .data_sources import InMemorySource, JsonFileSource, SupplierDataSource
+from .history import HistoryStore
 from .indicators import available_sources, rate_factor, register_source
 from .scoring import (
     aggregate,
@@ -15,6 +16,7 @@ from .scoring import (
 from .weight_store import WeightStore
 
 __all__ = [
+    "HistoryStore",
     "InMemorySource",
     "JsonFileSource",
     "SupplierDataSource",

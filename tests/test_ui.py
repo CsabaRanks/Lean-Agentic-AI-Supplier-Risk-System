@@ -90,3 +90,26 @@ def test_performance_calibration_in_ui():
     assert report.accepted and report.n_samples == 32
     assert "on_time_delivery" in report.new_weights
     assert "calibration_report" not in state(at, "risk")  # views keep separate runs
+
+
+def test_dashboard_actions_and_history(tmp_path):
+    at = app()
+    m = metrics(at)
+    assert m["Suppliers"] == "6"  # portfolio tab
+    # dashboard: per material group selection
+    at.selectbox(key="dash_group").select("chemicals").run()
+    assert not at.exception
+    assert any(mm.label == "Suppliers" and mm.value == "1" for mm in at.metric)
+    # history: snapshot to a temporary folder, then it is listed
+    at.text_input(key="history_dir").input(str(tmp_path)).run()
+    click(at, "Save snapshot")
+    assert (tmp_path / "risk.jsonl").exists()
+    assert any("snapshot(s)" in c.value for c in at.caption)
+
+
+def test_wgi_mock_option_and_recalculate_now():
+    at = app()
+    at.checkbox(key="use_wgi_mock").check().run()
+    click(at, "Recalculate now")
+    sup1 = state(at)["results"]["SUP-001"]
+    assert "WGI" in next(f.rationale for f in sup1.factor_scores if f.factor == "country_risk")

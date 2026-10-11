@@ -36,7 +36,7 @@ supplier-risk = "supplier_risk_agent.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-supplier_risk_agent = ["config/*.yaml"]
+supplier_risk_agent = ["config/*.yaml", "providers/mock_data/*.csv"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

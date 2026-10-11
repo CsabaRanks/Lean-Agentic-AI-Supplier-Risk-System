@@ -162,6 +162,42 @@ dimension_triggers:
     min_score: 60
     action: Reduce dependency (alternative qualification, design-to-multi-source).
 
+# Action framework: concrete measures per factor and level (most specific entry applies).
+# Generic examples; adapt wording, owners and levels to your organisation.
+factor_actions:
+  - {factor: availability, min_rating: 4, owner: category manager,
+     action: "Run a market scan for alternative sources and keep a shortlist of candidates."}
+  - {factor: availability, min_rating: 5, owner: category manager,
+     action: "Start qualifying an alternative source; consider redesign to widen the supply base."}
+  - {factor: switching_complexity, min_rating: 4, owner: category manager / engineering,
+     action: "Prepare an exit plan: technical documentation, tooling ownership and qualification steps."}
+  - {factor: switching_complexity, min_rating: 5, owner: category manager / engineering,
+     action: "Pre-qualify a second source now; the time to exit is too long to react after a disruption."}
+  - {factor: business_impact, min_rating: 4, owner: supply chain planning,
+     action: "Define safety stock and a customer communication plan for a supply interruption."}
+  - {factor: business_impact, min_rating: 5, owner: supply chain planning,
+     action: "Agree a business continuity plan with the supplier, including allocation rules."}
+  - {factor: credit_risk, min_rating: 4, owner: finance / category manager,
+     action: "Monitor credit information monthly; review payment terms and prepayments."}
+  - {factor: credit_risk, min_rating: 5, owner: finance / category manager,
+     action: "Limit financial exposure (open orders, tooling, prepayments) and prepare a fallback source."}
+  - {factor: insolvency_signals, min_rating: 4, owner: finance,
+     action: "Request current financial statements and discuss liquidity with the supplier."}
+  - {factor: country_risk, min_rating: 4, owner: category manager,
+     action: "Assess a regional alternative or dual sourcing across countries."}
+  - {factor: country_risk, min_rating: 5, owner: category manager / supply chain planning,
+     action: "Build buffer stock outside the region and qualify a source in a more stable country."}
+  - {factor: sourcing_strategy, min_rating: 4, owner: category manager,
+     action: "Move from single to dual sourcing for the affected scope."}
+  - {factor: transport_dependency, min_rating: 4, owner: logistics,
+     action: "Define alternative routes or transport modes and adjust safety lead times."}
+  - {factor: esg_rating, min_rating: 4, owner: sustainability,
+     action: "Request a corrective action plan and an updated ESG assessment."}
+  - {factor: compliance_status, min_rating: 4, owner: compliance,
+     action: "Schedule an audit and track the corrective actions to closure."}
+  - {factor: compliance_status, min_rating: 5, owner: compliance / management,
+     action: "Escalate; suspend new business until the critical finding is resolved."}
+
 # Calibration of weights against subjective expert labels (0..100 risk score
 # given by category managers). Disabled by default; enable here or per run.
 calibration:

@@ -122,6 +122,23 @@ dimension_triggers:
     min_score: 60
     action: Prepare a cost review or market benchmark before the next negotiation.
 
+# Action framework for the performance view (most specific entry per factor applies)
+factor_actions:
+  - {factor: on_time_delivery, min_rating: 4, owner: supply chain planning,
+     action: "Agree a delivery improvement plan with measurable on-time targets."}
+  - {factor: on_time_delivery, min_rating: 5, owner: supply chain planning,
+     action: "Escalate to supplier management; add safety lead time until targets are met."}
+  - {factor: delivered_quality, min_rating: 4, owner: quality,
+     action: "Request a structured problem-solving report (root cause, containment, corrective action)."}
+  - {factor: delivered_quality, min_rating: 5, owner: quality,
+     action: "Start a quality escalation: increased inspection and an on-site quality review."}
+  - {factor: price_competitiveness, min_rating: 4, owner: category manager,
+     action: "Run a cost breakdown analysis or market benchmark before the next negotiation."}
+  - {factor: responsiveness, min_rating: 4, owner: category manager,
+     action: "Agree communication rules (contacts, response times) in a supplier meeting."}
+  - {factor: compliance_status, min_rating: 4, owner: compliance,
+     action: "Schedule an audit and track the corrective actions to closure."}
+
 calibration:
   enabled: false
   min_labels: 8

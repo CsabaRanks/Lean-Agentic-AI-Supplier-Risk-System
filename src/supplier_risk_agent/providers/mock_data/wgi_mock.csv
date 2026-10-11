@@ -1,0 +1,8 @@
+# FICTIONAL placeholder values for the fictional regions used in the sample data.
+# These are NOT World Bank figures. Replace with a real WGI export via WorldBankWgiProvider.from_csv().
+country,year,percentile_rank
+Region A,2024,86
+Region B,2024,64
+Region C,2024,24
+Region D,2024,41
+Region E,2024,12

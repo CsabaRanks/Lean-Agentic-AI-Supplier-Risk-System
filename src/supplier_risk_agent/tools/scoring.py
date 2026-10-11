@@ -222,6 +222,26 @@ def recommend(assessment: RiskAssessment, model: RiskModelConfig) -> list[Action
                 )
             )
 
+    # action framework: the most specific entry per factor whose level is reached
+    rules: dict[str, list] = {}
+    for fa in model.factor_actions:
+        rules.setdefault(fa.factor, []).append(fa)
+    for f in assessment.factor_scores:
+        if f.rating is None or f.factor not in rules:
+            continue
+        reached = [fa for fa in rules[f.factor] if f.rating >= fa.min_rating]
+        if reached:
+            fa = max(reached, key=lambda r: r.min_rating)
+            recs.append(
+                ActionRecommendation(
+                    priority="factor",
+                    action=fa.action,
+                    trigger=f"{f.factor} rated {f.rating} ({f.rationale})",
+                    factor=f.factor,
+                    owner=fa.owner,
+                )
+            )
+
     for esc in assessment.escalations:
         recs.append(
             ActionRecommendation(

@@ -30,12 +30,15 @@ class SupplierRiskEvaluator:
         model: RiskModelConfig | None = None,
         weight_store: WeightStore | None = None,
         checkpointer: BaseCheckpointSaver | None = None,
+        providers=(),
     ):
+        """``providers``: external data providers applied before scoring (see ``providers`` package)."""
         self.model = model or load_risk_model()
         self.source = source
         # weights are stored per view (<dir>/<view>/<scope>_vNNN.yaml)
         self.weight_store = weight_store.for_view(self.model.view) if weight_store else None
-        self.app = build_graph(self.model, source, self.weight_store, checkpointer)
+        self.providers = list(providers)
+        self.app = build_graph(self.model, source, self.weight_store, checkpointer, self.providers)
 
     @classmethod
     def from_json(

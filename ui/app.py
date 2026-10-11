@@ -29,7 +29,9 @@ import streamlit as st
 from supplier_risk_agent import SupplierRiskEvaluator, load_risk_model
 from supplier_risk_agent.models import ClassOverride, ReviewDecision
 from supplier_risk_agent.models.config import available_views
-from supplier_risk_agent.tools import InMemorySource, JsonFileSource, WeightStore
+from supplier_risk_agent.providers import WorldBankWgiProvider
+from supplier_risk_agent.tools import HistoryStore, InMemorySource, JsonFileSource, WeightStore
+from supplier_risk_agent.tools.reporting import ALL_GROUPS, action_plan, group_summary, top_risks
 from supplier_risk_agent.tools.tabular import (
     all_view_columns,
     assessment_to_row,
@@ -102,6 +104,18 @@ def weight_store() -> WeightStore | None:
     return None
 
 
+def providers() -> list:
+    return [WorldBankWgiProvider.mock()] if st.session_state.get("use_wgi_mock") else []
+
+
+def history() -> HistoryStore:
+    return HistoryStore(ROOT / st.session_state.get("history_dir", "data/history"))
+
+
+def assessments() -> list:
+    return list((run_info().get("state") or {}).get("results", {}).values())
+
+
 def run(calibrate: bool, material_group: str | None) -> None:
     profiles, errors = rows_to_profiles(st.session_state.rows, model())
     st.session_state.input_errors = errors
@@ -109,7 +123,7 @@ def run(calibrate: bool, material_group: str | None) -> None:
     info.clear()
     if not profiles:
         return
-    evaluator = SupplierRiskEvaluator(InMemorySource(profiles), model(), weight_store())
+    evaluator = SupplierRiskEvaluator(InMemorySource(profiles), model(), weight_store(), providers=providers())
     info.update(
         evaluator=evaluator,
         state=evaluator.run(material_group=material_group, calibrate=calibrate),
@@ -184,6 +198,11 @@ with st.sidebar:
                     help="Approved weights are saved as a new version per view and used as the starting "
                          "point of later runs.")
         st.text_input("Weight store folder", value="data/weights", key="store_dir")
+        st.checkbox("Political stability from World Bank WGI (MOCK)", key="use_wgi_mock",
+                    help="Placeholder provider with FICTIONAL values for the sample regions. For real data, "
+                         "download WGI and use WorldBankWgiProvider.from_csv() (see docs/data-providers.md). "
+                         "Recalculate after switching.")
+        st.text_input("History folder", value="data/history", key="history_dir")
         st.caption(f"Model: {model().name} v{model().version}")
 
 
@@ -191,19 +210,155 @@ with st.sidebar:
 
 st.title("Supplier Risk Agent")
 views = available_views()
-st.radio("View", views, key="view", horizontal=True, format_func=lambda v: ui_model(v).view_label)
+top_left, top_right = st.columns([3, 1])
+top_left.radio("View", views, key="view", horizontal=True, format_func=lambda v: ui_model(v).view_label)
+if top_right.button("🔄 Recalculate now", type="primary", width="stretch",
+                    help="Scores are recalculated on demand from the current data, weights and providers."):
+    run(calibrate=False, material_group=None)
+    st.toast("Recalculated")
 if not run_info():  # first time this view is shown: score it
     run(calibrate=False, material_group=None)
 st.caption(
-    f"**{model().view_label}** — {model().view_question} Works like a spreadsheet; underneath: deterministic "
+    f"**{model().view_label}** — {model().view_question} Works like a spreadsheet: change data, press "
+    "**Recalculate now**, and every score, class and action is updated at once. Underneath: deterministic "
     "scoring, expert calibration with safeguards, human review and versioned weights."
 )
 for error in st.session_state.get("input_errors", []):
     st.error(f"Input: {error}")
 
-tab_portfolio, tab_run, tab_cal, tab_review = st.tabs(
-    ["📋 Portfolio", "▶️ Scoring run", "🎯 Calibration", "✅ Review & approval"]
+tab_portfolio, tab_dash, tab_actions, tab_history, tab_run, tab_cal, tab_review = st.tabs(
+    ["📋 Portfolio", "📊 Dashboard", "🛠 Actions", "🕓 History", "▶️ Scoring run", "🎯 Calibration",
+     "✅ Review & approval"]
 )
+
+
+# --- tab: dashboard ---------------------------------------------------------------------------
+
+with tab_dash:
+    items = assessments()
+    if not items:
+        st.info("No results yet.")
+    else:
+        order = [c.key for c in model().risk_classes]
+        styles = class_styles()
+        summary = pd.DataFrame(group_summary(items, model()))
+        group = st.selectbox("Material group", summary.material_group.tolist(), key="dash_group")
+        row = summary.set_index("material_group").loc[group]
+        selected = items if group == ALL_GROUPS else [a for a in items if (a.material_group or "(none)") == group]
+
+        k = st.columns(5)
+        k[0].metric("Suppliers", int(row.suppliers))
+        k[1].metric(f"Mean {model().score_label.lower()}", f"{row.mean_score:.1f}" if pd.notna(row.mean_score) else "–")
+        k[2].metric(f"Share {' / '.join(order[-2:])}", f"{row.share_top_two_classes:.0%}")
+        k[3].metric("Need review", int(row.needs_review))
+        k[4].metric("Raised by escalation rule", int(row.escalated))
+
+        left, right = st.columns([3, 2])
+        with left:
+            class_columns = [f"class_{c}" for c in order]
+            per_group = summary.loc[summary.material_group != ALL_GROUPS, ["material_group", *class_columns]].melt(
+                id_vars="material_group", value_vars=class_columns, var_name="class", value_name="suppliers")
+            per_group["class"] = per_group["class"].str.removeprefix("class_")
+            stacked = alt.Chart(per_group).mark_bar(stroke="white", strokeWidth=2).encode(
+                y=alt.Y("material_group:N", title=None),
+                x=alt.X("suppliers:Q", title="Suppliers", axis=alt.Axis(tickMinStep=1)),
+                color=alt.Color("class:N", scale=alt.Scale(domain=order, range=[styles[c][0] for c in order]),
+                                legend=alt.Legend(title=None, orient="top")),
+                order=alt.Order("class_rank:Q"),
+                tooltip=["material_group", "class", "suppliers"],
+            ).transform_calculate(class_rank=f"indexof({order}, datum.class)")
+            st.altair_chart(stacked.properties(height=alt.Step(34), title="Classes per material group"),
+                            width="stretch")
+        with right:
+            st.markdown(f"**Top risks — {group}**")
+            top = pd.DataFrame(top_risks(selected, model(), n=5))
+            if not top.empty:
+                top["risk_class"] = top.risk_class.map(class_label)
+                st.dataframe(top[["name", "score", "risk_class", "main_drivers"]], hide_index=True, width="stretch",
+                             column_config={"name": "Supplier", "score": st.column_config.NumberColumn(
+                                 model().score_label, format="%.1f"), "risk_class": "Class",
+                                 "main_drivers": "Main drivers (points)"})
+        st.markdown("**All material groups**")
+        st.dataframe(summary, hide_index=True, width="stretch", column_config={
+            "material_group": "Material group", "suppliers": "Suppliers",
+            "mean_score": st.column_config.NumberColumn(f"Mean {model().score_label.lower()}", format="%.1f"),
+            "share_top_two_classes": st.column_config.NumberColumn(f"Share {' / '.join(order[-2:])}",
+                                                                   format="percent"),
+            **{f"class_{c}": f"{styles[c][1]} {c}" for c in order},
+            "needs_review": "Review", "escalated": "Escalated", "most_concerning": "Most concerning"})
+
+
+# --- tab: actions ------------------------------------------------------------------------------
+
+with tab_actions:
+    plan = pd.DataFrame(action_plan(assessments()))
+    if plan.empty:
+        st.info("No actions.")
+    else:
+        st.caption("Action framework: measures per risk class, per elevated dimension and per factor level. "
+                   "Defined in the view's YAML (`actions`, `dimension_triggers`, `factor_actions`).")
+        f = st.columns([2, 2, 2, 2])
+        groups = f[0].multiselect("Material group", sorted(plan.material_group.dropna().unique()), key="act_group")
+        classes = f[1].multiselect("Class", [c.key for c in model().risk_classes], key="act_class")
+        levels = f[2].multiselect("Level", sorted(plan.level.unique()), key="act_level")
+        owners = f[3].multiselect("Owner", sorted(plan.owner.dropna().unique()), key="act_owner")
+        view_plan = plan
+        for column, chosen in (("material_group", groups), ("risk_class", classes), ("level", levels),
+                               ("owner", owners)):
+            if chosen:
+                view_plan = view_plan[view_plan[column].isin(chosen)]
+        st.dataframe(view_plan.assign(risk_class=view_plan.risk_class.map(class_label)), hide_index=True,
+                     width="stretch", column_config={"supplier_id": "ID", "name": "Supplier", "risk_class": "Class",
+                                                    "material_group": "Material group", "level": "Level",
+                                                    "factor": "Factor", "action": "Action", "owner": "Owner",
+                                                    "review_cycle": "Review cycle", "trigger": "Why"})
+        st.download_button("Export action plan CSV", to_csv(view_plan.to_dict("records")),
+                           file_name=f"{model().view}_action_plan.csv", mime="text/csv")
+
+
+# --- tab: history ---------------------------------------------------------------------------
+
+with tab_history:
+    c1, c2 = st.columns([1, 3])
+    note = c2.text_input("Note for this snapshot", placeholder="e.g. annual review 2026", key="snap_note")
+    if c1.button("📌 Save snapshot", width="stretch", disabled=not assessments()):
+        n = history().record(assessments(), model(), run_id=(run_info().get("state") or {}).get("run_id"),
+                             note=note)
+        st.success(f"Saved {n} rows to {st.session_state.get('history_dir', 'data/history')}/{model().view}.jsonl")
+    rows = pd.DataFrame(history().load(model().view))
+    if rows.empty:
+        st.info("No snapshots yet for this view. Save one above; approved reviews are saved automatically.")
+    else:
+        rows["recorded_at"] = pd.to_datetime(rows.recorded_at)
+        st.caption(f"{rows.recorded_at.nunique()} snapshot(s) for the {model().view_label.lower()} view.")
+        left, right = st.columns(2)
+        with left:
+            names = dict(zip(rows.supplier_id, rows.name))
+            sid = st.selectbox("Supplier", sorted(names), format_func=lambda s: f"{s} · {names[s]}", key="hist_sup")
+            mine = rows[rows.supplier_id == sid]
+            line = alt.Chart(mine).mark_line(point=alt.OverlayMarkDef(size=60, filled=True), strokeWidth=2,
+                                             color=CURRENT_COLOR).encode(
+                x=alt.X("recorded_at:T", title=None, axis=alt.Axis(format="%d %b %Y", labelAngle=0, tickCount=6)),
+                y=alt.Y("score:Q", title=model().score_label, scale=alt.Scale(domain=[0, 100])),
+                tooltip=[alt.Tooltip("recorded_at:T", title="snapshot"), "score", "risk_class", "note"],
+            )
+            st.altair_chart(line.properties(height=260, title=f"{names[sid]} over time"), width="stretch")
+            st.dataframe(mine[["recorded_at", "score", "risk_class", "weights", "approved_by", "note"]],
+                         hide_index=True, width="stretch")
+        with right:
+            groups = sorted(rows.material_group.dropna().unique())
+            g = st.selectbox("Material group", groups, key="hist_group")
+            trend = pd.DataFrame(history().group_trend(model().view, material_group=g))
+            trend["recorded_at"] = pd.to_datetime(trend.recorded_at)
+            line = alt.Chart(trend).mark_line(point=alt.OverlayMarkDef(size=60, filled=True), strokeWidth=2,
+                                              color=CURRENT_COLOR).encode(
+                x=alt.X("recorded_at:T", title=None, axis=alt.Axis(format="%d %b %Y", labelAngle=0, tickCount=6)),
+                y=alt.Y("mean_score:Q", title=f"Mean {model().score_label.lower()}", scale=alt.Scale(domain=[0, 100])),
+                tooltip=[alt.Tooltip("recorded_at:T", title="snapshot"), "mean_score", "suppliers"],
+            )
+            st.altair_chart(line.properties(height=260, title=f"{g}: mean score over time"), width="stretch")
+            st.dataframe(trend.assign(classes=trend.classes.map(lambda c: ", ".join(f"{k}: {v}" for k, v in c.items()))),
+                         hide_index=True, width="stretch")
 
 
 # --- tab: scoring run --------------------------------------------------------------------
@@ -507,7 +662,11 @@ with tab_review:
                                                                    comment=row["comment"] or "")
             decision = ReviewDecision(reviewer=reviewer or "unknown", approve_weights=bool(approve and proposed),
                                       overrides=chosen, defer=defer)
-            run_info()["state"] = evaluator.resume(state["run_id"], decision)
+            new_state = evaluator.resume(state["run_id"], decision)
+            run_info()["state"] = new_state
+            if not defer:  # an approved assessment is worth keeping: snapshot to history
+                history().record(list(new_state["results"].values()), model(), run_id=new_state["run_id"],
+                                 note="after review", approved_by=decision.reviewer)
             st.rerun()
 
     if state and state.get("errors"):

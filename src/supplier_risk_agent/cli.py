@@ -17,8 +17,10 @@ import json
 import sys
 
 from .graph import SupplierRiskEvaluator, ranked
-from .models.config import RiskModelConfig, available_views
+from .models.config import RiskModelConfig, available_views, load_risk_model
 from .models.domain import CalibrationReport, ClassOverride, ReviewDecision, RiskAssessment
+from .providers import WorldBankWgiProvider
+from .tools import HistoryStore, JsonFileSource, WeightStore
 
 
 def _print_portfolio(results: list[RiskAssessment], model: RiskModelConfig) -> None:
@@ -133,12 +135,24 @@ def main(argv: list[str] | None = None) -> int:
                      help="calibrate weights against expert labels before recommending")
     cal.add_argument("--no-calibrate", dest="calibrate", action="store_false")
     parser.add_argument("--weights-dir", help="versioned weight store: load latest approved weights, save new ones")
+    parser.add_argument("--history-dir", help="append a timestamped snapshot of the results (one file per view)")
+    wgi = parser.add_mutually_exclusive_group()
+    wgi.add_argument("--wgi-mock", action="store_true",
+                     help="fill political stability from the bundled FICTIONAL World Bank WGI placeholder table")
+    wgi.add_argument("--wgi-csv", help="fill political stability from a downloaded WGI CSV (country, percentile_rank)")
     parser.add_argument("--review", choices=["defer", "interactive"], default="defer",
                         help="when review is needed: leave it open (default) or ask in the terminal")
     parser.add_argument("--json", action="store_true", help="print machine-readable JSON")
     args = parser.parse_args(argv)
 
-    evaluator = SupplierRiskEvaluator.from_json(args.data, args.model, args.weights_dir, view=args.view)
+    providers = []
+    if args.wgi_mock:
+        providers.append(WorldBankWgiProvider.mock())
+    elif args.wgi_csv:
+        providers.append(WorldBankWgiProvider.from_csv(args.wgi_csv))
+    model = load_risk_model(args.model, view=args.view)
+    store = WeightStore(args.weights_dir) if args.weights_dir else None
+    evaluator = SupplierRiskEvaluator(JsonFileSource(args.data), model, store, providers=providers)
     state = evaluator.run(
         supplier_ids=[args.supplier] if args.supplier else None,
         material_group=args.material_group,
@@ -154,6 +168,11 @@ def main(argv: list[str] | None = None) -> int:
     results = ranked(state)
     if not results:
         return 1
+    if args.history_dir:
+        written = HistoryStore(args.history_dir).record(
+            results, evaluator.model, run_id=state["run_id"], note="cli, review pending" if request else "cli")
+        print(f"history: {written} rows appended to {args.history_dir}/{evaluator.model.view}.jsonl",
+              file=sys.stderr)
 
     report = state.get("calibration_report")
     if args.json:

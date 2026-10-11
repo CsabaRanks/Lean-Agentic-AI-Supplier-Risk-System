@@ -115,6 +115,15 @@ class DimensionTrigger(BaseModel):
     action: str
 
 
+class FactorAction(BaseModel):
+    """Action framework entry: what to do when one factor reaches a rating level."""
+
+    factor: str
+    min_rating: int = Field(description="Applies from this rating upwards (1..5)")
+    action: str
+    owner: str = Field(default="", description="Typical owner, e.g. 'category manager', 'quality'")
+
+
 class CalibrationSettings(BaseModel):
     """Controls the expert-label calibration (see docs/calibration.md)."""
 
@@ -217,6 +226,9 @@ class RiskModelConfig(BaseModel):
     min_data_completeness: float = Field(default=0.75, ge=0, le=1)
     actions: dict[str, ClassActions] = {}
     dimension_triggers: list[DimensionTrigger] = []
+    # Action framework per factor and level; the most specific entry (highest min_rating
+    # not above the factor's rating) applies.
+    factor_actions: list[FactorAction] = []
     calibration: CalibrationSettings = CalibrationSettings()
 
     @model_validator(mode="after")
@@ -243,6 +255,9 @@ class RiskModelConfig(BaseModel):
         for trig in self.dimension_triggers:
             if trig.dimension not in dim_keys:
                 raise ValueError(f"trigger references unknown dimension '{trig.dimension}'")
+        for fa in self.factor_actions:
+            if fa.factor not in factor_keys:
+                raise ValueError(f"factor action references unknown factor '{fa.factor}'")
         for key in self.actions:
             if key not in class_keys:
                 raise ValueError(f"actions defined for unknown class '{key}'")

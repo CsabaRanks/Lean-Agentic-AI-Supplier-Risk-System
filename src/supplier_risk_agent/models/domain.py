@@ -35,6 +35,9 @@ class SupplierProfile(BaseModel):
         le=100,
         description="Holistic subjective risk label (0..100) from a category manager; used for calibration",
     )
+    indicator_sources: dict[str, str] = Field(
+        default_factory=dict, description="indicator -> external provider it came from (missing = entered by hand)"
+    )
     expert_scores: dict[str, float] = Field(
         default_factory=dict,
         description="Holistic labels for other views, e.g. {'performance': 85}, on each view's display scale",
@@ -72,10 +75,12 @@ class Escalation(BaseModel):
 
 
 class ActionRecommendation(BaseModel):
-    priority: str = Field(description="Risk class or 'targeted' for dimension triggers")
+    priority: str = Field(description="Risk class, 'targeted' (dimension trigger) or 'factor' (action framework)")
     action: str
     trigger: str = Field(description="Why this action was proposed")
     review_cycle: str | None = None
+    factor: str | None = Field(default=None, description="Factor the action addresses (action framework)")
+    owner: str = ""
 
 
 class AuditEntry(BaseModel):

@@ -72,7 +72,11 @@ It shows each approach's **relative position**, factor by factor:
   - Human review that **pauses the run** (LangGraph `interrupt()`) until a reviewer approves or corrects.
   - **Versioned weight files**: every approved weight set is stored with timestamp and approver.
   - An append-only audit trail.
-- **Actionable output.** Each supplier gets a risk class with a review cycle and concrete mitigation actions.
+- **Actionable output.** Each supplier gets a class with a review cycle and concrete actions. They come from an **action framework** per risk class, per elevated dimension and per factor level, each with a typical owner.
+- **Supply chain risk and change complexity.** Supply chain risk is a sub-score of political stability (World Bank WGI percentile mapped to 1–5), sourcing strategy and transport dependency. Change complexity can be derived from the **time to exit** in months (bands 1–5).
+- **External data providers.** A slim provider interface fills missing indicators and records where each value came from. Bundled: a World Bank WGI provider (fictional mock table, or your own WGI download as CSV), a generic CSV provider for ERP / ESG / credit exports, and documented placeholders for API integrations. See [docs/data-providers.md](docs/data-providers.md).
+- **Dashboards and history.** Per material group: class distribution, key figures and top risks with their drivers. Timestamped snapshots per view follow suppliers and material groups over time.
+- **Recalculate at any time.** Scores are never stale: change data, weights or providers and press **🔄 Recalculate now** (or rerun the CLI). Every score, class and action is recomputed deterministically.
 - **Deterministic and tested.** Same input always gives the same score, backed by a pytest suite.
 
 > ⚠️ **The bundled criteria, weights and thresholds are illustrative examples.** They are a
@@ -219,6 +223,10 @@ supplier-risk --data data/calibration_portfolio.json --material-group plastics -
 # decide pending reviews in the terminal (approve weights, override classes)
 supplier-risk --data data/sample_suppliers.json --review interactive
 
+# political stability from the fictional WGI placeholder (or --wgi-csv your_download.csv);
+# append a timestamped snapshot to the history
+supplier-risk --data data/sample_suppliers.json --wgi-mock --history-dir data/history
+
 # machine-readable output
 supplier-risk --data data/sample_suppliers.json --json
 
@@ -253,8 +261,12 @@ streamlit run ui/app.py       # opens http://localhost:8501
 | Tab | What you do there |
 |---|---|
 | **View switch** (top) | *Performance* or *Risk*: changes classes, weights, score direction and results. Each view keeps its own run, calibration and review. |
-| **▶️ Scoring run** | Edit supplier inputs like a sheet (or import a CSV), then run the scoring. One sheet serves both views. |
+| **🔄 Recalculate now** (top) | Recompute every score, class and action from the current data, weights and providers, at any time. |
 | **📋 Portfolio** | Ranked table with traffic-light classes, filters, supplier details, audit trail, CSV export |
+| **📊 Dashboard** | Per material group: key figures, class distribution (stacked bars), top risks with their main drivers |
+| **🛠 Actions** | Action plan from the action framework: one row per supplier and measure, filter by group, class, level and owner, CSV export |
+| **🕓 History** | Save a timestamped snapshot; score over time per supplier and mean score per material group. Approved reviews are saved automatically. |
+| **▶️ Scoring run** | Edit supplier inputs like a sheet (or import a CSV), then run the scoring. One sheet serves both views. |
 | **🎯 Calibration** | Enter or import expert labels (0–100), calibrate, compare current vs. proposed weights, read the diagnostics |
 | **✅ Review & approval** | Approve proposed weights, set classes manually with a comment, or defer |
 
@@ -267,6 +279,10 @@ streamlit run ui/app.py       # opens http://localhost:8501
   labels of each view. Use **Empty template CSV** in
   the sidebar as a starting point. Semicolon-separated files from European Excel versions are
   accepted.
+- **Placeholders.** *Advanced → Political stability from World Bank WGI (MOCK)* fills political
+  stability from the bundled **fictional** table. It is a placeholder and not real data.
+- **History files** (`data/history/<view>.jsonl`) are git-ignored, because they may contain real
+  supplier data.
 
 ### Python API
 
@@ -299,7 +315,8 @@ if request:
 │   ├── agents/        # Supervisor, Data Collection, Scoring, Calibration, Recommendation
 │   ├── graph/         # LangGraph StateGraph + SupplierRiskEvaluator facade
 │   ├── models/        # RiskModelConfig, WeightSet, domain objects, graph state
-│   ├── tools/         # indicator → rating sources, scoring engine, calibration, data sources
+│   ├── providers/     # external data providers: World Bank WGI, CSV exports, API placeholders
+│   ├── tools/         # rating sources, scoring, calibration, reporting, history, data sources
 │   ├── config/        # default_risk_model.yaml (example template)
 │   └── cli.py
 ├── data/              # fictional sample data; weights/ = versioned weight store
@@ -318,6 +335,8 @@ if request:
 | Change criteria, weights or thresholds | Copy `src/supplier_risk_agent/config/default_risk_model.yaml` and run with `--model my_model.yaml`. |
 | Use different weights per material group | Set `material_group_weights` in the YAML, or run calibration with `--material-group`. |
 | Connect your own data | Implement `SupplierDataSource` (`get_supplier`, `list_supplier_ids`). |
+| Fill indicators from other systems | Pass `providers=[...]` to `SupplierRiskEvaluator`: `CsvIndicatorProvider` for exports, or your own `ExternalDataProvider` ([docs/data-providers.md](docs/data-providers.md)). |
+| Change concrete actions | Edit `factor_actions` (per factor and level), `dimension_triggers` and `actions` in the view YAML. |
 | Derive a rating from a new indicator | Add a function with `@register_source("my_source")` in `tools/indicators.py`. |
 | Add an agent | Register a node in `graph/builder.py` and add one routing rule in `Supervisor.route()`. |
 
@@ -333,7 +352,9 @@ if request:
 - [ ] LLM explanation agent: narrative per supplier, without changing numbers
 - [ ] LLM extraction agent: indicators from audit reports and questionnaires
 - [ ] External risk monitoring agent: news, disasters, geopolitical alerts as a time-varying factor
-- [ ] Dashboard: portfolio heatmap, before/after calibration view
+- [x] Dashboard per material group, action plan, assessment history
+- [x] External data provider interface (WGI as CSV / mock; generic CSV exports)
+- [ ] API integrations for providers (WGI online, ESG platform, ERP, credit agency): placeholders today
 
 ## Background
 

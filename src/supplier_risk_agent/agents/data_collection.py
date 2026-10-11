@@ -13,15 +13,17 @@ from __future__ import annotations
 from ..models.config import RiskModelConfig
 from ..models.domain import AuditEntry
 from ..models.state import SupplierRiskState
+from ..providers.base import enrich
 from ..tools.data_sources import SupplierDataSource
 
 AGENT_NAME = "data_collection"
 
 
 class DataCollectionAgent:
-    def __init__(self, source: SupplierDataSource, model: RiskModelConfig | None = None):
+    def __init__(self, source: SupplierDataSource, model: RiskModelConfig | None = None, providers=()):
         self.source = source
         self.model = model
+        self.providers = list(providers)
 
     def __call__(self, state: SupplierRiskState) -> dict:
         group = state.get("material_group")
@@ -37,12 +39,17 @@ class DataCollectionAgent:
             else:
                 suppliers[sid] = profile
 
+        provider_messages: list[str] = []
+        if self.providers and suppliers:
+            enriched, provider_messages = enrich(suppliers.values(), self.providers)
+            suppliers = {p.supplier_id: p for p in enriched}
+
         label_of = self.model.label_of if self.model else (lambda p: p.expert_risk_score)
         labels = {sid: label_of(p) for sid, p in suppliers.items() if label_of(p) is not None}
         return {
             "suppliers": suppliers,
             "expert_labels": labels,
-            "errors": errors,
+            "errors": errors + provider_messages,
             "audit_trail": [
                 AuditEntry(
                     agent=AGENT_NAME,
@@ -53,6 +60,8 @@ class DataCollectionAgent:
                         "loaded": len(suppliers),
                         "expert_labels": len(labels),
                         "errors": errors,
+                        "providers": [p.name for p in self.providers],
+                        "provider_messages": provider_messages,
                     },
                 )
             ],

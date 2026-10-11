@@ -71,6 +71,7 @@ def build_graph(
     source: SupplierDataSource,
     weight_store: WeightStore | None = None,
     checkpointer: BaseCheckpointSaver | None = None,
+    providers=(),
 ):
     """Return a compiled LangGraph app for portfolio assessments.
 
@@ -78,7 +79,7 @@ def build_graph(
     """
     graph = StateGraph(SupplierRiskState)
     graph.add_node("supervisor", Supervisor(model))
-    graph.add_node("collect_data", DataCollectionAgent(source, model))
+    graph.add_node("collect_data", DataCollectionAgent(source, model, providers))
     graph.add_node("score", ScoringAgent(model))
     graph.add_node("calibrate", CalibrationAgent(model, weight_store))
     graph.add_node("recommend", RecommendationAgent(model))

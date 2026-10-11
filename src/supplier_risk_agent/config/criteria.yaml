@@ -27,9 +27,12 @@ criteria:
     description: Number and accessibility of alternative sourcing options (few options = unfavourable).
     source: expert_assessment
   switching_complexity:
-    label: Change complexity
-    description: Effort to switch supplier (qualification, tooling, regulatory or customer approvals).
-    source: expert_assessment
+    label: Change complexity (time to exit)
+    description: >
+      Change Complexity Index: effort to switch supplier, measured as the months needed until an
+      alternative source is qualified and running (search, qualification, tooling, regulatory or
+      customer approvals). An expert rating can always override.
+    source: time_to_exit
   business_impact:
     label: Business consequence
     description: Impact on own operations and customers if the supplier fails.
@@ -47,9 +50,11 @@ criteria:
 
   # --- supply chain structure -----------------------------------------------------
   country_risk:
-    label: Country / geopolitical risk
-    description: Derived from a country risk index (0-100, higher = riskier), e.g. based on public governance indicators.
-    source: country_risk_index
+    label: Country risk (political stability)
+    description: >
+      Political stability of the supplier's country, preferably the World Bank WGI percentile rank
+      (higher = more stable); falls back to a generic country risk index (0-100, higher = riskier).
+    source: political_stability
   sourcing_strategy:
     label: Sourcing strategy
     description: Single vs. dual vs. multi sourcing for the supplied scope.

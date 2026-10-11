@@ -28,6 +28,7 @@ from typing import Any
 
 from ..models.config import RiskModelConfig, criteria_catalogue
 from ..models.domain import RiskAssessment, SupplierProfile
+from .indicators import source_inputs
 
 META_COLUMNS = ["supplier_id", "name", "material_group", "country", "annual_spend"]
 LABEL_COLUMN = "expert_risk_score"  # label column of the risk view
@@ -81,9 +82,7 @@ def input_columns(models: RiskModelConfig | Iterable[RiskModelConfig]) -> list[s
     models = [models] if isinstance(models, RiskModelConfig) else list(models)
     factors = [f for m in models for d in m.dimensions for f in d.factors]
     expert = [f.key for f in factors if f.source == "expert_assessment"]
-    indicators = [f.source for f in factors if f.source != "expert_assessment"]
-    if "transport_mode" in indicators:  # the transport rating source also reads this flag
-        indicators.insert(indicators.index("transport_mode") + 1, "intercontinental")
+    indicators = [name for f in factors for name in source_inputs(f.source)]
     labels = [m.label_column for m in models]
     return list(dict.fromkeys(META_COLUMNS + expert + indicators + labels))
 

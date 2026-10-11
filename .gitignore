@@ -35,6 +35,7 @@ dist/
 .env.*
 !.env.example
 
-# Outputs
+# Outputs (history may contain real supplier data)
+data/history/
 output/
 *.log

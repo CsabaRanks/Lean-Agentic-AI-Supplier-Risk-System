@@ -86,8 +86,9 @@ def test_one_sheet_serves_every_view(view):
 def test_criterion_keys_do_not_shadow_numeric_indicators():
     """A number under a criterion's name is read as an expert rating, so no numeric indicator may share it."""
     from supplier_risk_agent.models.config import criteria_catalogue
+    from supplier_risk_agent.tools.indicators import source_inputs
 
     catalogue = criteria_catalogue()
     text_indicators = {"compliance_status", "transport_mode"}
-    sources = {c["source"] for c in catalogue.values()} - {"expert_assessment"} - text_indicators
-    assert not set(catalogue) & sources
+    inputs = {name for c in catalogue.values() for name in source_inputs(c["source"])} - text_indicators
+    assert not set(catalogue) & inputs
