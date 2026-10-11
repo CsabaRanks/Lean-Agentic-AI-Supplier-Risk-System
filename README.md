@@ -94,6 +94,8 @@ or decided by an LLM. Nobody checks them against reality. This project adds a
      inconsistent labels, are rejected.
    - A level-offset check stops weights from being distorted when experts are systematically
      stricter or more lenient than the model's scale. Such cases go to review.
+   - Fit diagnostics flag what weights cannot express: a high unexplained residual, and
+     knock-out candidates that belong in an escalation rule.
 6. **Logging and persistence.** Old vs. new weights, MSE and class agreement before/after are logged. Applied weights are saved as a new version in the weight store (`data/weights/global_v002.yaml`, …).
 7. **Scope.** Calibration runs **globally** or **per material group**.
 

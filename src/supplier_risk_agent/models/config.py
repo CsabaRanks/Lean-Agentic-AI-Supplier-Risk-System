@@ -161,6 +161,17 @@ class CalibrationSettings(BaseModel):
         description="Flag a level offset if labels differ from scores by at least this many points on average",
     )
     level_bias_min_t: float = Field(default=2.0, ge=0, description="...and the offset is at least this many standard errors")
+    residual_share_warning: float = Field(
+        default=0.4, ge=0,
+        description="Warn if the (cross-validated) error after calibration exceeds this share of the label variance",
+    )
+    knockout_severe_rating: int = Field(default=4, description="Rating from which a factor counts as a severe finding")
+    knockout_min_suppliers: int = Field(default=3, ge=2, description="Minimum suppliers with a severe finding")
+    knockout_residual_threshold: float = Field(
+        default=5.0, ge=0,
+        description="Flag a knock-out candidate if those suppliers are judged at least this many points riskier "
+        "than the calibrated model predicts (after removing the overall offset), and >= 2 standard errors",
+    )
     level_bias_action: Literal["review", "warn"] = Field(
         default="review",
         description="'review': never auto-apply weights calibrated on level-biased labels; 'warn': report only",

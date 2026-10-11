@@ -144,6 +144,16 @@ class CalibrationReport(BaseModel):
     )
     level_offset_t: float | None = Field(default=None, description="level_offset / its standard error")
     level_bias_detected: bool = False
+    residual_share: float | None = Field(
+        default=None, description="Error after calibration as a share of the label variance (cross-validated if available)"
+    )
+    factors_at_minimum: list[str] = Field(
+        default_factory=list, description="Factors pushed from a clearly higher weight down to the minimum weight"
+    )
+    knockout_candidates: dict[str, float] = Field(
+        default_factory=dict,
+        description="factor -> mean extra risk (points) experts assign to suppliers with a severe rating on it",
+    )
     warnings: list[str] = Field(default_factory=list)
     message: str = ""
 

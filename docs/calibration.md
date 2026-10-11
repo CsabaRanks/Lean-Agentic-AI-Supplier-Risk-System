@@ -180,6 +180,14 @@ Calibration [global] — 32 labelled supplier(s): accepted: MSE 37.8 -> 13.3 (64
     - With `warn`, the warning is only reported.
   - **Disagreeing experts.** If category managers weigh criteria differently, their labels are
     not one policy. Measure agreement with two labels for a subset of suppliers first.
+- **Fit diagnostics.** These are hints in the report and the review request; they do not block
+  approval. Rates below are from E4 (`calibration-robustness/SUMMARY.md`, section E4b).
+
+  | Hint | Fires when | Useful? |
+  |---|---|---|
+  | **high residual** | the cross-validated error left after calibration is ≥ `residual_share_warning` (40 %) of the label variance | Yes: 63–100 % of runs with non-additive, knock-out or level-shifted experts; 0–7 % with linear experts; 17–43 % with very noisy labels (a true signal: the noise *is* unexplained) |
+  | **knock-out candidate** | suppliers with a severe rating (≥ `knockout_severe_rating`, 4) on a factor, at least `knockout_min_suppliers` (3) of them, are judged ≥ `knockout_residual_threshold` (5) points and ≥ 2 SE riskier than the calibrated model predicts, after removing the overall offset | Yes: knock-out policy found in 13 / 53 / 97 % of runs at 16 / 32 / 64 labels; ≤ 3 % false hints with linear experts. Response: an escalation rule. |
+  | **pushed to the minimum weight** | a factor's weight fell from ≥ 2× the minimum to the minimum | Weak: frequent with level offsets and knock-outs, but also in 13–17 % of linear and up to 53 % of very noisy runs. Read it as "check this factor", not as a diagnosis. |
 - **Treat weights like a model release.** Review the proposal, approve it, and commit the new
   weight file.
 - **Overfitting.** `scripts/validate_calibration.py` runs repeated k-fold cross-validation, a

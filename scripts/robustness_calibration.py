@@ -47,6 +47,7 @@ from supplier_risk_agent.tools.calibration import (
     build_design_matrix,
     class_agreement,
     cross_validated_acceptance,
+    diagnose_fit,
     fit_weights,
     level_offset,
     mse,
@@ -144,10 +145,10 @@ def labels(X: np.ndarray, policy: Policy, rng: np.random.Generator) -> np.ndarra
     return np.clip(rounded, 0, 100)
 
 
-def fit(X: np.ndarray, y: np.ndarray, settings: CalibrationSettings) -> tuple[np.ndarray, bool]:
+def fit(X: np.ndarray, y: np.ndarray, settings: CalibrationSettings) -> tuple[np.ndarray, bool, float]:
     theta, success, _, used, _ = fit_weights(X, y, THETA_DEFAULT, MODEL, settings)
-    passes = cross_validated_acceptance(X, y, THETA_DEFAULT, THETA_DEFAULT, MODEL, used)[0]
-    return theta, bool(success and passes)
+    passes, _, cv_after, _ = cross_validated_acceptance(X, y, THETA_DEFAULT, THETA_DEFAULT, MODEL, used)
+    return theta, bool(success and passes), cv_after
 
 
 def run(cfg: dict) -> tuple[list[dict], list[dict]]:
@@ -166,7 +167,8 @@ def run(cfg: dict) -> tuple[list[dict], list[dict]]:
             for seed in range(cfg["seeds"]):
                 X = ratings(n, seed, "CAL")
                 y = labels(X, policy, np.random.default_rng(10_000 * (p_idx + 1) + seed))
-                theta, accepted = fit(X, y, settings)
+                theta, accepted, cv_after = fit(X, y, settings)
+                share, at_minimum, knockouts = diagnose_fit(X, y, theta, THETA_DEFAULT, MODEL, settings, cv_after)
                 offset, offset_t = level_offset(X, y, THETA_DEFAULT, MODEL)
                 flagged = abs(offset) >= settings.level_bias_threshold and abs(offset_t) >= settings.level_bias_min_t
                 calibrated = mse(X_test, y_true, theta, MODEL)
@@ -179,6 +181,11 @@ def run(cfg: dict) -> tuple[list[dict], list[dict]]:
                     "accepted_cv": accepted, "harm": bool(applied > default_err),
                     "level_offset": offset, "level_flag": bool(flagged),
                     "mse_applied_level_check": applied_checked, "harm_level_check": bool(applied_checked > default_err),
+                    "residual_share": share,
+                    "diag_high_residual": bool(share is not None and share >= settings.residual_share_warning),
+                    "diag_factor_at_minimum": bool(at_minimum),
+                    "diag_knockout_candidate": bool(knockouts),
+                    "knockout_factors": ";".join(sorted(knockouts)),
                     "class_agreement_calibrated": class_agreement(X_test, y_true, theta, MODEL),
                 }
                 rows.append(row)
@@ -199,6 +206,10 @@ def run(cfg: dict) -> tuple[list[dict], list[dict]]:
                 "level_offset_mean": statistics.mean(r["level_offset"] for r in runs),
                 "level_flag_rate": statistics.mean(r["level_flag"] for r in runs),
                 "harm_rate_level_check": statistics.mean(r["harm_level_check"] for r in runs),
+                "residual_share_mean": statistics.mean(r["residual_share"] for r in runs),
+                "diag_high_residual_rate": statistics.mean(r["diag_high_residual"] for r in runs),
+                "diag_factor_at_minimum_rate": statistics.mean(r["diag_factor_at_minimum"] for r in runs),
+                "diag_knockout_candidate_rate": statistics.mean(r["diag_knockout_candidate"] for r in runs),
                 "class_agreement_default": ca_default,
                 "class_agreement_calibrated_mean": statistics.mean(r["class_agreement_calibrated"] for r in runs),
             })
@@ -238,6 +249,17 @@ def markdown(summary: list[dict], cfg: dict) -> str:
             f"{s['share_better_than_default']:.0%} | {s['acceptance_rate_cv']:.0%} | {s['harm_rate_cv']:.0%} | "
             f"{s['level_offset_mean']:+.1f} | {s['level_flag_rate']:.0%} | {s['harm_rate_level_check']:.0%} | "
             f"{s['class_agreement_default']:.0%} → {s['class_agreement_calibrated_mean']:.0%} |")
+    lines += [
+        "",
+        "## E4b · Fit diagnostics (share of runs with a hint)",
+        "",
+        "| policy | n | residual share (mean) | high residual (≥ 40 %) | factor at minimum weight | knock-out candidate |",
+        "|---|---:|---:|---:|---:|---:|",
+    ]
+    for s in summary:
+        lines.append(
+            f"| {s['policy']} | {s['n']} | {s['residual_share_mean']:.2f} | {s['diag_high_residual_rate']:.0%} | "
+            f"{s['diag_factor_at_minimum_rate']:.0%} | {s['diag_knockout_candidate_rate']:.0%} |")
     return "\n".join(lines) + "\n"
 
 

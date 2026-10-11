@@ -1110,6 +1110,38 @@ what the scaled λ (Section 7.4) and the stricter acceptance rule (Section 7.8) 
    - **require the cross-validated improvement to exceed its own uncertainty** rather than a fixed
      percentage. This is now the default (Section 7.8). It removes the harm in this scenario.
 
+**Fit diagnostics.** Since knock-outs and non-additive judgement cannot be fixed by weights, the
+calibration report should at least *say* when they are likely. The demonstrator adds three hints
+to the report and to the review request. They inform the reviewer and do not block approval.
+Thresholds were derived on these E4 policies (rates at n = 16 / 32 / 64,
+`calibration-robustness/SUMMARY.md`, section E4b):
+
+- **High residual.** The cross-validated error left after calibration is at least 40 % of the
+  label variance.
+  - **Detection:** 63–77 % of runs with interacting criteria, 77–87 % with knock-outs, 87–93 %
+    with a level shift, 100 % with worst-factor experts.
+  - **Linear experts:** 0–7 %.
+  - **Very noisy labels (σ = 8):** 17–43 %. This is a correct signal: the noise really is
+    unexplained.
+- **Knock-out candidate.** Suppliers with a severe rating (≥ 4) on one factor, at least three of
+  them, are judged at least 5 points and two standard errors riskier than the calibrated model
+  predicts, after the overall offset is removed.
+  - **Detection:** the knock-out policy was found in 13 / 53 / 97 % of runs, always on the right
+    factor family.
+  - **False hints:** at most 3 % with linear experts. Worst-factor experts trigger it in 7–30 %
+    of runs, which is defensible, since their policy is itself non-compensatory.
+  - **Response:** an escalation rule (Section 6.2).
+- **Pushed to the minimum weight.** A factor's weight fell from at least twice the minimum to the
+  minimum.
+  - **Unspecific:** it fires with level shifts (100 %) and knock-outs (80–87 %), but also in
+    13–17 % of runs with linear experts and up to 53 % with very noisy labels. It is reported as
+    "check this factor", not as a diagnosis.
+  - **Not a reliable knock-out signal:** a knock-out tends to make the affected factor look
+    *more* important, not less.
+
+None of the hints detects disagreement between experts reliably (0–17 %). That still requires
+repeated labels (Section 11).
+
 **What E4 adds.** It turns the main limitation of E1–E3 ("best-case labels") into a map of where
 calibration works and where it does not:
 - **Works:** noisy, coarsely rounded but broadly additive judgement.
@@ -1474,9 +1506,11 @@ already run:
   - **Legacy option.** The in-sample rule remains available as an option and should not be used
     for real decisions.
 - **Policies weights cannot express.** Knock-out judgements, level offsets and non-additive
-  policies cannot be learned by weights (Section 7.7). The demonstrator diagnoses level offsets
-  and withholds such calibrations for review. It does not yet diagnose knock-outs or
-  non-additivity directly, and disagreement between experts is not detected at all.
+  policies cannot be learned by weights (Section 7.7).
+  - **Level offsets:** the demonstrator withholds such calibrations for review.
+  - **Knock-outs and non-additivity:** it gives hints (knock-out candidate, high residual).
+  - **Limits of the hints:** they were tuned on constructed policies. The minimum-weight hint is
+    unspecific. Disagreement between experts is not reliably detected.
 - **Regularisation strength.** λ is scaled with the number of labels (0.05 × 32 / *n*). That
   removes the large-sample bias of a fixed λ (Section 7.4). The scaling constant was set on
   synthetic data. Cross-validated selection was tested and not adopted, and it remains available
@@ -1499,14 +1533,14 @@ value relative to effort.
    cross-validated selection is available as an option (Section 7.4). The scaling constant was set
    on synthetic data. With real labels, it should be checked whether the same constant holds,
    possibly per material group.
-2. **Further diagnostics for misspecification** (from E4). The level-offset check is
-   implemented (Section 7.7). Two diagnostics remain:
-   - the residual error left after calibration, reported as a share of the label variance
-   - for suppliers with severe single findings, the residual error separately (candidate
-     knock-outs)
+2. **From hints to suggestions.** The diagnostics are implemented (level offset, high residual,
+   knock-out candidate, minimum weight; Section 7.7). A next step is to turn them into concrete
+   proposals:
+   - a draft escalation rule for a knock-out candidate
+   - a threshold shift for a level offset
 
-   The levers that respond to these diagnostics are escalation rules, class thresholds or an
-   offset term, not weights.
+   Each proposal would be reviewed like calibrated weights. The thresholds of the hints should
+   be checked on field data.
 3. **A better-founded acceptance test.** The uncertainty threshold (z ≥ 2) is implemented, but
    it was chosen on the synthetic scenarios it is evaluated on, and it ignores the dependence
    between folds. Two improvements are open:

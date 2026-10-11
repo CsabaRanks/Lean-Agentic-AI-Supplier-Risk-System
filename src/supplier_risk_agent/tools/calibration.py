@@ -50,6 +50,24 @@ is both material (``level_bias_threshold`` points) and clear
 (``level_bias_min_t`` standard errors). A flagged offset is a reason to review
 the class thresholds, not to approve new weights.
 
+Fit diagnostics
+---------------
+After fitting, three hints are added to the report (they inform the reviewer,
+they do not block):
+
+* high residual share: the error left after calibration is a large share of
+  the label variance. Typical causes: non-additive judgement, inconsistent
+  labels, very noisy labels.
+* factors at the minimum weight: a factor was pushed from a clearly higher
+  weight to the minimum. Either experts disregard it, or their judgement on it
+  is not additive (level offset, knock-out logic).
+* knock-out candidates: suppliers with a severe rating on a factor are judged
+  clearly riskier than the calibrated model predicts, after removing the
+  overall offset. This is the signature of a knock-out rule, which belongs in an
+  escalation rule rather than in the weights.
+
+Thresholds were derived on the constructed expert policies of experiment E4.
+
 Expert labels are expected as 0..100 scores; classes for the labels are
 derived with the model's own thresholds (used for the class-agreement metric).
 Reported MSE values are in score points squared (0..100 scale).
@@ -116,6 +134,37 @@ def level_offset(X: np.ndarray, y: np.ndarray, theta: np.ndarray, model: RiskMod
         return mean, 0.0
     se = float(residual.std(ddof=1) / np.sqrt(len(residual)))
     return mean, (float(mean / se) if se > 0 else 0.0)
+
+
+def diagnose_fit(
+    X: np.ndarray,
+    y: np.ndarray,
+    theta: np.ndarray,
+    theta_prior: np.ndarray,
+    model: RiskModelConfig,
+    settings: CalibrationSettings,
+    error_after: float,
+) -> tuple[float | None, list[str], dict[str, float]]:
+    """Residual share, factors pushed to the minimum weight, knock-out candidates (see module docstring)."""
+    keys = model.factor_keys()
+    variance = float(np.var(y))
+    residual_share = error_after / variance if variance > 0 else None
+
+    floor = settings.min_factor_weight
+    at_minimum = [k for k, new, old in zip(keys, theta, theta_prior) if new <= floor + 0.005 and old >= 2 * floor]
+
+    residual = y - _predict(X, theta, model)
+    residual = residual - residual.mean()  # an overall offset is the level-offset check's job
+    candidates: dict[str, float] = {}
+    for j, key in enumerate(keys):
+        severe = X[:, j] >= settings.knockout_severe_rating
+        if severe.sum() < settings.knockout_min_suppliers:
+            continue
+        mean = float(residual[severe].mean())
+        se = float(residual[severe].std(ddof=1) / np.sqrt(severe.sum()))
+        if mean >= settings.knockout_residual_threshold and se > 0 and mean / se >= 2:
+            candidates[key] = round(mean, 1)
+    return residual_share, at_minimum, candidates
 
 
 def relative_improvement(before: float, after: float) -> float:
@@ -368,6 +417,28 @@ def calibrate_weights(
         report.cv_improvement_z = round(z, 2) if np.isfinite(z) else 99.0
         basis_text = (f"cross-validated MSE {cv_before:.1f} -> {cv_after:.1f}, z = {z:.1f} "
                       f"(in-sample {before:.1f} -> {after:.1f})")
+
+    error_after = report.cv_mse_after if report.cv_mse_after is not None else after
+    share, at_minimum, candidates = diagnose_fit(X, y, theta, theta_prior, model, settings, error_after)
+    report.residual_share = round(share, 3) if share is not None else None
+    report.factors_at_minimum = at_minimum
+    report.knockout_candidates = candidates
+    if share is not None and share >= settings.residual_share_warning:
+        report.warnings.append(
+            f"high residual: {share:.0%} of the label variance remains unexplained after calibration. "
+            "Expert judgement may be non-additive, inconsistent between experts, or very noisy; "
+            "weights alone cannot represent it."
+        )
+    if at_minimum:
+        report.warnings.append(
+            f"pushed to the minimum weight: {', '.join(at_minimum)}. Either experts disregard these factors, "
+            "or their judgement on them is not additive (level offset, knock-out logic). Check before approving."
+        )
+    for key, extra in candidates.items():
+        report.warnings.append(
+            f"knock-out candidate: suppliers with a severe {key.replace('_', ' ')} rating are judged "
+            f"{extra:.1f} points riskier than the calibrated model predicts. Consider an escalation rule."
+        )
 
     large_enough = basis_improvement >= settings.min_improvement
     certain_enough = settings.acceptance != "cross_validated" or z >= settings.cv_min_z

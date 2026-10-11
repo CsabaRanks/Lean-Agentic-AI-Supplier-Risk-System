@@ -2,6 +2,29 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Fit diagnostics: residual and knock-out candidates
+
+**D27: Three hints in the calibration report.** They are warn only; they appear in the review
+request and the audit trail.
+1. **High residual.** CV error after calibration ≥ 40 % of the label variance.
+2. **Knock-out candidate.** Suppliers with a rating ≥ 4 on a factor (≥ 3 of them) are judged
+   ≥ 5 points and ≥ 2 SE riskier than the calibrated model predicts. The residual is **centred**
+   first, because without centring every level shift looks like a knock-out on every factor.
+3. **Pushed to the minimum weight.**
+
+**Probe before building.** The user's hypothesis "factor pushed to the minimum = knock-out
+candidate" was checked first. It is unspecific: it fires with level shifts and knock-outs, but
+also in 13–17 % of linear and up to 53 % of very noisy runs. A knock-out makes its factor look
+more important, not less. The minimum-weight hint is therefore kept, but worded as "check this
+factor". The real knock-out signal is the subgroup residual.
+
+**E4b rates (n = 16 / 32 / 64):**
+- **Knock-out candidate:** 13 / 53 / 97 % on the knock-out policy; ≤ 3 % false hints for linear
+  experts.
+- **High residual:** 63–100 % on non-additive, knock-out and level-shifted policies; 0–7 % for
+  linear experts.
+- **Not reliably detected:** disagreement between experts.
+
 ## 2026-10 — Regularisation scaled with 1/n
 
 **D26: Default `lambda_selection: scaled`**, i.e. λ = 0.05 × 32 / n (`lambda_reference_n: 32`).

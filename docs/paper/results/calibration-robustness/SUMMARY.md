@@ -34,3 +34,35 @@ Synthetic data only. 30 seeds per cell; independent test set of 2000 suppliers; 
 | coarse | 16 | 0.0 | 29.7 | 12.5 | 58% | 100% | 33% | 0% | +0.9 | 0% | 0% | 79% → 86% |
 | coarse | 32 | 0.0 | 29.7 | 7.0 | 76% | 100% | 63% | 0% | +1.3 | 0% | 0% | 79% → 90% |
 | coarse | 64 | 0.0 | 29.7 | 3.6 | 88% | 100% | 97% | 0% | +1.3 | 0% | 0% | 79% → 93% |
+
+## E4b · Fit diagnostics (share of runs with a hint)
+
+| policy | n | residual share (mean) | high residual (≥ 40 %) | factor at minimum weight | knock-out candidate |
+|---|---:|---:|---:|---:|---:|
+| linear | 16 | 0.22 | 7% | 13% | 3% |
+| linear | 32 | 0.14 | 0% | 13% | 0% |
+| linear | 64 | 0.12 | 0% | 17% | 0% |
+| interaction | 16 | 0.57 | 77% | 43% | 0% |
+| interaction | 32 | 0.50 | 63% | 53% | 0% |
+| interaction | 64 | 0.45 | 63% | 43% | 0% |
+| knockout | 16 | 0.77 | 87% | 80% | 13% |
+| knockout | 32 | 0.62 | 77% | 83% | 53% |
+| knockout | 64 | 0.53 | 77% | 87% | 97% |
+| worst_factor | 16 | 2.92 | 100% | 100% | 7% |
+| worst_factor | 32 | 2.27 | 100% | 100% | 20% |
+| worst_factor | 64 | 2.12 | 100% | 100% | 30% |
+| level_shift | 16 | 0.69 | 93% | 100% | 3% |
+| level_shift | 32 | 0.56 | 87% | 100% | 7% |
+| level_shift | 64 | 0.52 | 90% | 100% | 13% |
+| two_experts | 16 | 0.27 | 10% | 20% | 0% |
+| two_experts | 32 | 0.27 | 17% | 20% | 0% |
+| two_experts | 64 | 0.25 | 0% | 17% | 0% |
+| noise_low | 16 | 0.12 | 0% | 3% | 0% |
+| noise_low | 32 | 0.07 | 0% | 3% | 0% |
+| noise_low | 64 | 0.05 | 0% | 0% | 0% |
+| noise_high | 16 | 0.41 | 43% | 43% | 0% |
+| noise_high | 32 | 0.34 | 30% | 53% | 7% |
+| noise_high | 64 | 0.34 | 17% | 47% | 3% |
+| coarse | 16 | 0.22 | 3% | 7% | 0% |
+| coarse | 32 | 0.16 | 0% | 10% | 0% |
+| coarse | 64 | 0.15 | 0% | 10% | 0% |

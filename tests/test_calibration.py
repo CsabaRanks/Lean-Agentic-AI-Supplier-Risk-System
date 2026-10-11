@@ -204,3 +204,46 @@ def test_fixed_lambda_is_used_as_is(model):
     report, _ = calibrate_weights(portfolio(20, 0, model), model, model.default_weights(),
                                   CalibrationSettings(lambda_selection="fixed", regularization=0.3))
     assert report.regularization_used == 0.3 and report.lambda_cv_curve == {}
+
+
+def test_knockout_candidate_detected(model):
+    """Experts lift suppliers with acute insolvency signals to at least 70: a knock-out rule."""
+    from supplier_risk_agent.tools.synthetic import synthetic_portfolio as portfolio
+
+    profiles = portfolio(64, 4, model)
+    for p in profiles:
+        if p.indicators["distress_signals"] >= 2:  # insolvency rating >= 4
+            p.expert_risk_score = max(p.expert_risk_score, 70.0)
+    report, _ = calibrate_weights(profiles, model, model.default_weights())
+    assert "insolvency_signals" in report.knockout_candidates
+    assert report.knockout_candidates["insolvency_signals"] >= 5
+    assert any("knock-out candidate" in w and "insolvency signals" in w for w in report.warnings)
+
+
+def test_no_fit_warnings_for_linear_experts(model):
+    from supplier_risk_agent.tools.synthetic import synthetic_portfolio as portfolio
+
+    report, _ = calibrate_weights(portfolio(64, 4, model), model, model.default_weights())
+    assert report.residual_share < 0.4
+    assert report.knockout_candidates == {}
+    assert not any("high residual" in w or "knock-out" in w for w in report.warnings)
+
+
+def test_high_residual_warning_for_unrelated_labels(model):
+    from supplier_risk_agent.tools.synthetic import synthetic_portfolio as portfolio
+
+    rng = np.random.default_rng(0)
+    profiles = portfolio(40, 5, model)
+    for p in profiles:
+        p.expert_risk_score = float(rng.uniform(0, 100))  # labels unrelated to the factors
+    report, _ = calibrate_weights(profiles, model, model.default_weights())
+    assert report.residual_share >= 0.4
+    assert any("high residual" in w for w in report.warnings)
+
+
+def test_level_offset_pushes_rare_factors_to_minimum(model):
+    from supplier_risk_agent.tools.synthetic import synthetic_portfolio as portfolio
+
+    report, _ = calibrate_weights(_shifted(portfolio(64, 1, model), 10), model, model.default_weights())
+    assert {"insolvency_signals", "compliance_status"} <= set(report.factors_at_minimum)
+    assert any("pushed to the minimum weight" in w for w in report.warnings)
