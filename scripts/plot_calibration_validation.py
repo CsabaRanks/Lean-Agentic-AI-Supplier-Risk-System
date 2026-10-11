@@ -5,6 +5,8 @@ Reads the CSV summaries written by scripts/validate_calibration.py and writes
     docs/paper/figures/fig04_lambda_curve.{png,svg}       E1: error vs. regularisation strength
     docs/paper/figures/fig05_learning_curve.{png,svg}     E2: error vs. number of labels; acceptance rules
     docs/paper/figures/fig06_weight_stability.{png,svg}   E3: recovered weights across seeds
+    docs/paper/figures/fig07_robustness.{png,svg}         E4: misspecified expert policies
+                                                          (only if scripts/robustness_calibration.py has run)
 
     python scripts/plot_calibration_validation.py
     python scripts/plot_calibration_validation.py --results <dir> --out <dir>
@@ -25,6 +27,7 @@ import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "docs" / "paper" / "results" / "calibration-validation"
+ROBUSTNESS = ROOT / "docs" / "paper" / "results" / "calibration-robustness"
 OUT = ROOT / "docs" / "paper" / "figures"
 
 NOISE_FLOOR = 16 + 25 / 12  # sigma = 4, rounding to steps of 5 (see tools.synthetic.label_noise_floor)
@@ -166,14 +169,55 @@ def fig_stability(results: Path, out: Path) -> list[Path]:
     return _save(fig, out, "fig06_weight_stability")
 
 
+POLICY_LABELS = {
+    "linear": "linear (reference)", "noise_low": "linear, σ = 2", "noise_high": "linear, σ = 8",
+    "coarse": "linear, steps of 10", "level_shift": "level shift +10", "interaction": "interaction",
+    "knockout": "knock-out floor", "worst_factor": "worst factor dominates", "two_experts": "two experts disagree",
+}
+
+
+def fig_robustness(results: Path, out: Path) -> list[Path]:
+    rows = read("e4_summary", results)
+    order = [p for p in POLICY_LABELS if any(r["policy"] == p for r in rows)]
+    sizes = sorted({r["n"] for r in rows})
+    shades = {s: c for s, c in zip(sizes, ["#a8d5c2", "#4fa383", GREEN][-len(sizes):])}
+    width = 0.8 / len(sizes)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.4, 4.6), sharey=True,
+                                   gridspec_kw={"width_ratios": [1.35, 1]})
+    for j, n in enumerate(sizes):
+        by_policy = {r["policy"]: r for r in rows if r["n"] == n}
+        ys = [i + (j - (len(sizes) - 1) / 2) * width for i in range(len(order))]
+        ax1.barh(ys, [100 * by_policy[p]["excess_error_removed"] for p in order], height=width,
+                 color=shades[n], label=f"n = {int(n)}")
+        ax2.barh(ys, [100 * by_policy[p]["harm_rate_cv"] for p in order], height=width, color=shades[n])
+    ax1.axvline(0, color="#6b7580", lw=1)
+    ax1.set_yticks(range(len(order)))
+    ax1.set_yticklabels([POLICY_LABELS[p] for p in order])
+    ax1.invert_yaxis()
+    ax1.set_xlabel("Excess error removed by calibration (%)")
+    ax1.set_title("(a) Share of the default weights' error above the linear floor", fontsize=10, loc="left")
+    ax1.legend(fontsize=8.5, loc="upper left")
+    ax2.set_xlabel("Runs where applied weights are worse than defaults (%)")
+    ax2.set_title("(b) Harm rate, cross-validated rule", fontsize=10, loc="left")
+    for ax in (ax1, ax2):
+        ax.grid(axis="y", visible=False)
+    fig.tight_layout()
+    return _save(fig, out, "fig07_robustness")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--results", type=Path, default=RESULTS)
+    parser.add_argument("--robustness", type=Path, default=ROBUSTNESS)
     parser.add_argument("--out", type=Path, default=OUT)
     args = parser.parse_args(argv)
     _style()
-    for paths in (fig_lambda(args.results, args.out), fig_learning(args.results, args.out),
-                  fig_stability(args.results, args.out)):
+    figures = [fig_lambda(args.results, args.out), fig_learning(args.results, args.out),
+               fig_stability(args.results, args.out)]
+    if (args.robustness / "e4_summary.csv").exists():
+        figures.append(fig_robustness(args.robustness, args.out))
+    for paths in figures:
         for p in paths:
             print(f"wrote {p.relative_to(ROOT) if p.is_relative_to(ROOT) else p}")
     return 0

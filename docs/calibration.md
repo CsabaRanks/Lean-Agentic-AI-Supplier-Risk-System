@@ -153,6 +153,15 @@ Calibration [global] — 32 labelled supplier(s): accepted: MSE 37.8 -> 13.3 (64
 - **Sample size.** With 10 factors, aim for clearly more than 10 labelled suppliers per scope.
   `min_labels` (default 8) is a hard floor; regularisation does the rest.
 - **Label quality.** Collect labels *before* experts see the model score, to avoid anchoring.
+- **What calibration cannot learn** (robustness experiment E4, `scripts/robustness_calibration.py`):
+  - **Knock-out judgements** ("a major compliance finding means high risk, full stop"). Encode
+    them as escalation rules.
+  - **Systematic strictness or leniency.** If labels are on average higher or lower than scores,
+    calibration distorts the weights. In E4 it pushed insolvency and compliance weights to the
+    minimum. Check the mean label–score difference before approving; adjust class thresholds
+    instead.
+  - **Disagreeing experts.** If category managers weigh criteria differently, their labels are
+    not one policy. Measure agreement with two labels for a subset of suppliers first.
 - **Treat weights like a model release.** Review the proposal, approve it, and commit the new
   weight file.
 - **Overfitting.** `scripts/validate_calibration.py` runs repeated k-fold cross-validation, a

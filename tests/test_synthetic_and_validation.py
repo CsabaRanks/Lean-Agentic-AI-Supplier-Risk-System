@@ -65,3 +65,17 @@ def test_validation_script_quick_run(tmp_path):
     for name in ("fig04_lambda_curve", "fig05_learning_curve", "fig06_weight_stability"):
         assert (figures / f"{name}.png").stat().st_size > 10_000
         assert (figures / f"{name}.svg").exists()
+
+
+def test_robustness_script_quick_run(tmp_path):
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "robustness_calibration.py"), "--quick", "--out", str(tmp_path)],
+        check=False, capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    rows = json.loads((tmp_path / "summary.json").read_text())["summary"]
+    by_policy = {r["policy"]: r for r in rows}
+    assert {"linear", "interaction", "knockout", "worst_factor", "level_shift", "two_experts"} <= set(by_policy)
+    # sanity: a linear policy is exactly representable, non-linear ones are not
+    assert by_policy["linear"]["linear_floor_mse"] == pytest.approx(0.0, abs=1e-3)
+    assert by_policy["knockout"]["linear_floor_mse"] > 10

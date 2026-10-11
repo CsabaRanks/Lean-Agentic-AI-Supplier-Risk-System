@@ -2,6 +2,24 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Robustness to misspecified expert policies (E4)
+
+**D23: E4 run** (`scripts/robustness_calibration.py`, Figure 7, paper Section 7.7). Eight constructed
+expert policies; production settings; 16/32/64 labels; 30 seeds.
+
+| Situation | What calibration does |
+|---|---|
+| Noise / rounding | Robust, but costs labels: σ = 8 needs about 64 labels for 75 % of the gain. |
+| Non-additive policies (interaction, worst factor) | A large floor remains that no weighting removes; class agreement barely improves. |
+| Knock-out judgements | Weights cannot learn them. At 16 labels calibration is worse than the defaults; the CV rule still lets 10–13 % harm through at 16–32 labels. Encode knock-outs as escalation rules. |
+| Level offset (experts uniformly stricter) | Weights cannot shift the level. Calibration distorts them: the shift correlates 0.89 with factor mean rating, and insolvency and compliance are pushed to the minimum weight. Handle via thresholds or an offset term. |
+| Disagreeing experts, little to gain | Worst case for the acceptance rule: 43 % harm at 16 labels, 23 % at 32. Measure inter-rater agreement first; require the CV improvement to exceed its standard error. |
+
+**Open follow-ups (code):**
+- level-bias and residual diagnostics in the calibration report
+- significance-based acceptance
+- λ by CV
+
 ## 2026-10 — Cross-validated acceptance and validation figures
 
 **D21: Acceptance is tested out of sample by default.**
