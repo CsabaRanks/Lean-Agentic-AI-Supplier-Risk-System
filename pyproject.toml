@@ -27,6 +27,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.5"]
 research = ["matplotlib>=3.8"]  # regenerate docs/images/spider-diagram.png
+ui = ["streamlit>=1.38", "pandas>=2.0"]  # spreadsheet-style front end: streamlit run ui/app.py
 
 [project.scripts]
 supplier-risk = "supplier_risk_agent.cli:main"

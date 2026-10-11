@@ -203,6 +203,34 @@ SUP-001   Alpha Precision Parts          12.2  low        100%  global/default
 * class raised by an escalation rule
 ```
 
+### Spreadsheet UI
+
+The same workflow behind a familiar spreadsheet surface:
+- **Rows and columns.** Suppliers in rows; criteria, scores and classes in columns.
+- **Working the table.** Filters, sorting, traffic-light classes, direct cell editing.
+- **CSV.** Import and export.
+
+```bash
+pip install -e ".[ui]"        # adds streamlit and pandas
+streamlit run ui/app.py       # opens http://localhost:8501
+```
+
+| Tab | What you do there |
+|---|---|
+| **▶️ Scoring run** | Edit supplier inputs like a sheet (or import a CSV), then run the scoring |
+| **📋 Portfolio** | Ranked table with traffic-light classes, filters, supplier details, audit trail, CSV export |
+| **🎯 Calibration** | Enter or import expert labels (0–100), calibrate, compare current vs. proposed weights, read the diagnostics |
+| **✅ Review & approval** | Approve proposed weights, set classes manually with a comment, or defer |
+
+**How the UI handles your data:**
+- **Calculations.** All numbers come from the package (`SupplierRiskEvaluator`). The UI only
+  collects input and shows results.
+- **Approval.** Calibrated weights are never applied without approval in the UI.
+- **CSV format.** One supplier per row. Columns named like a factor hold expert ratings 1–5; other
+  columns hold raw indicators; `expert_risk_score` holds the label. Use **Empty template CSV** in
+  the sidebar as a starting point. Semicolon-separated files from European Excel versions are
+  accepted.
+
 ### Python API
 
 ```python

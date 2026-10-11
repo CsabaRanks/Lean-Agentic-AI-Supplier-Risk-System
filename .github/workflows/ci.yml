@@ -22,9 +22,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - name: Install
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev,ui]"
       - name: Lint
-        run: ruff check src tests examples scripts
+        run: ruff check src tests examples scripts ui
       - name: Test
         env:
           LANGGRAPH_STRICT_MSGPACK: "true"

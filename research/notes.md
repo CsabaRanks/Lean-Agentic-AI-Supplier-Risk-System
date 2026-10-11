@@ -2,6 +2,33 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Spreadsheet UI ("wolf in sheep's clothing")
+
+**D28: `ui/app.py` (Streamlit).** It feels like a spreadsheet; the full workflow runs underneath.
+
+**Design choices:**
+- **`st.data_editor` instead of streamlit-aggrid:** native and version-safe. It is testable with
+  Streamlit's `AppTest`, and the end-to-end tests run in CI. Sorting and editing come built in;
+  filters are one row of controls above the table.
+- **No logic in the UI:** all numbers come from `SupplierRiskEvaluator`. Row/CSV conversion
+  lives in `supplier_risk_agent.tools.tabular` and is tested, including a CSV round trip that gives
+  identical assessments.
+- **Scoring on load:** data is scored as soon as it is loaded (start, example, CSV import), like a
+  spreadsheet that is always calculated. The button is "Recalculate".
+- **Approval enforced:** in the UI, calibrated weights always go through the review tab
+  (`auto_apply` off).
+- **Labels edited in one place:** expert labels are edited only in the calibration tab, so that
+  two editors never compete for the same cell.
+- **Colours:** risk classes use the fixed status palette, always as icon + label (never colour
+  alone). Current/proposed weights use categorical slots 1/2 of the validated reference palette.
+
+**Found by looking at screenshots** (headless Chromium):
+- The class chart overlapped its bars.
+- The weight chart was cramped.
+- The portfolio started empty.
+
+All three are fixed. Known cosmetic: `st.dataframe` shows missing numbers as a grey "None".
+
 ## 2026-10 — Fit diagnostics: residual and knock-out candidates
 
 **D27: Three hints in the calibration report.** They are warn only; they appear in the review
