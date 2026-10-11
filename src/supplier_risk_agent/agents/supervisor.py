@@ -6,12 +6,14 @@ is deliberately rule-based: it is cheap, deterministic and easy to test. The
 (e.g. to decide when external data must be refreshed).
 
 Flow:
-    collect_data -> score -> [calibrate -> score] -> recommend -> [human_review] -> end
+    collect_data -> score -> [calibrate -> score] -> recommend
+        -> [human_review (pauses) -> [score] -> recommend] -> end
 
 Calibration runs at most once per run, and only if enabled (per run via
 ``state["calibrate"]`` or globally via ``calibration.enabled``). If it applies
-new weights, the supervisor routes back to scoring exactly once — the
-calibration feedback loop is bounded by construction.
+new weights (automatically or after reviewer approval), the supervisor routes
+back to scoring exactly once — the feedback loop is bounded by construction.
+Human review runs at most once per run (``review_status`` is set afterwards).
 """
 
 from __future__ import annotations
@@ -54,22 +56,3 @@ class Supervisor:
             "audit_trail": [AuditEntry(agent=AGENT_NAME, event="routed", details={"next_step": step})],
         }
 
-
-def human_review_node(state: SupplierRiskState) -> dict:
-    """Placeholder for human-in-the-loop review.
-
-    Currently it only marks the run as pending review. A later version can use
-    LangGraph's ``interrupt()`` to pause the graph until a reviewer confirms or
-    overrides results or proposed weights.
-    """
-    flagged = [sid for sid, r in state.get("results", {}).items() if r.requires_human_review]
-    return {
-        "review_status": "pending",
-        "audit_trail": [
-            AuditEntry(
-                agent="human_review",
-                event="review_requested",
-                details={"suppliers": flagged, "portfolio_reasons": state.get("review_reasons", [])},
-            )
-        ],
-    }

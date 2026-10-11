@@ -20,10 +20,12 @@ def test_escalation_rules_fire(evaluator):
     assert r5.calculated_class == "low" and r5.risk_class == "critical"
 
 
-def test_incomplete_data_requires_review(evaluator):
+def test_incomplete_data_pauses_for_review(evaluator):
     state = evaluator.run(["SUP-006"])
     assert state["requires_human_review"] is True
-    assert state["review_status"] == "pending"
+    assert "review_status" not in state  # paused, not decided
+    request = evaluator.pending_review(state)
+    assert [s["supplier_id"] for s in request["flagged_suppliers"]] == ["SUP-006"]
     assert any("completeness" in r for r in state["results"]["SUP-006"].review_reasons)
 
 
@@ -68,7 +70,7 @@ def test_proposed_weights_need_approval_when_auto_apply_off(calibration_evaluato
     model.calibration.auto_apply = False
     state = SupplierRiskEvaluator(calibration_evaluator.source, model).run(calibrate=True)
     assert state["calibration_report"].accepted and not state["calibration_applied"]
-    assert state["review_status"] == "pending"
+    assert SupplierRiskEvaluator.pending_review(state)["proposed_weights"] is not None
     assert any("approval required" in r for r in state["review_reasons"])
 
 

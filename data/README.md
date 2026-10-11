@@ -5,7 +5,9 @@ All data in this folder is **entirely fictional**.
 - `sample_suppliers.json` — six hand-crafted suppliers covering the main scoring paths (below).
 - `calibration_portfolio.json` — 36 synthetic suppliers in three material groups, 32 of them with an
   expert label. Generated reproducibly by `examples/generate_calibration_dataset.py` from a hidden
-  weighting plus noise, to demonstrate the Calibration Agent.
+  weighting plus noise, to demonstrate the Calibration Agent. **The expert labels are synthetic**,
+  not real judgements.
+- `weights/` — versioned weight store (see [weights/README.md](weights/README.md)).
 
 `sample_suppliers.json` contains Names, regions and
 all indicator values are invented to exercise the different paths of the risk model:
@@ -41,7 +43,8 @@ all indicator values are invented to exercise the different paths of the risk mo
     "esg_score": 78,             // 0..100, higher = better
     "compliance_status": "compliant"  // compliant | minor_findings | open_findings | major_findings | critical_findings
   },
-  // optional holistic expert label (0..100) used for calibration
+  // optional holistic expert label used for calibration: 0..100 on the model's score scale
+  // (the expert's class is derived from it with the model's thresholds)
   "expert_risk_score": 20
 }
 ```

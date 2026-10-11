@@ -14,7 +14,7 @@
 4. **Agents with a single responsibility, coordinated by a supervisor.** The graph is a hub-and-spoke
    LangGraph `StateGraph`; each worker returns a partial state update and hands control back.
 5. **Governance built in.** Append-only audit trail, data-completeness checks, escalation rules that
-   cannot be averaged away, and a human-review exit.
+   cannot be averaged away, human review with `interrupt()`, and versioned weight files.
 
 ## Graph
 
@@ -26,13 +26,15 @@ flowchart TD
     SUP -->|calibration enabled,<br/>not yet run| CA[Calibration Agent]
     SUP -->|weights applied,<br/>round 1 only| SC
     SUP -->|scores final| RA[Action & Recommendation Agent]
-    SUP -->|flagged| HR[Human Review]
+    SUP -->|flagged| HR[Human Review<br/>interrupt]
     SUP -->|done| END([end])
     DC --> SUP
     SC --> SUP
     CA --> SUP
     RA --> SUP
-    HR --> END
+    HR -->|decision| SUP
+    CA -. auto-applied .-> WS[(Weight store)]
+    HR -. approved .-> WS
 ```
 
 The routing rules live in one method, `Supervisor.route()`:
@@ -43,13 +45,34 @@ The routing rules live in one method, `Supervisor.route()`:
 | no suppliers loaded | `end` |
 | `results` not in state | `score` |
 | calibration enabled and not yet performed | `calibrate` |
-| calibration applied and `scoring_round < 2` | `score` (feedback loop) |
-| recommendations not yet created | `recommend` |
-| `requires_human_review` and not yet reviewed | `human_review` |
+| calibration applied (auto or approved) and `scoring_round < 2` | `score` (feedback loop) |
+| recommendations not yet created (or invalidated by a review decision) | `recommend` |
+| `requires_human_review` and no `review_status` yet | `human_review` |
 | otherwise | `end` |
 
-The calibration feedback loop is bounded by construction: calibration runs at most once per run and
-triggers at most one re-score.
+The loops are bounded by construction: calibration runs at most once, re-scoring happens at most
+once, and human review happens at most once per run.
+
+## Human-in-the-loop
+
+`human_review` calls LangGraph's `interrupt()` with a review request:
+
+- flagged suppliers and their reasons
+- proposed weights with old/new values and MSE
+- the allowed classes
+
+The graph is compiled with a checkpointer. The paused run is stored under its `run_id` (the
+LangGraph thread id) and continues with `SupplierRiskEvaluator.resume(run_id, ReviewDecision(...))`:
+
+| Decision | Effect |
+|---|---|
+| `approve_weights=True` | proposed weights become active and are stored (with reviewer); the portfolio is re-scored and recommendations rebuilt |
+| `overrides={id: {risk_class, comment}}` | manual class per supplier (`manual_override=True`), kept across re-scoring; recommendations rebuilt |
+| `defer=True` | the run closes without decisions, and flagged items stay open |
+
+Invalid decisions (unknown supplier or class, approval without pending weights) are reported in
+`errors` and ignored. The checkpointer only restores allow-listed types (`state_serializer()`).
+Use the same serializer for a persistent checkpointer, e.g. to resume a run in another process.
 
 ## Agents
 
@@ -58,9 +81,9 @@ triggers at most one re-score.
 | Supervisor | `agents/supervisor.py` | Rule-based routing; single extension point for an LLM supervisor. |
 | Data Collection | `agents/data_collection.py` | Loads suppliers in scope (optionally one material group) and expert labels from a `SupplierDataSource`. |
 | Scoring | `agents/scoring.py` | Resolves the weight set per supplier, computes factor ratings, dimension scores, overall score, class, escalations, completeness checks. |
-| Calibration | `agents/calibration.py` | Fits weights to expert labels (min. MSE, constraints), logs old vs. new weights and MSE, applies or proposes them. |
+| Calibration | `agents/calibration.py` | Fits weights to expert labels (min. MSE, constraints), logs old vs. new weights and MSE, applies (and stores) or proposes them. |
 | Action & Recommendation | `agents/recommendation.py` | Maps class, elevated dimensions and escalations to actions and a review cycle. |
-| Human Review | `agents/supervisor.py` (`human_review_node`) | Placeholder; marks the run as pending review. Planned: LangGraph `interrupt()`. |
+| Human Review | `agents/human_review.py` | Pauses the run with `interrupt()`; applies the reviewer's decision (approve weights, class overrides, defer). |
 
 ## State (`models/state.py`)
 
@@ -68,13 +91,13 @@ One `SupplierRiskState` (TypedDict) per run over a portfolio:
 
 | Group | Fields |
 |---|---|
-| Input | `supplier_ids`, `material_group`, `calibrate` |
+| Input | `run_id`, `supplier_ids`, `material_group`, `calibrate` |
 | Data | `suppliers`, `expert_labels` |
 | Weights | `active_weights` (per scope: `global` or a material group), `calibrated_weights` |
 | Scoring | `results` (supplier id → `RiskAssessment`), `scoring_round` |
 | Calibration | `calibration_performed`, `calibration_applied`, `mse_before`, `mse_after`, `calibration_report` |
 | Recommendation | `recommendations_done` (actions are stored on each `RiskAssessment`) |
-| Governance | `next_step`, `requires_human_review`, `review_status`, `review_reasons`*, `errors`*, `audit_trail`* |
+| Governance | `next_step`, `requires_human_review`, `review_status`, `review_decision`, `manual_overrides`, `review_reasons`*, `errors`*, `audit_trail`* |
 
 \* append-only (`Annotated[list, operator.add]`): LangGraph concatenates updates from all nodes.
 
@@ -88,6 +111,9 @@ meaningful across a portfolio. A single supplier is assessed by running the same
 
 For each supplier the Scoring Agent picks the most specific weight set:
 
+Active weights come from the weight store (latest version per scope) when one is configured,
+and are updated by calibration within a run.
+
 1. active (e.g. calibrated) weights for the supplier's material group
 2. configured defaults for that material group (`material_group_weights`)
 3. active global weights (e.g. globally calibrated)
@@ -100,7 +126,7 @@ src/supplier_risk_agent/
 ├── agents/          # one class per agent, each a LangGraph node (callable)
 ├── graph/           # StateGraph construction + SupplierRiskEvaluator facade
 ├── models/          # config (RiskModelConfig, WeightSet), domain objects, state
-├── tools/           # pure functions: indicators -> ratings, scoring, calibration, data sources
+├── tools/           # indicators -> ratings, scoring, calibration, data sources, weight store
 ├── config/          # bundled example risk model (YAML)
 └── cli.py           # `supplier-risk` command
 ```
@@ -113,4 +139,4 @@ src/supplier_risk_agent/
 | add a data feed (credit API, ESG platform, news) | new `@register_source` function in `tools/indicators.py` and/or a new `SupplierDataSource` |
 | add an agent (e.g. external risk monitoring) | new node in `graph/builder.py` + one rule in `Supervisor.route()` |
 | use an LLM supervisor | replace `Supervisor.route()` |
-| real human-in-the-loop | replace `human_review_node` with LangGraph `interrupt()` + checkpointer |
+| resume runs across processes | pass a persistent checkpointer with `serde=state_serializer()` |

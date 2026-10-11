@@ -4,6 +4,7 @@ from .indicators import available_sources, rate_factor, register_source
 from .scoring import (
     aggregate,
     apply_escalations,
+    apply_override,
     assess_profile,
     classify,
     normalise,
@@ -11,13 +12,16 @@ from .scoring import (
     resolve_weights,
     score_factors,
 )
+from .weight_store import WeightStore
 
 __all__ = [
     "InMemorySource",
     "JsonFileSource",
     "SupplierDataSource",
+    "WeightStore",
     "aggregate",
     "apply_escalations",
+    "apply_override",
     "assess_profile",
     "available_sources",
     "calibrate_weights",

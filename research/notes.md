@@ -2,6 +2,30 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Weight store and human-in-the-loop
+
+**D9 — Versioned weight files instead of overwriting the model YAML.**
+Each applied weight set becomes `<scope>_v<NNN>.yaml` with timestamp, approver, model version
+and calibration metrics. The files are append-only and reviewable in git, and rollback is
+possible. The model YAML stays the methodology definition, with the default weights as the
+regularisation anchor.
+
+**D10 — Regularisation anchored on configured defaults, not on the last calibration.**
+Found by a test: with the previous calibration as the anchor, repeated runs on the same labels
+drifted further from the methodology every time. With the defaults as the anchor, re-calibration
+converges, and the min-improvement gate prevents redundant new versions.
+
+**D11 — Human review via LangGraph `interrupt()` + checkpointer.**
+The run pauses with a structured review request and resumes with a `ReviewDecision`: approve
+weights, class overrides, or defer. Side effects happen only after `interrupt()` returns, because
+nodes are re-executed on resume. Manual overrides are kept across re-scoring. State types are
+explicitly allow-listed for checkpoint deserialization (`state_serializer()`); unregistered types
+are going to be blocked by LangGraph.
+
+**D12 — Expert labels as 0–100 scores, classes derived.**
+Labels carry more information than classes and keep the fit linear. Class agreement is reported
+in addition to the MSE.
+
 ## 2026-10 — Initial architecture
 
 **D1 — Deterministic scoring, LLM later and only for language.**
@@ -38,8 +62,8 @@ refactoring.
 
 ## Open questions
 
-- Persisting approved calibrated weights: write back to YAML, or a versioned weights store?
-- Ordinal expert labels (low/medium/high/critical) instead of 0–100 scores?
+- Persistent checkpointer (SQLite) so reviews can be decided in a later session?
+- Additionally support ordinal expert labels (low/medium/high/critical)?
 - Cross-validation in the calibration report — which k for small samples?
 - Which public sources to use for the country-risk index by default?
 

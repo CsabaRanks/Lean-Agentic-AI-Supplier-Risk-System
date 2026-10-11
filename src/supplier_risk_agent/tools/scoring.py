@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from ..models.config import GLOBAL_SCOPE, RiskModelConfig, WeightSet
 from ..models.domain import (
     ActionRecommendation,
+    ClassOverride,
     DimensionScore,
     Escalation,
     FactorScore,
@@ -174,6 +175,19 @@ def assess_profile(profile: SupplierProfile, model: RiskModelConfig, weights: We
         escalations=escalations,
         requires_human_review=bool(reasons),
         review_reasons=reasons,
+    )
+
+
+def apply_override(assessment: RiskAssessment, override: ClassOverride, reviewer: str) -> RiskAssessment:
+    """Set a reviewer's risk class. Scores stay untouched; the change is flagged."""
+    comment = f"{reviewer}: {override.comment}" if override.comment else f"class set by {reviewer}"
+    return assessment.model_copy(
+        update={
+            "risk_class": override.risk_class,
+            "manual_override": True,
+            "review_comment": comment,
+            "requires_human_review": False,
+        }
     )
 
 

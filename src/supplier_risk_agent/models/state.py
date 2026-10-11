@@ -16,13 +16,21 @@ import operator
 from typing import Annotated, Literal, TypedDict
 
 from .config import WeightSet
-from .domain import AuditEntry, CalibrationReport, RiskAssessment, SupplierProfile
+from .domain import (
+    AuditEntry,
+    CalibrationReport,
+    ClassOverride,
+    ReviewDecision,
+    RiskAssessment,
+    SupplierProfile,
+)
 
 Step = Literal["collect_data", "score", "calibrate", "recommend", "human_review", "end"]
 
 
 class SupplierRiskState(TypedDict, total=False):
     # --- input ---------------------------------------------------------------
+    run_id: str  # also the LangGraph thread id used to resume a paused run
     supplier_ids: list[str]  # empty / missing = all suppliers in the source
     material_group: str | None  # restrict run (and calibration scope) to one group
     calibrate: bool  # per-run switch; overrides calibration.enabled in the config
@@ -56,7 +64,9 @@ class SupplierRiskState(TypedDict, total=False):
     # --- control flow & governance ------------------------------------------------
     next_step: Step
     requires_human_review: bool
-    review_status: Literal["pending"]
+    review_status: Literal["completed", "deferred"]  # absent while the run waits for review
+    review_decision: ReviewDecision | None
+    manual_overrides: dict[str, ClassOverride]  # kept across re-scoring
     review_reasons: Annotated[list[str], operator.add]  # portfolio-level reasons
     errors: Annotated[list[str], operator.add]
     audit_trail: Annotated[list[AuditEntry], operator.add]

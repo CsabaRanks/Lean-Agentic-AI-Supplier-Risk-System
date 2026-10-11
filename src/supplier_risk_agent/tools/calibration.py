@@ -14,10 +14,15 @@ model score reproduces the expert view as closely as possible:
     subject to theta_f >= w_min  for all f,     sum_f theta_f = 1
 
 * The first term is the mean squared error (MSE) in normalised units.
-* The ridge term pulls towards the prior weights ``theta_0`` (the configured
-  defaults). It keeps the solution stable with few labels and prevents single
-  criteria from being switched off — calibration *adjusts* expert-defined
-  weights, it does not replace the methodology.
+* The ridge term pulls towards the *anchor* weights ``theta_0`` — always the
+  configured defaults, never the result of a previous calibration. It keeps
+  the solution stable with few labels and prevents single criteria from being
+  switched off — calibration *adjusts* expert-defined weights, it does not
+  replace the methodology. Anchoring on the defaults also means repeated
+  calibration on the same labels converges to the same weights instead of
+  drifting a little further every run.
+* "MSE before" is measured with the currently active weights (``prior``),
+  which may be defaults or previously approved weights.
 * ``w_min`` guarantees every criterion keeps a minimum influence.
 
 The problem is a convex quadratic program; we solve it with SciPy's SLSQP,
@@ -25,6 +30,8 @@ which handles the bound and equality constraints directly. Only suppliers with
 an expert label *and* complete data are used, because missing-data
 re-weighting would make the score non-linear in ``theta``.
 
+Expert labels are expected as 0..100 scores; classes for the labels are
+derived with the model's own thresholds (used for the class-agreement metric).
 Reported MSE values are in score points squared (0..100 scale).
 """
 
@@ -35,7 +42,7 @@ from scipy.optimize import minimize
 
 from ..models.config import CalibrationSettings, RiskModelConfig, WeightSet
 from ..models.domain import CalibrationReport, SupplierProfile
-from .scoring import score_factors
+from .scoring import classify, score_factors
 
 ABS_TOL = 1e-3  # minimum absolute MSE reduction (score points^2) to count as improvement
 
@@ -68,6 +75,17 @@ def _predict(X: np.ndarray, theta: np.ndarray, model: RiskModelConfig) -> np.nda
 
 def mse(X: np.ndarray, y: np.ndarray, theta: np.ndarray, model: RiskModelConfig) -> float:
     return float(np.mean((_predict(X, theta, model) - y) ** 2))
+
+
+def class_agreement(X: np.ndarray, y: np.ndarray, theta: np.ndarray, model: RiskModelConfig) -> float:
+    """Share of suppliers whose model class equals the class derived from the expert label.
+
+    Experts give 0..100 scores; their class follows from the same thresholds
+    as the model's, so both are directly comparable.
+    """
+    pred = _predict(X, theta, model)
+    hits = [classify(float(p), model) == classify(float(t), model) for p, t in zip(pred, y)]
+    return float(np.mean(hits)) if hits else 0.0
 
 
 def solve_weights(
@@ -107,9 +125,16 @@ def calibrate_weights(
     prior: WeightSet,
     settings: CalibrationSettings | None = None,
     scope: str | None = None,
+    anchor: WeightSet | None = None,
 ) -> tuple[CalibrationReport, WeightSet | None]:
-    """Calibrate ``prior`` against expert labels. Returns (report, new weights or None)."""
+    """Calibrate against expert labels. Returns (report, new weights or None).
+
+    ``prior``  — weights currently in use (baseline for "MSE before").
+    ``anchor`` — regularisation target; defaults to ``prior``. Agents pass the
+                 configured defaults here.
+    """
     settings = settings or model.calibration
+    anchor = anchor or prior
     scope = scope or prior.scope
     keys = model.factor_keys()
     X, y, used, excluded = build_design_matrix(profiles, model, prior)
@@ -128,10 +153,11 @@ def calibrate_weights(
         )
         return report, None
 
-    theta0 = np.array([prior.factor_weights.get(k, 0.0) for k in keys])
-    theta, success, solver_msg = solve_weights(X, y, theta0, model, settings)
+    theta_prior = np.array([prior.factor_weights.get(k, 0.0) for k in keys])
+    theta_anchor = np.array([anchor.factor_weights.get(k, 0.0) for k in keys])
+    theta, success, solver_msg = solve_weights(X, y, theta_anchor, model, settings)
 
-    before, after = mse(X, y, theta0, model), mse(X, y, theta, model)
+    before, after = mse(X, y, theta_prior, model), mse(X, y, theta, model)
     # Below ABS_TOL the model already reproduces the labels (up to rounding);
     # a relative improvement of numerical noise must not count as a gain.
     improvement = (before - after) / before if before - after > ABS_TOL else 0.0
@@ -146,6 +172,8 @@ def calibrate_weights(
     report.new_dimension_weights = {k: round(v, 4) for k, v in new.dimension_weights(model).items()}
     report.mse_before = round(before, 3)
     report.mse_after = round(after, 3)
+    report.class_agreement_before = round(class_agreement(X, y, theta_prior, model), 4)
+    report.class_agreement_after = round(class_agreement(X, y, theta, model), 4)
     report.improvement = round(improvement, 4)
     report.accepted = success and improvement >= settings.min_improvement
     if not success:

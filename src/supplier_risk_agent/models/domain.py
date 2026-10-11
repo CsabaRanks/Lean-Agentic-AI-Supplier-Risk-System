@@ -102,6 +102,8 @@ class RiskAssessment(BaseModel):
     recommendations: list[ActionRecommendation] = []
     requires_human_review: bool = False
     review_reasons: list[str] = []
+    manual_override: bool = Field(default=False, description="Risk class set by a reviewer")
+    review_comment: str | None = None
 
 
 class CalibrationReport(BaseModel):
@@ -118,6 +120,28 @@ class CalibrationReport(BaseModel):
     mse_before: float | None = None
     mse_after: float | None = None
     improvement: float | None = Field(default=None, description="Relative MSE reduction, 0..1")
+    class_agreement_before: float | None = Field(
+        default=None, description="Share of suppliers whose model class equals the class derived from the label"
+    )
+    class_agreement_after: float | None = None
     accepted: bool = False
     applied: bool = False
+    stored_as: str | None = Field(default=None, description="Weight store file, if persisted")
     message: str = ""
+
+
+class ClassOverride(BaseModel):
+    risk_class: str
+    comment: str = ""
+
+
+class ReviewDecision(BaseModel):
+    """What a reviewer sends to resume a run paused at the human-review step."""
+
+    reviewer: str = "unknown"
+    approve_weights: bool = Field(default=False, description="Approve proposed calibrated weights")
+    overrides: dict[str, ClassOverride] = Field(
+        default_factory=dict, description="supplier_id -> manual risk class"
+    )
+    defer: bool = Field(default=False, description="Close the run without decisions; items stay open")
+    comment: str = ""

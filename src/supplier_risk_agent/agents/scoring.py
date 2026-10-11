@@ -19,7 +19,7 @@ from __future__ import annotations
 from ..models.config import GLOBAL_SCOPE, RiskModelConfig
 from ..models.domain import AuditEntry
 from ..models.state import SupplierRiskState
-from ..tools.scoring import assess_profile, resolve_weights
+from ..tools.scoring import apply_override, assess_profile, resolve_weights
 
 AGENT_NAME = "scoring"
 
@@ -33,10 +33,16 @@ class ScoringAgent:
         if GLOBAL_SCOPE not in active:
             active[GLOBAL_SCOPE] = self.model.default_weights()
 
+        overrides = state.get("manual_overrides") or {}
+        decision = state.get("review_decision")
+        reviewer = decision.reviewer if decision else "reviewer"
+
         results = {}
         for sid, profile in state["suppliers"].items():
             weights = resolve_weights(profile.material_group, active, self.model)
             results[sid] = assess_profile(profile, self.model, weights)
+            if sid in overrides:  # reviewer decisions survive re-scoring
+                results[sid] = apply_override(results[sid], overrides[sid], reviewer)
 
         round_no = state.get("scoring_round", 0) + 1
         flagged = [sid for sid, r in results.items() if r.requires_human_review]

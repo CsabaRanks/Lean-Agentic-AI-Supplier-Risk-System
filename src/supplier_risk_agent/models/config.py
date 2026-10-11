@@ -65,6 +65,7 @@ class WeightSet(BaseModel):
     scope: str = Field(default=GLOBAL_SCOPE, description="'global' or a material group key")
     origin: Literal["default", "material_group_default", "calibrated", "manual"] = "default"
     factor_weights: dict[str, float]
+    version: int | None = Field(default=None, description="Version in the weight store, if persisted")
     note: str = ""
 
     @model_validator(mode="after")

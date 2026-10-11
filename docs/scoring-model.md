@@ -47,9 +47,26 @@ R    = Σ W_d · R_d / Σ W_d        (dimensions with data)
 S    = (R − 1) / (5 − 1) · 100    → 0..100
 ```
 
-The normalisation is **min-max**: a supplier rated 1 everywhere scores 0, rated 5 everywhere
-scores 100. (A naive `R / 5` would map the best possible supplier to 20 %, which compresses the
-usable range.)
+### Why `(R − 1) / 4 · 100`?
+
+The rating scale is 1..5, so it has **no zero point**. The lowest possible risk is 1, not 0.
+Min-max normalisation maps the *actual* range of the scale onto 0–100:
+
+| Weighted rating R | `(R − 1) / 4 · 100` | naive `R / 5 · 100` |
+|---|---|---|
+| 1.0 (best possible) | **0** | 20 |
+| 3.0 (scale midpoint) | **50** | 60 |
+| 5.0 (worst possible) | **100** | 100 |
+
+- **Uses the full range.** With `R / 5`, scores below 20 cannot occur. 20 % of the scale is dead
+  space, and the remaining differences are compressed.
+- **Intuitive anchors.** 0 = lowest risk the model can express, 50 = "medium" on every factor,
+  100 = highest. The class thresholds (30 / 50 / 70) can be read directly against these anchors.
+- **Compatible with expert labels.** Category managers give holistic risk labels on 0–100. An
+  expert who says "lowest risk" means 0, not 20. Calibration compares labels and scores on the
+  same scale (see [calibration.md](calibration.md)).
+- **Linear.** The transformation is affine, so it does not change rankings or relative distances.
+  That keeps calibration a linear least-squares problem.
 
 ### Missing data
 

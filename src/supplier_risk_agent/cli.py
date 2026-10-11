@@ -5,6 +5,8 @@ Examples:
     supplier-risk --data data/sample_suppliers.json --supplier SUP-003
     supplier-risk --data data/calibration_portfolio.json --calibrate
     supplier-risk --data data/calibration_portfolio.json --material-group plastics --calibrate
+    supplier-risk --data data/calibration_portfolio.json --calibrate --weights-dir data/weights
+    supplier-risk --data data/sample_suppliers.json --review interactive
     supplier-risk --data data/sample_suppliers.json --json
 """
 
@@ -15,7 +17,7 @@ import json
 import sys
 
 from .graph import SupplierRiskEvaluator, ranked
-from .models.domain import CalibrationReport, RiskAssessment
+from .models.domain import CalibrationReport, ClassOverride, ReviewDecision, RiskAssessment
 
 
 def _print_portfolio(results: list[RiskAssessment]) -> None:
@@ -64,11 +66,40 @@ def _print_calibration(rep: CalibrationReport) -> None:
         print(f"  excluded: {', '.join(f'{k} ({v})' for k, v in rep.excluded.items())}")
     if rep.new_weights is None:
         return
-    print(f"  MSE {rep.mse_before} -> {rep.mse_after}  |  applied: {rep.applied}")
+    print(f"  MSE {rep.mse_before} -> {rep.mse_after}  |  class agreement "
+          f"{rep.class_agreement_before:.0%} -> {rep.class_agreement_after:.0%}  |  applied: {rep.applied}")
+    if rep.stored_as:
+        print(f"  stored as: {rep.stored_as}")
     print(f"  {'factor':<22} {'old':>7} {'new':>7}  delta")
     for key, old in rep.old_weights.items():
         new = rep.new_weights[key]
         print(f"  {key:<22} {old:7.1%} {new:7.1%}  {new - old:+.1%}")
+
+
+def _interactive_review(request: dict, ask=None) -> ReviewDecision:
+    """Ask the reviewer in the terminal; returns the decision to resume the run."""
+    ask = ask or input
+    print("\n=== Human review required ===")
+    for item in request["flagged_suppliers"]:
+        print(f"  {item['supplier_id']} {item['name']}: class {item['risk_class']}")
+        for reason in item["reasons"]:
+            print(f"      - {reason}")
+    approve = False
+    proposed = request.get("proposed_weights")
+    if proposed:
+        print(f"  Proposed weights [{proposed['scope']}]: MSE {proposed['mse_before']} -> {proposed['mse_after']}")
+        for key, old in proposed["old_weights"].items():
+            print(f"      {key:<22} {old:6.1%} -> {proposed['new_weights'][key]:6.1%}")
+        approve = ask("Approve proposed weights? [y/N] ").strip().lower() in {"y", "yes", "j", "ja"}
+
+    overrides: dict[str, ClassOverride] = {}
+    allowed = ", ".join(request["allowed_classes"])
+    raw = ask(f"Class overrides, e.g. 'SUP-006=high' ({allowed}); empty to skip: ").strip()
+    for part in filter(None, (p.strip() for p in raw.split(","))):
+        sid, _, cls = part.partition("=")
+        overrides[sid.strip()] = ClassOverride(risk_class=cls.strip())
+    reviewer = ask("Reviewer name: ").strip() or "unknown"
+    return ReviewDecision(reviewer=reviewer, approve_weights=approve, overrides=overrides)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -81,15 +112,23 @@ def main(argv: list[str] | None = None) -> int:
     cal.add_argument("--calibrate", dest="calibrate", action="store_true", default=None,
                      help="calibrate weights against expert labels before recommending")
     cal.add_argument("--no-calibrate", dest="calibrate", action="store_false")
+    parser.add_argument("--weights-dir", help="versioned weight store: load latest approved weights, save new ones")
+    parser.add_argument("--review", choices=["defer", "interactive"], default="defer",
+                        help="when review is needed: leave it open (default) or ask in the terminal")
     parser.add_argument("--json", action="store_true", help="print machine-readable JSON")
     args = parser.parse_args(argv)
 
-    evaluator = SupplierRiskEvaluator.from_json(args.data, args.model)
+    evaluator = SupplierRiskEvaluator.from_json(args.data, args.model, args.weights_dir)
     state = evaluator.run(
         supplier_ids=[args.supplier] if args.supplier else None,
         material_group=args.material_group,
         calibrate=args.calibrate,
     )
+    request = evaluator.pending_review(state)
+    if request and args.review == "interactive" and not args.json:
+        state = evaluator.resume(state["run_id"], _interactive_review(request))
+        request = None
+
     for err in state.get("errors", []):
         print(f"error: {err}", file=sys.stderr)
     results = ranked(state)
@@ -99,8 +138,10 @@ def main(argv: list[str] | None = None) -> int:
     report = state.get("calibration_report")
     if args.json:
         print(json.dumps({
+            "run_id": state["run_id"],
             "results": [r.model_dump() for r in results],
             "calibration": report.model_dump() if report else None,
+            "pending_review": request,
         }, indent=2))
         return 0
 
@@ -110,6 +151,10 @@ def main(argv: list[str] | None = None) -> int:
         _print_portfolio(results)
     if report:
         _print_calibration(report)
+    if request:
+        print(f"\nReview pending for {len(request['flagged_suppliers'])} supplier(s)"
+              + (" and proposed weights" if request["proposed_weights"] else "")
+              + " — rerun with --review interactive to decide.")
     return 0
 
 
