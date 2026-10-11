@@ -2,6 +2,26 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Factor model v0.4: fifteen factors
+
+**D32: Material-group adaptation folded into customisability; back to 15 factors.**
+- **Change.** *Material-group-specific adaptation* (v0.3 factor 5) is no longer a separate axis.
+  Per-group configuration is now evidence under *customisability & data sovereignty* (now 11).
+  Adapting criteria, weights or thresholds by commodity is one use case of changing the method,
+  and scoring both separately double-counted that capability.
+- **Renumbering.** Old 1–4 stay 1–4, old 6–16 become 5–15. *Integration of risk management and
+  performance evaluation* is unchanged and is now factor 15. The factors on which the platforms
+  are clearly ahead are now 7, 8, 12 and 14.
+- **Ratings.** No averaging of the old axes. All retained scores, confidence marks and per-vendor
+  values are unchanged; the old adaptation scores are retired. The customisability rationales
+  now name per-group configuration and its limits.
+- **Overlap review.** The remaining factor pairs were checked for overlap and kept separate, each
+  with a stated boundary (`success-factors.md`, "Changes from v0.3 to v0.4").
+- **Where it shows.** Matrix and charts regenerated; paper Section 3.1 (both versions) describes
+  the third review. Entries D16 and D31 keep their historical numbering.
+- **Material-group awareness** remains a feature of the approach (paper Section 5, README). It is
+  no longer a benchmark axis of its own.
+
 ## 2026-10 — Factor model v0.3 after practitioner feedback
 
 **D31: Factor model v0.3: risk & performance integration added, factor 14 sharpened, five
