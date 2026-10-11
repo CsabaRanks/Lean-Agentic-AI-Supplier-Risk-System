@@ -163,6 +163,7 @@ def assess_profile(profile: SupplierProfile, model: RiskModelConfig, weights: We
         material_group=profile.material_group,
         model_name=model.name,
         model_version=model.version,
+        view=model.view,
         weights_scope=weights.scope,
         weights_origin=weights.origin,
         overall_score=agg.overall_score,

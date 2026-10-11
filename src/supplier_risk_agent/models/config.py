@@ -24,6 +24,12 @@ import yaml
 from pydantic import BaseModel, Field, model_validator
 
 DEFAULT_MODEL_RESOURCE = "default_risk_model.yaml"
+CRITERIA_RESOURCE = "criteria.yaml"
+# Bundled views. Add a view by adding a YAML file here; criteria come from criteria.yaml.
+VIEW_RESOURCES = {
+    "risk": "default_risk_model.yaml",
+    "performance": "default_performance_model.yaml",
+}
 GLOBAL_SCOPE = "global"
 
 
@@ -180,10 +186,27 @@ class CalibrationSettings(BaseModel):
 
 
 class RiskModelConfig(BaseModel):
-    """Complete, validated description of a risk model."""
+    """Complete, validated description of one evaluation view (e.g. risk or performance).
+
+    A view selects criteria from the shared catalogue and sets its own dimensions,
+    weights, classes, rules, actions and calibration settings. The scoring engine
+    is the same for every view.
+    """
 
     name: str
     version: str
+    view: str = Field(default="risk", description="Identifier of the view, e.g. 'risk' or 'performance'")
+    view_label: str = "Risk"
+    view_question: str = ""
+    score_label: str = "Risk score"
+    score_orientation: Literal["higher_is_riskier", "higher_is_better"] = Field(
+        default="higher_is_riskier",
+        description=(
+            "How the score is PRESENTED. Internally every view computes 0 = favourable .. 100 = unfavourable; "
+            "'higher_is_better' displays 100 - internal score and reads expert labels on that display scale."
+        ),
+    )
+    label_column: str = Field(default="expert_risk_score", description="Column / field holding expert labels")
     rating_scale: RatingScale = RatingScale()
     dimensions: list[DimensionConfig] = Field(min_length=1)
     # Optional default weights per material group: {group: {factor: weight}}.
@@ -238,6 +261,23 @@ class RiskModelConfig(BaseModel):
                 return d.key
         raise KeyError(factor_key)
 
+    # --- presentation and labels of this view ---------------------------------------
+
+    def to_display(self, internal_score: float | None) -> float | None:
+        """Internal 0 (favourable) .. 100 (unfavourable) -> score as shown for this view."""
+        if internal_score is None:
+            return None
+        return round(100 - internal_score, 2) if self.score_orientation == "higher_is_better" else internal_score
+
+    def label_of(self, profile) -> float | None:
+        """Expert label of a supplier for this view, on the internal scale used for calibration."""
+        value = profile.expert_scores.get(self.view)
+        if value is None and self.view == "risk":
+            value = profile.expert_risk_score
+        if value is None:
+            return None
+        return 100 - value if self.score_orientation == "higher_is_better" else value
+
     def class_rank(self, class_key: str) -> int:
         return [c.key for c in self.risk_classes].index(class_key)
 
@@ -256,14 +296,44 @@ class RiskModelConfig(BaseModel):
         return WeightSet(scope=GLOBAL_SCOPE, origin="default", factor_weights=weights)
 
 
-def load_risk_model(path: str | Path | None = None) -> RiskModelConfig:
-    """Load a risk model from ``path`` or fall back to the bundled default template."""
+def _bundled(resource: str) -> dict:
+    text = resources.files("supplier_risk_agent.config").joinpath(resource).read_text(encoding="utf-8")
+    return yaml.safe_load(text)
+
+
+def criteria_catalogue() -> dict[str, dict]:
+    """The shared criteria catalogue: key -> {label, description, source}."""
+    return dict(_bundled(CRITERIA_RESOURCE)["criteria"])
+
+
+def available_views() -> list[str]:
+    return list(VIEW_RESOURCES)
+
+
+def resolve_criteria(data: dict, catalogue: dict[str, dict]) -> dict:
+    """Fill factor label / description / source from the catalogue where the view omits them.
+
+    A view may also define its own criteria under ``criteria:``; they extend or
+    override the bundled catalogue for this view.
+    """
+    criteria = {**catalogue, **(data.pop("criteria", None) or {})}
+    for dim in data.get("dimensions", []):
+        for factor in dim.get("factors", []):
+            known = criteria.get(factor["key"])
+            if known is None and "source" not in factor:
+                raise ValueError(f"criterion '{factor['key']}' is neither in the catalogue nor fully defined")
+            for field in ("label", "description", "source"):
+                if field not in factor and known and field in known:
+                    factor[field] = known[field]
+    return data
+
+
+def load_risk_model(path: str | Path | None = None, view: str = "risk") -> RiskModelConfig:
+    """Load a view from ``path``, or the bundled default for ``view`` ('risk' or 'performance')."""
     if path is None:
-        text = (
-            resources.files("supplier_risk_agent.config")
-            .joinpath(DEFAULT_MODEL_RESOURCE)
-            .read_text(encoding="utf-8")
-        )
+        if view not in VIEW_RESOURCES:
+            raise ValueError(f"unknown view '{view}', available: {', '.join(VIEW_RESOURCES)}")
+        data = _bundled(VIEW_RESOURCES[view])
     else:
-        text = Path(path).read_text(encoding="utf-8")
-    return RiskModelConfig.model_validate(yaml.safe_load(text))
+        data = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+    return RiskModelConfig.model_validate(resolve_criteria(data, criteria_catalogue()))

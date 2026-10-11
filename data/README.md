@@ -21,6 +21,12 @@ all indicator values are invented to exercise the different paths of the risk mo
 | SUP-005 | Low score, but acute insolvency signals → escalation rule raises class |
 | SUP-006 | Most data missing → flagged for human review |
 
+The six suppliers also carry performance data: on-time rate, PPM, price competitiveness and
+responsiveness. Some deliberately score differently in the two views. SUP-003 and SUP-005 are
+critical in the risk view and A suppliers in the performance view. The calibration portfolio
+carries synthetic performance labels (`expert_scores.performance`, higher = better), generated
+from a delivery-heavy hidden weighting.
+
 ## Record format
 
 ```jsonc

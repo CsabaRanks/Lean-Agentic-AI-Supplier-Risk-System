@@ -61,3 +61,33 @@ def test_assessment_row_has_spreadsheet_columns(evaluator):
     assert row["risk_class"] == "high" and row["calculated_class"] == "medium" and row["escalated"]
     assert {"dim_severity", "dim_financial", "dim_supply_chain", "dim_esg_compliance"} <= set(row)
     assert row["score"] == pytest.approx(41.75)
+
+
+@pytest.mark.parametrize("view", ["risk", "performance"])
+def test_one_sheet_serves_every_view(view):
+    """Rows written once are read identically for each view (shared criteria, view-independent parsing)."""
+    from conftest import DATA_DIR
+
+    from supplier_risk_agent import load_risk_model
+
+    model = load_risk_model(view=view)
+    source = JsonFileSource(DATA_DIR / "sample_suppliers.json")
+    profiles = [source.get_supplier(i) for i in source.list_supplier_ids()]
+    rows = from_csv(to_csv([profile_to_row(p, load_risk_model()) for p in profiles]))
+    restored, errors = rows_to_profiles(rows, model)
+    assert not errors
+
+    def scores(src):
+        return {a.supplier_id: (a.overall_score, a.risk_class) for a in SupplierRiskEvaluator(src, model).assess_all()}
+
+    assert scores(InMemorySource(restored)) == scores(source)
+
+
+def test_criterion_keys_do_not_shadow_numeric_indicators():
+    """A number under a criterion's name is read as an expert rating, so no numeric indicator may share it."""
+    from supplier_risk_agent.models.config import criteria_catalogue
+
+    catalogue = criteria_catalogue()
+    text_indicators = {"compliance_status", "transport_mode"}
+    sources = {c["source"] for c in catalogue.values()} - {"expert_assessment"} - text_indicators
+    assert not set(catalogue) & sources

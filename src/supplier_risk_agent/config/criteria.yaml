@@ -1,0 +1,88 @@
+# ---------------------------------------------------------------------------
+# Shared criteria catalogue
+#
+# Every criterion is defined ONCE here: what it means and where its 1..5
+# rating comes from (`source`, see tools/indicators.py). Views such as the
+# risk view and the performance view pick criteria from this catalogue and give
+# them their own dimensions and weights.
+#
+# A criterion used by several views (e.g. credit_risk, esg_rating,
+# compliance_status) is therefore rated identically everywhere. Only its weight
+# differs, which is how practice works: supplier performance evaluation and
+# supplier risk management share some inputs but ask different questions.
+#
+# Every rating is oriented the same way: 1 = favourable, 5 = unfavourable.
+# A view can still present its score as "higher is better" (see the view files).
+#
+# Naming rule: a criterion key must not equal the name of a NUMERIC raw indicator
+# (e.g. the quality criterion is `delivered_quality`, its indicator `quality_ppm`).
+# In a spreadsheet row a number under a criterion's name is read as an expert
+# rating 1..5, so the two would be indistinguishable.
+# ---------------------------------------------------------------------------
+
+criteria:
+  # --- replaceability and criticality (risk view: Severity Index) ---------------
+  availability:
+    label: Availability of alternatives
+    description: Number and accessibility of alternative sourcing options (few options = unfavourable).
+    source: expert_assessment
+  switching_complexity:
+    label: Change complexity
+    description: Effort to switch supplier (qualification, tooling, regulatory or customer approvals).
+    source: expert_assessment
+  business_impact:
+    label: Business consequence
+    description: Impact on own operations and customers if the supplier fails.
+    source: expert_assessment
+
+  # --- financial ----------------------------------------------------------------
+  credit_risk:
+    label: Credit risk
+    description: Derived from an external credit score (0-100, higher = healthier).
+    source: credit_score
+  insolvency_signals:
+    label: Insolvency / distress signals
+    description: Count of recent negative financial signals (late payments, warnings, filings).
+    source: distress_signals
+
+  # --- supply chain structure -----------------------------------------------------
+  country_risk:
+    label: Country / geopolitical risk
+    description: Derived from a country risk index (0-100, higher = riskier), e.g. based on public governance indicators.
+    source: country_risk_index
+  sourcing_strategy:
+    label: Sourcing strategy
+    description: Single vs. dual vs. multi sourcing for the supplied scope.
+    source: qualified_sources
+  transport_dependency:
+    label: Transport dependency
+    description: Exposure of the main transport mode and route length.
+    source: transport_mode
+
+  # --- ESG and compliance --------------------------------------------------------
+  esg_rating:
+    label: ESG rating
+    description: Derived from an external ESG score (0-100, higher = better).
+    source: esg_score
+  compliance_status:
+    label: Compliance status
+    description: Code-of-conduct acceptance, self-assessment questionnaire and audit findings.
+    source: compliance_status
+
+  # --- operational performance (performance view) ----------------------------------
+  on_time_delivery:
+    label: On-time delivery
+    description: Share of deliveries on time and in full over the evaluation period (%, higher = better).
+    source: on_time_rate
+  delivered_quality:
+    label: Quality (PPM)
+    description: Defective parts per million delivered over the evaluation period (lower = better).
+    source: quality_ppm
+  price_competitiveness:
+    label: Price competitiveness
+    description: Expert assessment of price level and cost development versus market and alternatives.
+    source: expert_assessment
+  responsiveness:
+    label: Responsiveness & cooperation
+    description: Expert assessment of communication, flexibility and support in problem solving.
+    source: expert_assessment

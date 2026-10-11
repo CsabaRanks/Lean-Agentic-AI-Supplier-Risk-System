@@ -16,7 +16,7 @@ import json
 from pathlib import Path
 
 from supplier_risk_agent import load_risk_model
-from supplier_risk_agent.tools.synthetic import synthetic_portfolio
+from supplier_risk_agent.tools.synthetic import add_performance_fields, synthetic_portfolio
 
 SEED = 42
 N_SUPPLIERS = 36
@@ -26,11 +26,14 @@ OUT = Path(__file__).resolve().parents[1] / "data" / "calibration_portfolio.json
 
 def main() -> None:
     suppliers = synthetic_portfolio(N_SUPPLIERS, SEED, load_risk_model())
+    # performance-view fields and labels come from a separate random stream (risk fields unchanged)
+    add_performance_fields(suppliers, SEED, load_risk_model(view="performance"))
     records = [s.model_dump(exclude_none=True) for s in suppliers]
 
     # A few suppliers without an expert label: scored, but not used for calibration.
     for r in records[-N_UNLABELLED:]:
         r.pop("expert_risk_score", None)
+        r["expert_scores"] = {}
 
     OUT.write_text(json.dumps(records, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {len(records)} suppliers to {OUT}")

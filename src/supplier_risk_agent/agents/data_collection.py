@@ -10,6 +10,7 @@ documents (audit reports, self-assessment questionnaires).
 
 from __future__ import annotations
 
+from ..models.config import RiskModelConfig
 from ..models.domain import AuditEntry
 from ..models.state import SupplierRiskState
 from ..tools.data_sources import SupplierDataSource
@@ -18,8 +19,9 @@ AGENT_NAME = "data_collection"
 
 
 class DataCollectionAgent:
-    def __init__(self, source: SupplierDataSource):
+    def __init__(self, source: SupplierDataSource, model: RiskModelConfig | None = None):
         self.source = source
+        self.model = model
 
     def __call__(self, state: SupplierRiskState) -> dict:
         group = state.get("material_group")
@@ -35,7 +37,8 @@ class DataCollectionAgent:
             else:
                 suppliers[sid] = profile
 
-        labels = {sid: p.expert_risk_score for sid, p in suppliers.items() if p.expert_risk_score is not None}
+        label_of = self.model.label_of if self.model else (lambda p: p.expert_risk_score)
+        labels = {sid: label_of(p) for sid, p in suppliers.items() if label_of(p) is not None}
         return {
             "suppliers": suppliers,
             "expert_labels": labels,

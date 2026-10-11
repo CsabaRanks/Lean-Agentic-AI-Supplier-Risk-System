@@ -1,8 +1,61 @@
 # Scoring model
 
-> The bundled model (`src/supplier_risk_agent/config/default_risk_model.yaml`) is an **example
-> template**. Criteria, weights, bands and thresholds are illustrative and must be adapted and
-> calibrated for a real supplier base.
+> The bundled models are **example templates**. Criteria, weights, bands and thresholds are
+> illustrative and must be adapted and calibrated for a real supplier base:
+> - risk view: `src/supplier_risk_agent/config/default_risk_model.yaml`
+> - performance view: `default_performance_model.yaml`
+
+## Views and the shared criteria catalogue
+
+Supplier **performance evaluation** ("How well does this supplier deliver?") and supplier **risk
+management** ("How exposed are we if it fails?") are distinct practices. They use overlapping
+information. The model reflects this in two layers.
+
+**Criteria catalogue** (`config/criteria.yaml`)
+- Every criterion is defined once: label, description and the rating source that turns data into
+  a 1–5 rating.
+- Ratings are always oriented 1 = favourable, 5 = unfavourable.
+
+**Views** (one YAML each)
+- A view selects criteria from the catalogue and groups them into its own dimensions with its own
+  weights.
+- It also defines its own classes, escalation rules, actions, material-group weights and
+  calibration settings.
+- A view can define extra criteria under `criteria:`.
+
+| Criterion | Risk view | Performance view |
+|---|---|---|
+| availability, switching_complexity, business_impact | Severity Index | — |
+| credit_risk | Financial Stability | Stability & Compliance |
+| insolvency_signals | Financial Stability | — |
+| country_risk, sourcing_strategy, transport_dependency | Supply Chain Risk | — |
+| esg_rating, compliance_status | ESG & Compliance | Stability & Compliance |
+| on_time_delivery, delivered_quality | — | Delivery, Quality |
+| price_competitiveness, responsiveness | — | Commercial, Cooperation |
+
+**Reading direction.** Internally, every view computes 0 = favourable … 100 = unfavourable, using
+the same engine. The performance view *presents* its score as 100 − internal (higher = better),
+and its expert labels (`expert_performance_score`) are given on that scale. Class thresholds in
+the YAML refer to the internal scale.
+
+**Performance view template.**
+- Dimensions:
+  - Delivery 30 % (on-time rate: ≥ 98 % → 1 … < 85 % → 5)
+  - Quality 30 % (PPM: < 50 → 1 … ≥ 1000 → 5)
+  - Commercial 20 %
+  - Cooperation 10 %
+  - Stability & Compliance 10 %
+- Classes: A (performance ≥ 75), B (50–75), C (< 50).
+- Escalation: a critical compliance finding → at least C.
+
+**Separation between views.** Expert labels and stored weights are kept per view. Weight files
+live in `<weights-dir>/<view>/`. Calibrating one view never changes the other.
+
+**Naming rule for new criteria.** A criterion key must not equal the name of a *numeric* raw
+indicator. In a spreadsheet row, a number under a criterion's name is read as an expert rating.
+This is why the quality criterion is `delivered_quality` and its indicator is `quality_ppm`.
+
+The rest of this document describes the risk view; the mechanics are identical for every view.
 
 ## Structure
 

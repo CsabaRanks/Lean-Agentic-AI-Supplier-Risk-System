@@ -8,7 +8,9 @@
     "expert_ratings": {
       "availability": 3,
       "switching_complexity": 2,
-      "business_impact": 2
+      "business_impact": 2,
+      "price_competitiveness": 4,
+      "responsiveness": 5
     },
     "indicators": {
       "credit_score": 37,
@@ -18,9 +20,14 @@
       "transport_mode": "air",
       "intercontinental": true,
       "esg_score": 26,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 90.4,
+      "quality_ppm": 250
     },
-    "expert_risk_score": 55.0
+    "expert_risk_score": 55.0,
+    "expert_scores": {
+      "performance": 45.0
+    }
   },
   {
     "supplier_id": "CAL-002",
@@ -31,7 +38,9 @@
     "expert_ratings": {
       "availability": 5,
       "switching_complexity": 4,
-      "business_impact": 2
+      "business_impact": 2,
+      "price_competitiveness": 4,
+      "responsiveness": 3
     },
     "indicators": {
       "credit_score": 77,
@@ -41,9 +50,14 @@
       "transport_mode": "air",
       "intercontinental": false,
       "esg_score": 34,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 83.7,
+      "quality_ppm": 120
     },
-    "expert_risk_score": 45.0
+    "expert_risk_score": 45.0,
+    "expert_scores": {
+      "performance": 35.0
+    }
   },
   {
     "supplier_id": "CAL-003",
@@ -54,7 +68,9 @@
     "expert_ratings": {
       "availability": 4,
       "switching_complexity": 1,
-      "business_impact": 3
+      "business_impact": 3,
+      "price_competitiveness": 5,
+      "responsiveness": 5
     },
     "indicators": {
       "credit_score": 64,
@@ -64,9 +80,14 @@
       "transport_mode": "air",
       "intercontinental": false,
       "esg_score": 63,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 99.5,
+      "quality_ppm": 20
     },
-    "expert_risk_score": 25.0
+    "expert_risk_score": 25.0,
+    "expert_scores": {
+      "performance": 80.0
+    }
   },
   {
     "supplier_id": "CAL-004",
@@ -77,7 +98,9 @@
     "expert_ratings": {
       "availability": 1,
       "switching_complexity": 1,
-      "business_impact": 2
+      "business_impact": 2,
+      "price_competitiveness": 1,
+      "responsiveness": 4
     },
     "indicators": {
       "credit_score": 57,
@@ -87,9 +110,14 @@
       "transport_mode": "air",
       "intercontinental": true,
       "esg_score": 61,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 91.2,
+      "quality_ppm": 700
     },
-    "expert_risk_score": 45.0
+    "expert_risk_score": 45.0,
+    "expert_scores": {
+      "performance": 35.0
+    }
   },
   {
     "supplier_id": "CAL-005",
@@ -100,7 +128,9 @@
     "expert_ratings": {
       "availability": 3,
       "switching_complexity": 1,
-      "business_impact": 5
+      "business_impact": 5,
+      "price_competitiveness": 1,
+      "responsiveness": 3
     },
     "indicators": {
       "credit_score": 41,
@@ -110,9 +140,14 @@
       "transport_mode": "air",
       "intercontinental": false,
       "esg_score": 86,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 86.6,
+      "quality_ppm": 250
     },
-    "expert_risk_score": 55.0
+    "expert_risk_score": 55.0,
+    "expert_scores": {
+      "performance": 45.0
+    }
   },
   {
     "supplier_id": "CAL-006",
@@ -123,7 +158,9 @@
     "expert_ratings": {
       "availability": 1,
       "switching_complexity": 3,
-      "business_impact": 4
+      "business_impact": 4,
+      "price_competitiveness": 1,
+      "responsiveness": 1
     },
     "indicators": {
       "credit_score": 54,
@@ -133,9 +170,14 @@
       "transport_mode": "sea",
       "intercontinental": true,
       "esg_score": 78,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 87.5,
+      "quality_ppm": 120
     },
-    "expert_risk_score": 45.0
+    "expert_risk_score": 45.0,
+    "expert_scores": {
+      "performance": 55.0
+    }
   },
   {
     "supplier_id": "CAL-007",
@@ -146,7 +188,9 @@
     "expert_ratings": {
       "availability": 2,
       "switching_complexity": 2,
-      "business_impact": 5
+      "business_impact": 5,
+      "price_competitiveness": 4,
+      "responsiveness": 1
     },
     "indicators": {
       "credit_score": 88,
@@ -156,9 +200,14 @@
       "transport_mode": "air",
       "intercontinental": false,
       "esg_score": 32,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 88.8,
+      "quality_ppm": 20
     },
-    "expert_risk_score": 50.0
+    "expert_risk_score": 50.0,
+    "expert_scores": {
+      "performance": 60.0
+    }
   },
   {
     "supplier_id": "CAL-008",
@@ -169,7 +218,9 @@
     "expert_ratings": {
       "availability": 2,
       "switching_complexity": 4,
-      "business_impact": 5
+      "business_impact": 5,
+      "price_competitiveness": 5,
+      "responsiveness": 1
     },
     "indicators": {
       "credit_score": 28,
@@ -179,9 +230,14 @@
       "transport_mode": "sea",
       "intercontinental": false,
       "esg_score": 16,
-      "compliance_status": "minor_findings"
+      "compliance_status": "minor_findings",
+      "on_time_rate": 81.0,
+      "quality_ppm": 250
     },
-    "expert_risk_score": 70.0
+    "expert_risk_score": 70.0,
+    "expert_scores": {
+      "performance": 25.0
+    }
   },
   {
     "supplier_id": "CAL-009",
@@ -192,7 +248,9 @@
     "expert_ratings": {
       "availability": 5,
       "switching_complexity": 3,
-      "business_impact": 3
+      "business_impact": 3,
+      "price_competitiveness": 1,
+      "responsiveness": 2
     },
     "indicators": {
       "credit_score": 34,
@@ -202,9 +260,14 @@
       "transport_mode": "road",
       "intercontinental": false,
       "esg_score": 48,
-      "compliance_status": "major_findings"
+      "compliance_status": "major_findings",
+      "on_time_rate": 92.7,
+      "quality_ppm": 20
     },
-    "expert_risk_score": 55.0
+    "expert_risk_score": 55.0,
+    "expert_scores": {
+      "performance": 65.0
+    }
   },
   {
     "supplier_id": "CAL-010",
@@ -215,7 +278,9 @@
     "expert_ratings": {
       "availability": 3,
       "switching_complexity": 5,
-      "business_impact": 5
+      "business_impact": 5,
+      "price_competitiveness": 3,
+      "responsiveness": 1
     },
     "indicators": {
       "credit_score": 45,
@@ -225,9 +290,14 @@
       "transport_mode": "road",
       "intercontinental": false,
       "esg_score": 77,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 94.2,
+      "quality_ppm": 60
     },
-    "expert_risk_score": 45.0
+    "expert_risk_score": 45.0,
+    "expert_scores": {
+      "performance": 60.0
+    }
   },
   {
     "supplier_id": "CAL-011",
@@ -238,7 +308,9 @@
     "expert_ratings": {
       "availability": 3,
       "switching_complexity": 2,
-      "business_impact": 1
+      "business_impact": 1,
+      "price_competitiveness": 1,
+      "responsiveness": 5
     },
     "indicators": {
       "credit_score": 50,
@@ -248,9 +320,14 @@
       "transport_mode": "air",
       "intercontinental": false,
       "esg_score": 83,
-      "compliance_status": "minor_findings"
+      "compliance_status": "minor_findings",
+      "on_time_rate": 83.2,
+      "quality_ppm": 1200
     },
-    "expert_risk_score": 40.0
+    "expert_risk_score": 40.0,
+    "expert_scores": {
+      "performance": 20.0
+    }
   },
   {
     "supplier_id": "CAL-012",
@@ -261,7 +338,9 @@
     "expert_ratings": {
       "availability": 5,
       "switching_complexity": 5,
-      "business_impact": 4
+      "business_impact": 4,
+      "price_competitiveness": 1,
+      "responsiveness": 5
     },
     "indicators": {
       "credit_score": 47,
@@ -271,9 +350,14 @@
       "transport_mode": "sea",
       "intercontinental": false,
       "esg_score": 62,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 94.8,
+      "quality_ppm": 250
     },
-    "expert_risk_score": 60.0
+    "expert_risk_score": 60.0,
+    "expert_scores": {
+      "performance": 55.0
+    }
   },
   {
     "supplier_id": "CAL-013",
@@ -284,7 +368,9 @@
     "expert_ratings": {
       "availability": 2,
       "switching_complexity": 2,
-      "business_impact": 1
+      "business_impact": 1,
+      "price_competitiveness": 5,
+      "responsiveness": 3
     },
     "indicators": {
       "credit_score": 63,
@@ -294,9 +380,14 @@
       "transport_mode": "rail",
       "intercontinental": true,
       "esg_score": 22,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 86.7,
+      "quality_ppm": 1200
     },
-    "expert_risk_score": 50.0
+    "expert_risk_score": 50.0,
+    "expert_scores": {
+      "performance": 10.0
+    }
   },
   {
     "supplier_id": "CAL-014",
@@ -307,7 +398,9 @@
     "expert_ratings": {
       "availability": 3,
       "switching_complexity": 4,
-      "business_impact": 2
+      "business_impact": 2,
+      "price_competitiveness": 3,
+      "responsiveness": 1
     },
     "indicators": {
       "credit_score": 89,
@@ -317,9 +410,14 @@
       "transport_mode": "air",
       "intercontinental": true,
       "esg_score": 75,
-      "compliance_status": "open_findings"
+      "compliance_status": "open_findings",
+      "on_time_rate": 83.8,
+      "quality_ppm": 20
     },
-    "expert_risk_score": 30.0
+    "expert_risk_score": 30.0,
+    "expert_scores": {
+      "performance": 60.0
+    }
   },
   {
     "supplier_id": "CAL-015",
@@ -330,7 +428,9 @@
     "expert_ratings": {
       "availability": 4,
       "switching_complexity": 3,
-      "business_impact": 4
+      "business_impact": 4,
+      "price_competitiveness": 2,
+      "responsiveness": 2
     },
     "indicators": {
       "credit_score": 72,
@@ -340,9 +440,14 @@
       "transport_mode": "road",
       "intercontinental": true,
       "esg_score": 58,
-      "compliance_status": "open_findings"
+      "compliance_status": "open_findings",
+      "on_time_rate": 95.5,
+      "quality_ppm": 250
     },
-    "expert_risk_score": 40.0
+    "expert_risk_score": 40.0,
+    "expert_scores": {
+      "performance": 70.0
+    }
   },
   {
     "supplier_id": "CAL-016",
@@ -353,7 +458,9 @@
     "expert_ratings": {
       "availability": 4,
       "switching_complexity": 2,
-      "business_impact": 3
+      "business_impact": 3,
+      "price_competitiveness": 5,
+      "responsiveness": 3
     },
     "indicators": {
       "credit_score": 79,
@@ -363,9 +470,14 @@
       "transport_mode": "road",
       "intercontinental": true,
       "esg_score": 84,
-      "compliance_status": "open_findings"
+      "compliance_status": "open_findings",
+      "on_time_rate": 93.8,
+      "quality_ppm": 120
     },
-    "expert_risk_score": 35.0
+    "expert_risk_score": 35.0,
+    "expert_scores": {
+      "performance": 55.0
+    }
   },
   {
     "supplier_id": "CAL-017",
@@ -376,7 +488,9 @@
     "expert_ratings": {
       "availability": 2,
       "switching_complexity": 2,
-      "business_impact": 4
+      "business_impact": 4,
+      "price_competitiveness": 4,
+      "responsiveness": 5
     },
     "indicators": {
       "credit_score": 82,
@@ -386,9 +500,14 @@
       "transport_mode": "rail",
       "intercontinental": false,
       "esg_score": 64,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 92.5,
+      "quality_ppm": 20
     },
-    "expert_risk_score": 45.0
+    "expert_risk_score": 45.0,
+    "expert_scores": {
+      "performance": 65.0
+    }
   },
   {
     "supplier_id": "CAL-018",
@@ -399,7 +518,9 @@
     "expert_ratings": {
       "availability": 5,
       "switching_complexity": 4,
-      "business_impact": 2
+      "business_impact": 2,
+      "price_competitiveness": 3,
+      "responsiveness": 3
     },
     "indicators": {
       "credit_score": 44,
@@ -409,9 +530,14 @@
       "transport_mode": "road",
       "intercontinental": false,
       "esg_score": 22,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 87.2,
+      "quality_ppm": 120
     },
-    "expert_risk_score": 30.0
+    "expert_risk_score": 30.0,
+    "expert_scores": {
+      "performance": 45.0
+    }
   },
   {
     "supplier_id": "CAL-019",
@@ -422,7 +548,9 @@
     "expert_ratings": {
       "availability": 5,
       "switching_complexity": 2,
-      "business_impact": 1
+      "business_impact": 1,
+      "price_competitiveness": 4,
+      "responsiveness": 2
     },
     "indicators": {
       "credit_score": 85,
@@ -432,9 +560,14 @@
       "transport_mode": "road",
       "intercontinental": false,
       "esg_score": 45,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 88.4,
+      "quality_ppm": 20
     },
-    "expert_risk_score": 40.0
+    "expert_risk_score": 40.0,
+    "expert_scores": {
+      "performance": 55.0
+    }
   },
   {
     "supplier_id": "CAL-020",
@@ -445,7 +578,9 @@
     "expert_ratings": {
       "availability": 5,
       "switching_complexity": 1,
-      "business_impact": 4
+      "business_impact": 4,
+      "price_competitiveness": 1,
+      "responsiveness": 1
     },
     "indicators": {
       "credit_score": 94,
@@ -455,9 +590,14 @@
       "transport_mode": "rail",
       "intercontinental": false,
       "esg_score": 55,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 81.6,
+      "quality_ppm": 700
     },
-    "expert_risk_score": 40.0
+    "expert_risk_score": 40.0,
+    "expert_scores": {
+      "performance": 45.0
+    }
   },
   {
     "supplier_id": "CAL-021",
@@ -468,7 +608,9 @@
     "expert_ratings": {
       "availability": 3,
       "switching_complexity": 4,
-      "business_impact": 3
+      "business_impact": 3,
+      "price_competitiveness": 4,
+      "responsiveness": 5
     },
     "indicators": {
       "credit_score": 29,
@@ -478,9 +620,14 @@
       "transport_mode": "road",
       "intercontinental": true,
       "esg_score": 42,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 87.6,
+      "quality_ppm": 1200
     },
-    "expert_risk_score": 55.0
+    "expert_risk_score": 55.0,
+    "expert_scores": {
+      "performance": 15.0
+    }
   },
   {
     "supplier_id": "CAL-022",
@@ -491,7 +638,9 @@
     "expert_ratings": {
       "availability": 3,
       "switching_complexity": 3,
-      "business_impact": 2
+      "business_impact": 2,
+      "price_competitiveness": 1,
+      "responsiveness": 5
     },
     "indicators": {
       "credit_score": 76,
@@ -501,9 +650,14 @@
       "transport_mode": "road",
       "intercontinental": false,
       "esg_score": 85,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 88.7,
+      "quality_ppm": 120
     },
-    "expert_risk_score": 30.0
+    "expert_risk_score": 30.0,
+    "expert_scores": {
+      "performance": 55.0
+    }
   },
   {
     "supplier_id": "CAL-023",
@@ -514,7 +668,9 @@
     "expert_ratings": {
       "availability": 2,
       "switching_complexity": 3,
-      "business_impact": 1
+      "business_impact": 1,
+      "price_competitiveness": 3,
+      "responsiveness": 4
     },
     "indicators": {
       "credit_score": 33,
@@ -524,9 +680,14 @@
       "transport_mode": "sea",
       "intercontinental": false,
       "esg_score": 58,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 88.0,
+      "quality_ppm": 700
     },
-    "expert_risk_score": 35.0
+    "expert_risk_score": 35.0,
+    "expert_scores": {
+      "performance": 35.0
+    }
   },
   {
     "supplier_id": "CAL-024",
@@ -537,7 +698,9 @@
     "expert_ratings": {
       "availability": 1,
       "switching_complexity": 1,
-      "business_impact": 4
+      "business_impact": 4,
+      "price_competitiveness": 3,
+      "responsiveness": 5
     },
     "indicators": {
       "credit_score": 55,
@@ -547,9 +710,14 @@
       "transport_mode": "sea",
       "intercontinental": true,
       "esg_score": 71,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 85.2,
+      "quality_ppm": 20
     },
-    "expert_risk_score": 45.0
+    "expert_risk_score": 45.0,
+    "expert_scores": {
+      "performance": 50.0
+    }
   },
   {
     "supplier_id": "CAL-025",
@@ -560,7 +728,9 @@
     "expert_ratings": {
       "availability": 1,
       "switching_complexity": 1,
-      "business_impact": 2
+      "business_impact": 2,
+      "price_competitiveness": 3,
+      "responsiveness": 5
     },
     "indicators": {
       "credit_score": 89,
@@ -570,9 +740,14 @@
       "transport_mode": "rail",
       "intercontinental": false,
       "esg_score": 20,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 81.7,
+      "quality_ppm": 700
     },
-    "expert_risk_score": 20.0
+    "expert_risk_score": 20.0,
+    "expert_scores": {
+      "performance": 25.0
+    }
   },
   {
     "supplier_id": "CAL-026",
@@ -583,7 +758,9 @@
     "expert_ratings": {
       "availability": 2,
       "switching_complexity": 2,
-      "business_impact": 1
+      "business_impact": 1,
+      "price_competitiveness": 2,
+      "responsiveness": 2
     },
     "indicators": {
       "credit_score": 65,
@@ -593,9 +770,14 @@
       "transport_mode": "rail",
       "intercontinental": false,
       "esg_score": 45,
-      "compliance_status": "open_findings"
+      "compliance_status": "open_findings",
+      "on_time_rate": 94.5,
+      "quality_ppm": 250
     },
-    "expert_risk_score": 20.0
+    "expert_risk_score": 20.0,
+    "expert_scores": {
+      "performance": 55.0
+    }
   },
   {
     "supplier_id": "CAL-027",
@@ -606,7 +788,9 @@
     "expert_ratings": {
       "availability": 1,
       "switching_complexity": 2,
-      "business_impact": 3
+      "business_impact": 3,
+      "price_competitiveness": 5,
+      "responsiveness": 1
     },
     "indicators": {
       "credit_score": 72,
@@ -616,9 +800,14 @@
       "transport_mode": "rail",
       "intercontinental": false,
       "esg_score": 28,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 81.0,
+      "quality_ppm": 700
     },
-    "expert_risk_score": 40.0
+    "expert_risk_score": 40.0,
+    "expert_scores": {
+      "performance": 25.0
+    }
   },
   {
     "supplier_id": "CAL-028",
@@ -629,7 +818,9 @@
     "expert_ratings": {
       "availability": 4,
       "switching_complexity": 3,
-      "business_impact": 3
+      "business_impact": 3,
+      "price_competitiveness": 4,
+      "responsiveness": 3
     },
     "indicators": {
       "credit_score": 49,
@@ -639,9 +830,14 @@
       "transport_mode": "air",
       "intercontinental": false,
       "esg_score": 23,
-      "compliance_status": "major_findings"
+      "compliance_status": "major_findings",
+      "on_time_rate": 90.5,
+      "quality_ppm": 1200
     },
-    "expert_risk_score": 70.0
+    "expert_risk_score": 70.0,
+    "expert_scores": {
+      "performance": 30.0
+    }
   },
   {
     "supplier_id": "CAL-029",
@@ -652,7 +848,9 @@
     "expert_ratings": {
       "availability": 5,
       "switching_complexity": 4,
-      "business_impact": 5
+      "business_impact": 5,
+      "price_competitiveness": 2,
+      "responsiveness": 1
     },
     "indicators": {
       "credit_score": 62,
@@ -662,9 +860,14 @@
       "transport_mode": "rail",
       "intercontinental": false,
       "esg_score": 48,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 98.1,
+      "quality_ppm": 20
     },
-    "expert_risk_score": 55.0
+    "expert_risk_score": 55.0,
+    "expert_scores": {
+      "performance": 95.0
+    }
   },
   {
     "supplier_id": "CAL-030",
@@ -675,7 +878,9 @@
     "expert_ratings": {
       "availability": 5,
       "switching_complexity": 1,
-      "business_impact": 4
+      "business_impact": 4,
+      "price_competitiveness": 2,
+      "responsiveness": 1
     },
     "indicators": {
       "credit_score": 93,
@@ -685,9 +890,14 @@
       "transport_mode": "air",
       "intercontinental": true,
       "esg_score": 83,
-      "compliance_status": "minor_findings"
+      "compliance_status": "minor_findings",
+      "on_time_rate": 98.5,
+      "quality_ppm": 60
     },
-    "expert_risk_score": 30.0
+    "expert_risk_score": 30.0,
+    "expert_scores": {
+      "performance": 90.0
+    }
   },
   {
     "supplier_id": "CAL-031",
@@ -698,7 +908,9 @@
     "expert_ratings": {
       "availability": 1,
       "switching_complexity": 3,
-      "business_impact": 5
+      "business_impact": 5,
+      "price_competitiveness": 3,
+      "responsiveness": 4
     },
     "indicators": {
       "credit_score": 60,
@@ -708,9 +920,14 @@
       "transport_mode": "sea",
       "intercontinental": false,
       "esg_score": 67,
-      "compliance_status": "compliant"
+      "compliance_status": "compliant",
+      "on_time_rate": 84.6,
+      "quality_ppm": 60
     },
-    "expert_risk_score": 40.0
+    "expert_risk_score": 40.0,
+    "expert_scores": {
+      "performance": 40.0
+    }
   },
   {
     "supplier_id": "CAL-032",
@@ -721,7 +938,9 @@
     "expert_ratings": {
       "availability": 4,
       "switching_complexity": 2,
-      "business_impact": 5
+      "business_impact": 5,
+      "price_competitiveness": 3,
+      "responsiveness": 4
     },
     "indicators": {
       "credit_score": 92,
@@ -731,9 +950,14 @@
       "transport_mode": "sea",
       "intercontinental": true,
       "esg_score": 70,
-      "compliance_status": "minor_findings"
+      "compliance_status": "minor_findings",
+      "on_time_rate": 96.3,
+      "quality_ppm": 1200
     },
-    "expert_risk_score": 60.0
+    "expert_risk_score": 60.0,
+    "expert_scores": {
+      "performance": 50.0
+    }
   },
   {
     "supplier_id": "CAL-033",
@@ -744,7 +968,9 @@
     "expert_ratings": {
       "availability": 4,
       "switching_complexity": 4,
-      "business_impact": 4
+      "business_impact": 4,
+      "price_competitiveness": 4,
+      "responsiveness": 5
     },
     "indicators": {
       "credit_score": 47,
@@ -754,8 +980,11 @@
       "transport_mode": "road",
       "intercontinental": true,
       "esg_score": 57,
-      "compliance_status": "compliant"
-    }
+      "compliance_status": "compliant",
+      "on_time_rate": 95.5,
+      "quality_ppm": 60
+    },
+    "expert_scores": {}
   },
   {
     "supplier_id": "CAL-034",
@@ -766,7 +995,9 @@
     "expert_ratings": {
       "availability": 2,
       "switching_complexity": 2,
-      "business_impact": 1
+      "business_impact": 1,
+      "price_competitiveness": 1,
+      "responsiveness": 3
     },
     "indicators": {
       "credit_score": 25,
@@ -776,8 +1007,11 @@
       "transport_mode": "road",
       "intercontinental": false,
       "esg_score": 88,
-      "compliance_status": "compliant"
-    }
+      "compliance_status": "compliant",
+      "on_time_rate": 92.8,
+      "quality_ppm": 60
+    },
+    "expert_scores": {}
   },
   {
     "supplier_id": "CAL-035",
@@ -788,7 +1022,9 @@
     "expert_ratings": {
       "availability": 2,
       "switching_complexity": 2,
-      "business_impact": 1
+      "business_impact": 1,
+      "price_competitiveness": 3,
+      "responsiveness": 5
     },
     "indicators": {
       "credit_score": 33,
@@ -798,8 +1034,11 @@
       "transport_mode": "air",
       "intercontinental": true,
       "esg_score": 46,
-      "compliance_status": "open_findings"
-    }
+      "compliance_status": "open_findings",
+      "on_time_rate": 90.7,
+      "quality_ppm": 120
+    },
+    "expert_scores": {}
   },
   {
     "supplier_id": "CAL-036",
@@ -810,7 +1049,9 @@
     "expert_ratings": {
       "availability": 5,
       "switching_complexity": 5,
-      "business_impact": 3
+      "business_impact": 3,
+      "price_competitiveness": 2,
+      "responsiveness": 3
     },
     "indicators": {
       "credit_score": 76,
@@ -820,7 +1061,10 @@
       "transport_mode": "air",
       "intercontinental": false,
       "esg_score": 75,
-      "compliance_status": "compliant"
-    }
+      "compliance_status": "compliant",
+      "on_time_rate": 90.5,
+      "quality_ppm": 700
+    },
+    "expert_scores": {}
   }
 ]

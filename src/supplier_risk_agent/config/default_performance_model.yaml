@@ -1,0 +1,140 @@
+# ---------------------------------------------------------------------------
+# Default performance model — an EXAMPLE TEMPLATE, not a recommendation.
+#
+# This is the PERFORMANCE VIEW: "How well does this supplier deliver?"
+# It is the classic supplier performance evaluation (delivery, quality,
+# commercial, cooperation). It shares some criteria with the risk view
+# (credit_risk, esg_rating, compliance_status) via criteria.yaml, with its own
+# weights, classes, rules and actions.
+#
+# Orientation: ratings are 1 = favourable ... 5 = unfavourable, as everywhere.
+# Internally the score is computed the same way as in the risk view. It is
+# DISPLAYED as a performance score where higher is better (100 - internal score),
+# and expert labels for this view are given on that display scale too.
+# Class thresholds below refer to the internal scale (0 = best).
+# ---------------------------------------------------------------------------
+
+name: generic-supplier-performance-template
+version: "0.1.0"
+
+view: performance
+view_label: Performance
+view_question: How well does this supplier deliver?
+score_label: Performance score
+score_orientation: higher_is_better        # displayed as 100 = best, 0 = worst
+label_column: expert_performance_score     # holistic expert label (0..100, higher = better)
+
+rating_scale:
+  min: 1
+  max: 5
+
+dimensions:
+  - key: delivery
+    label: Delivery
+    description: Reliability of deliveries.
+    weight: 0.30
+    factors:
+      - key: on_time_delivery
+        weight: 1.0
+
+  - key: quality
+    label: Quality
+    description: Quality of delivered goods.
+    weight: 0.30
+    factors:
+      - key: delivered_quality
+        weight: 1.0
+
+  - key: commercial
+    label: Commercial
+    description: Price level and cost development.
+    weight: 0.20
+    factors:
+      - key: price_competitiveness
+        weight: 1.0
+
+  - key: cooperation
+    label: Cooperation
+    description: Communication, flexibility and support.
+    weight: 0.10
+    factors:
+      - key: responsiveness
+        weight: 1.0
+
+  - key: stability_compliance
+    label: Stability & Compliance
+    description: Shared with the risk view - financial health, ESG and compliance.
+    weight: 0.10
+    factors:
+      - key: credit_risk
+        weight: 0.50
+      - key: esg_rating
+        weight: 0.25
+      - key: compliance_status
+        weight: 0.25
+
+material_group_weights: {}
+
+# A / B / C rating, common in supplier evaluation. Lower bound of the INTERNAL
+# score (0 = best): A = performance >= 75, B = 50..75, C = below 50.
+risk_classes:
+  - key: A
+    label: A - preferred
+    min_score: 0
+  - key: B
+    label: B - acceptable
+    min_score: 25
+  - key: C
+    label: C - development needed
+    min_score: 50
+
+escalation_rules:
+  - factor: compliance_status
+    min_rating: 5
+    floor_class: C
+    reason: Critical compliance finding — a good delivery record must not hide it.
+
+min_data_completeness: 0.75
+
+actions:
+  A:
+    review_cycle: annual
+    actions:
+      - Keep as preferred supplier; consider for new business.
+  B:
+    review_cycle: semi-annual
+    actions:
+      - Agree improvement targets on the weakest dimension.
+  C:
+    review_cycle: quarterly
+    actions:
+      - Start a supplier development plan with measurable targets and owner.
+      - Restrict new business until targets are met.
+
+dimension_triggers:
+  - dimension: delivery
+    min_score: 60
+    action: Agree a delivery improvement plan (root cause, buffer, schedule adherence).
+  - dimension: quality
+    min_score: 60
+    action: Request a structured problem-solving report and quality improvement plan.
+  - dimension: commercial
+    min_score: 60
+    action: Prepare a cost review or market benchmark before the next negotiation.
+
+calibration:
+  enabled: false
+  min_labels: 8
+  regularization: 0.05
+  lambda_selection: scaled
+  lambda_reference_n: 32
+  min_factor_weight: 0.02
+  min_improvement: 0.05
+  acceptance: cross_validated
+  cv_folds: 5
+  cv_repeats: 3
+  cv_min_z: 2.0
+  level_bias_threshold: 5.0
+  level_bias_min_t: 2.0
+  level_bias_action: review
+  auto_apply: true

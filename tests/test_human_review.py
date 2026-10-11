@@ -57,14 +57,14 @@ def test_weight_approval_applies_persists_and_rescores(proposing_evaluator, tmp_
     paused = proposing_evaluator.run(calibrate=True, run_id="r-approve")
     request = proposing_evaluator.pending_review(paused)
     assert request["proposed_weights"]["mse_after"] < request["proposed_weights"]["mse_before"]
-    assert not list(tmp_path.iterdir())  # nothing persisted before approval
+    assert not (tmp_path / "risk").exists()  # nothing persisted before approval
 
     done = proposing_evaluator.resume("r-approve", ReviewDecision(reviewer="bob", approve_weights=True))
 
     assert done["calibration_applied"] and done["scoring_round"] == 2
     assert agents(done)[-3:] == ["human_review", "scoring", "recommendation"]
     assert all(r.weights_origin == "calibrated" for r in done["results"].values())
-    stored = sorted(p.name for p in tmp_path.iterdir())
+    stored = sorted(p.name for p in (tmp_path / "risk").iterdir())  # one folder per view
     assert stored == ["global_v001.yaml"]
     assert done["calibration_report"].stored_as.endswith("global_v001.yaml")
 
@@ -74,7 +74,7 @@ def test_rejecting_weights_keeps_defaults(proposing_evaluator, tmp_path):
     done = proposing_evaluator.resume("r-reject", ReviewDecision(reviewer="bob", approve_weights=False))
     assert not done["calibration_applied"] and done["scoring_round"] == 1
     assert all(r.weights_origin == "default" for r in done["results"].values())
-    assert not list(tmp_path.iterdir())
+    assert not (tmp_path / "risk").exists()
 
 
 def test_approval_without_pending_weights_is_reported(evaluator):

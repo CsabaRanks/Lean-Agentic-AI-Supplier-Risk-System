@@ -5,6 +5,10 @@
 # Copy this file, adapt it to your own category strategy and calibrate it
 # against your supplier base before using results for real decisions.
 #
+# This is the RISK VIEW. Criteria (meaning and data source) are defined once in
+# criteria.yaml and shared with other views; this file only selects them and
+# sets dimensions, weights, classes, rules, actions and calibration settings.
+#
 # Conventions
 #   * Every factor is rated on an ordinal scale 1..5 (1 = low risk, 5 = high risk).
 #   * The weights below are DEFAULT weights. Factor weights are relative within
@@ -19,6 +23,13 @@
 name: generic-supplier-risk-template
 version: "0.1.0"
 
+view: risk
+view_label: Risk
+view_question: How exposed are we if this supplier fails?
+score_label: Risk score
+score_orientation: higher_is_riskier   # 0 = lowest risk, 100 = highest risk
+label_column: expert_risk_score        # holistic expert label for calibration (0..100, same orientation)
+
 rating_scale:
   min: 1
   max: 5
@@ -32,20 +43,11 @@ dimensions:
     weight: 0.35
     factors:
       - key: availability
-        label: Availability of alternatives
-        description: Number and accessibility of alternative sourcing options (few options = high risk).
         weight: 0.30
-        source: expert_assessment
       - key: switching_complexity
-        label: Change complexity
-        description: Effort to switch supplier (qualification, tooling, regulatory or customer approvals).
         weight: 0.30
-        source: expert_assessment
       - key: business_impact
-        label: Business consequence
-        description: Impact on own operations and customers if the supplier fails.
         weight: 0.40
-        source: expert_assessment
 
   - key: financial
     label: Financial Stability
@@ -53,15 +55,9 @@ dimensions:
     weight: 0.20
     factors:
       - key: credit_risk
-        label: Credit risk
-        description: Derived from an external credit score (0-100, higher = healthier).
         weight: 0.70
-        source: credit_score
       - key: insolvency_signals
-        label: Insolvency / distress signals
-        description: Count of recent negative financial signals (late payments, warnings, filings).
         weight: 0.30
-        source: distress_signals
 
   - key: supply_chain
     label: Supply Chain Risk
@@ -69,20 +65,11 @@ dimensions:
     weight: 0.25
     factors:
       - key: country_risk
-        label: Country / geopolitical risk
-        description: Derived from a country risk index (0-100, higher = riskier), e.g. based on public governance indicators.
         weight: 0.40
-        source: country_risk_index
       - key: sourcing_strategy
-        label: Sourcing strategy
-        description: Single vs. dual vs. multi sourcing for the supplied scope.
         weight: 0.35
-        source: qualified_sources
       - key: transport_dependency
-        label: Transport dependency
-        description: Exposure of the main transport mode and route length.
         weight: 0.25
-        source: transport_mode
 
   - key: esg_compliance
     label: ESG & Compliance
@@ -90,15 +77,9 @@ dimensions:
     weight: 0.20
     factors:
       - key: esg_rating
-        label: ESG rating
-        description: Derived from an external ESG score (0-100, higher = better).
         weight: 0.60
-        source: esg_score
       - key: compliance_status
-        label: Compliance status
-        description: Code-of-conduct acceptance, self-assessment questionnaire and audit findings.
         weight: 0.40
-        source: compliance_status
 
 # Optional default weights per material group (not one-size-fits-all).
 # Values are EFFECTIVE factor weights (share of the overall score). Factors not

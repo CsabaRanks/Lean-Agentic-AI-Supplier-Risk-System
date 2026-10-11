@@ -127,7 +127,7 @@ src/supplier_risk_agent/
 ├── graph/           # StateGraph construction + SupplierRiskEvaluator facade
 ├── models/          # config (RiskModelConfig, WeightSet), domain objects, state
 ├── tools/           # indicators -> ratings, scoring, calibration, data sources, weight store
-├── config/          # bundled example risk model (YAML)
+├── config/          # criteria.yaml (shared catalogue) + one YAML per view (risk, performance)
 └── cli.py           # `supplier-risk` command
 ```
 
@@ -135,7 +135,9 @@ src/supplier_risk_agent/
 
 | You want to… | Change |
 |---|---|
-| use different criteria / weights / thresholds | copy the YAML, pass `--model` |
+| use different criteria / weights / thresholds | copy a view YAML, pass `--model` |
+| add a view (e.g. sustainability) | new YAML that picks criteria from `config/criteria.yaml`; register it in `VIEW_RESOURCES` to make it a bundled view |
+| add a criterion | add it to `config/criteria.yaml` (or under `criteria:` in a view) with a rating source |
 | add a data feed (credit API, ESG platform, news) | new `@register_source` function in `tools/indicators.py` and/or a new `SupplierDataSource` |
 | add an agent (e.g. external risk monitoring) | new node in `graph/builder.py` + one rule in `Supervisor.route()` |
 | use an LLM supervisor | replace `Supervisor.route()` |

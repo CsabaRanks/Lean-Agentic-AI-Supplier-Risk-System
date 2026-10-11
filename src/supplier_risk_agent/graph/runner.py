@@ -33,8 +33,9 @@ class SupplierRiskEvaluator:
     ):
         self.model = model or load_risk_model()
         self.source = source
-        self.weight_store = weight_store
-        self.app = build_graph(self.model, source, weight_store, checkpointer)
+        # weights are stored per view (<dir>/<view>/<scope>_vNNN.yaml)
+        self.weight_store = weight_store.for_view(self.model.view) if weight_store else None
+        self.app = build_graph(self.model, source, self.weight_store, checkpointer)
 
     @classmethod
     def from_json(
@@ -42,9 +43,10 @@ class SupplierRiskEvaluator:
         data_path: str | Path,
         model_path: str | Path | None = None,
         weights_dir: str | Path | None = None,
+        view: str = "risk",
     ) -> SupplierRiskEvaluator:
         store = WeightStore(weights_dir) if weights_dir else None
-        return cls(JsonFileSource(data_path), load_risk_model(model_path), store)
+        return cls(JsonFileSource(data_path), load_risk_model(model_path, view=view), store)
 
     @staticmethod
     def _config(run_id: str) -> dict:

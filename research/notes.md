@@ -2,6 +2,31 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Two views: performance and risk
+
+**D29: Supplier performance evaluation and supplier risk management are separate views.**
+- **Shared catalogue.** Criteria (meaning and rating source) are defined once in
+  `config/criteria.yaml`.
+- **One YAML per view.** Each view selects criteria and sets its own dimensions, weights, classes,
+  escalation rules, actions and calibration. Shared criteria in the template: credit_risk,
+  esg_rating, compliance_status.
+- **Same engine.** Every view computes internally 0 = favourable … 100 = unfavourable.
+  `score_orientation: higher_is_better` changes only the presentation, and the reading of expert
+  labels, for the performance view.
+- **Per-view separation.** Labels (`expert_risk_score`, `expert_scores[view]` /
+  `expert_<view>_score`), weight-store sub-folders and the UI runs are kept per view.
+
+**Bugs found while building it:**
+1. A criterion named like a numeric indicator (`quality_ppm`) made PPM values be read as expert
+   ratings. The criterion was renamed `delivered_quality`. A naming rule is now in the catalogue,
+   with a test.
+2. Spreadsheet rows were parsed against the active view's criteria only, so risk ratings became
+   "indicators" in the performance view. Rows are now parsed against the whole catalogue. A test
+   checks that one sheet gives identical results per view.
+
+**Result on sample data.** SUP-003 and SUP-005 are critical in the risk view and A in the
+performance view. This illustrates why practice keeps both.
+
 ## 2026-10 — Spreadsheet UI ("wolf in sheep's clothing")
 
 **D28: `ui/app.py` (Streamlit).** It feels like a spreadsheet; the full workflow runs underneath.

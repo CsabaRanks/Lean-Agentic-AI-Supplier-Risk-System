@@ -58,4 +58,4 @@ def test_auto_applied_calibration_is_persisted_and_reused(calibration_evaluator,
     assert all(r.weights_origin == "calibrated" for r in second["results"].values())
     assert second["calibration_report"].mse_before == pytest.approx(first["calibration_report"].mse_after, abs=0.1)
     assert not second["calibration_report"].applied
-    assert sorted(p.name for p in tmp_path.iterdir()) == ["global_v001.yaml"]
+    assert sorted(p.name for p in (tmp_path / "risk").iterdir()) == ["global_v001.yaml"]

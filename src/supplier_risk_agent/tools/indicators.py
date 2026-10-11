@@ -135,6 +135,24 @@ def _esg(profile: SupplierProfile, factor_key: str) -> RatingResult:
     return 6 - _band(score, [25, 45, 60, 75]), f"ESG score {score:g}/100"
 
 
+@register_source("on_time_rate")
+def _on_time(profile: SupplierProfile, factor_key: str) -> RatingResult:
+    if _missing(profile, "on_time_rate"):
+        return None, "no on-time delivery rate available"
+    rate = float(profile.indicators["on_time_rate"])
+    # higher on-time rate = better; bands are illustrative
+    rating = 1 if rate >= 98 else 2 if rate >= 95 else 3 if rate >= 90 else 4 if rate >= 85 else 5
+    return rating, f"on-time delivery {rate:g} %"
+
+
+@register_source("quality_ppm")
+def _ppm(profile: SupplierProfile, factor_key: str) -> RatingResult:
+    if _missing(profile, "quality_ppm"):
+        return None, "no PPM figure available"
+    ppm = float(profile.indicators["quality_ppm"])
+    return _band(ppm, [50, 200, 500, 1000]), f"{ppm:g} PPM"
+
+
 COMPLIANCE_RATINGS = {
     "compliant": 1,
     "minor_findings": 2,

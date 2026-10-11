@@ -17,14 +17,17 @@ import json
 import sys
 
 from .graph import SupplierRiskEvaluator, ranked
+from .models.config import RiskModelConfig, available_views
 from .models.domain import CalibrationReport, ClassOverride, ReviewDecision, RiskAssessment
 
 
-def _print_portfolio(results: list[RiskAssessment]) -> None:
+def _print_portfolio(results: list[RiskAssessment], model: RiskModelConfig) -> None:
+    print(f"View: {model.view_label} — {model.view_question}\n")
     print(f"{'ID':<9} {'Supplier':<28} {'Score':>6}  {'Class':<9} {'Data':>5}  {'Weights':<20} Review")
     print("-" * 94)
     for r in results:
-        score = f"{r.overall_score:6.1f}" if r.overall_score is not None else "   n/a"
+        shown = model.to_display(r.overall_score)
+        score = f"{shown:6.1f}" if shown is not None else "   n/a"
         cls = r.risk_class or "n/a"
         if r.calculated_class and r.risk_class != r.calculated_class:
             cls += "*"
@@ -36,12 +39,14 @@ def _print_portfolio(results: list[RiskAssessment]) -> None:
     print("\n* class raised by an escalation rule")
 
 
-def _print_detail(r: RiskAssessment) -> None:
+def _print_detail(r: RiskAssessment, model: RiskModelConfig) -> None:
     print(f"\n{r.supplier_name} ({r.supplier_id}) — model {r.model_name}@{r.model_version}")
     print(f"Material group: {r.material_group or '-'}  |  weights: {r.weights_scope}/{r.weights_origin}")
-    print(f"Overall score: {r.overall_score}  |  class: {r.risk_class}  |  data: {r.data_completeness:.0%}\n")
+    print(f"{model.score_label}: {model.to_display(r.overall_score)}  |  class: {r.risk_class}  |  "
+          f"data: {r.data_completeness:.0%}\n")
     for d in r.dimension_scores:
-        score = f"{d.score:5.1f}" if d.score is not None else "  n/a"
+        shown = model.to_display(d.score)
+        score = f"{shown:5.1f}" if shown is not None else "  n/a"
         print(f"  {d.label:<22} weight {d.weight:5.1%}  score {score}")
         for f in (f for f in r.factor_scores if f.dimension == d.dimension):
             rating = f.rating if f.rating is not None else "-"
@@ -118,7 +123,9 @@ def _interactive_review(request: dict, ask=None) -> ReviewDecision:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="supplier-risk", description=__doc__.splitlines()[0])
     parser.add_argument("--data", required=True, help="JSON file with supplier records")
-    parser.add_argument("--model", help="risk model YAML (default: bundled example template)")
+    parser.add_argument("--view", choices=available_views(), default="risk",
+                        help="evaluation view: risk (default) or performance")
+    parser.add_argument("--model", help="model YAML for the view (default: bundled example template)")
     parser.add_argument("--supplier", help="assess a single supplier ID")
     parser.add_argument("--material-group", help="restrict the run (and calibration scope) to one material group")
     cal = parser.add_mutually_exclusive_group()
@@ -131,7 +138,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="print machine-readable JSON")
     args = parser.parse_args(argv)
 
-    evaluator = SupplierRiskEvaluator.from_json(args.data, args.model, args.weights_dir)
+    evaluator = SupplierRiskEvaluator.from_json(args.data, args.model, args.weights_dir, view=args.view)
     state = evaluator.run(
         supplier_ids=[args.supplier] if args.supplier else None,
         material_group=args.material_group,
@@ -159,9 +166,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.supplier:
-        _print_detail(results[0])
+        _print_detail(results[0], evaluator.model)
     else:
-        _print_portfolio(results)
+        _print_portfolio(results, evaluator.model)
     if report:
         _print_calibration(report)
     if request:

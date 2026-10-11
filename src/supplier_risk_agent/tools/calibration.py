@@ -93,7 +93,8 @@ def build_design_matrix(
     rows, labels, used = [], [], []
     excluded: dict[str, str] = {}
     for p in profiles:
-        if p.expert_risk_score is None:
+        label = model.label_of(p)
+        if label is None:
             continue
         ratings = {f.factor: f.rating for f in score_factors(p, model, prior)}
         missing = [k for k in keys if ratings[k] is None]
@@ -101,7 +102,7 @@ def build_design_matrix(
             excluded[p.supplier_id] = f"incomplete data ({', '.join(missing)})"
             continue
         rows.append([ratings[k] for k in keys])
-        labels.append(p.expert_risk_score)
+        labels.append(label)
         used.append(p.supplier_id)
     return np.array(rows, dtype=float), np.array(labels, dtype=float), used, excluded
 

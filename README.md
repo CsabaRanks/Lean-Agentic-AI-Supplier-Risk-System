@@ -61,8 +61,9 @@ It shows each approach's **relative position**, factor by factor:
 
 ## What it does
 
+- **Two views: performance and risk.** The same suppliers and shared criteria, evaluated with two configurable profiles, each with its own weights, classes and actions (see below).
 - **Structured scoring.** Multi-dimensional, weighted scoring with 1–5 factor ratings and min-max normalisation to 0–100.
-- **Configurable model.** Criteria, **default weights**, thresholds, escalation rules and actions live in one YAML file. Nothing is hard-coded.
+- **Configurable model.** Criteria are defined once in a shared catalogue. **Default weights**, thresholds, escalation rules and actions live in one YAML file per view. Nothing is hard-coded.
 - **Calibration against expert judgement.** A dedicated agent learns weights from category managers' holistic assessments (see below).
 - **Material-group aware.** Weights can differ per commodity or material group instead of one-size-fits-all.
 - **Governance built in.**
@@ -77,6 +78,39 @@ It shows each approach's **relative position**, factor by factor:
 > ⚠️ **The bundled criteria, weights and thresholds are illustrative examples.** They are a
 > template to start from. Adapt them to your categories and calibrate them on your own supplier
 > base before using the results for decisions.
+
+## Two views: supplier performance and supplier risk
+
+In practice, procurement runs two related evaluations that are easy to mix up:
+
+| | **Supplier performance evaluation** | **Supplier risk management** |
+|---|---|---|
+| Question | How well does this supplier deliver? | How exposed are we if this supplier fails? |
+| Typical criteria | on-time delivery, quality (PPM), price, cooperation | replaceability, business consequence, financial stability, country / sourcing / transport, ESG & compliance |
+| Classes in the template | A / B / C (A = preferred) | low / medium / high / critical |
+| Typical consequence | supplier development, business allocation | mitigation: second source, safety stock, monitoring |
+
+The two views **share criteria**, such as credit risk, ESG rating and compliance status. A
+shared criterion is defined once in a catalogue (`config/criteria.yaml`), so it has the same
+meaning and data source in both views. Each view gives it **its own weight**, classes, escalation
+rules and actions (`config/default_risk_model.yaml`, `config/default_performance_model.yaml`).
+
+Everything else works for both views alike:
+- calibration against expert labels, with a separate label per view
+- material-group weights
+- human review
+- versioned weights, stored per view
+
+The sample data shows why both are needed. Cobalt Specialty Chemicals and Evergreen Packaging
+are **critical** in the risk view, because of single sourcing and acute insolvency signals. Both
+are **A suppliers** in the performance view, because they deliver on time and in quality.
+
+```bash
+supplier-risk --data data/sample_suppliers.json --view performance
+```
+
+Further views can be added as new YAML files that pick criteria from the catalogue, for example
+a sustainability view.
 
 ## ⭐ Differentiator: calibration against expert judgement
 
@@ -171,8 +205,9 @@ git clone <this-repo> && cd supplier-risk-agent
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
-# assess the fictional sample portfolio
+# assess the fictional sample portfolio (risk view; --view performance for the performance view)
 supplier-risk --data data/sample_suppliers.json
+supplier-risk --data data/sample_suppliers.json --view performance
 
 # one supplier in detail
 supplier-risk --data data/sample_suppliers.json --supplier SUP-003
@@ -217,7 +252,8 @@ streamlit run ui/app.py       # opens http://localhost:8501
 
 | Tab | What you do there |
 |---|---|
-| **▶️ Scoring run** | Edit supplier inputs like a sheet (or import a CSV), then run the scoring |
+| **View switch** (top) | *Performance* or *Risk*: changes classes, weights, score direction and results. Each view keeps its own run, calibration and review. |
+| **▶️ Scoring run** | Edit supplier inputs like a sheet (or import a CSV), then run the scoring. One sheet serves both views. |
 | **📋 Portfolio** | Ranked table with traffic-light classes, filters, supplier details, audit trail, CSV export |
 | **🎯 Calibration** | Enter or import expert labels (0–100), calibrate, compare current vs. proposed weights, read the diagnostics |
 | **✅ Review & approval** | Approve proposed weights, set classes manually with a comment, or defer |
@@ -227,7 +263,8 @@ streamlit run ui/app.py       # opens http://localhost:8501
   collects input and shows results.
 - **Approval.** Calibrated weights are never applied without approval in the UI.
 - **CSV format.** One supplier per row. Columns named like a factor hold expert ratings 1–5; other
-  columns hold raw indicators; `expert_risk_score` holds the label. Use **Empty template CSV** in
+  columns hold raw indicators; `expert_risk_score` and `expert_performance_score` hold the
+  labels of each view. Use **Empty template CSV** in
   the sidebar as a starting point. Semicolon-separated files from European Excel versions are
   accepted.
 

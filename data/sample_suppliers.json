@@ -5,11 +5,23 @@
     "material_group": "metal_parts",
     "country": "Region A",
     "annual_spend": 1200000,
-    "expert_ratings": {"availability": 2, "switching_complexity": 2, "business_impact": 3},
+    "expert_ratings": {
+      "availability": 2,
+      "switching_complexity": 2,
+      "business_impact": 3,
+      "price_competitiveness": 2,
+      "responsiveness": 2
+    },
     "indicators": {
-      "credit_score": 84, "distress_signals": 0, "country_risk_index": 12,
-      "qualified_sources": 3, "transport_mode": "road",
-      "esg_score": 78, "compliance_status": "compliant"
+      "credit_score": 84,
+      "distress_signals": 0,
+      "country_risk_index": 12,
+      "qualified_sources": 3,
+      "transport_mode": "road",
+      "esg_score": 78,
+      "compliance_status": "compliant",
+      "on_time_rate": 97.0,
+      "quality_ppm": 120
     }
   },
   {
@@ -18,11 +30,23 @@
     "material_group": "plastics",
     "country": "Region B",
     "annual_spend": 850000,
-    "expert_ratings": {"availability": 3, "switching_complexity": 4, "business_impact": 4},
+    "expert_ratings": {
+      "availability": 3,
+      "switching_complexity": 4,
+      "business_impact": 4,
+      "price_competitiveness": 3,
+      "responsiveness": 3
+    },
     "indicators": {
-      "credit_score": 62, "distress_signals": 0, "country_risk_index": 35,
-      "qualified_sources": 2, "transport_mode": "rail",
-      "esg_score": 58, "compliance_status": "minor_findings"
+      "credit_score": 62,
+      "distress_signals": 0,
+      "country_risk_index": 35,
+      "qualified_sources": 2,
+      "transport_mode": "rail",
+      "esg_score": 58,
+      "compliance_status": "minor_findings",
+      "on_time_rate": 93.0,
+      "quality_ppm": 380
     }
   },
   {
@@ -31,11 +55,24 @@
     "material_group": "chemicals",
     "country": "Region C",
     "annual_spend": 2300000,
-    "expert_ratings": {"availability": 5, "switching_complexity": 5, "business_impact": 5},
+    "expert_ratings": {
+      "availability": 5,
+      "switching_complexity": 5,
+      "business_impact": 5,
+      "price_competitiveness": 4,
+      "responsiveness": 2
+    },
     "indicators": {
-      "credit_score": 41, "distress_signals": 1, "country_risk_index": 72,
-      "qualified_sources": 1, "transport_mode": "sea", "intercontinental": true,
-      "esg_score": 38, "compliance_status": "open_findings"
+      "credit_score": 41,
+      "distress_signals": 1,
+      "country_risk_index": 72,
+      "qualified_sources": 1,
+      "transport_mode": "sea",
+      "intercontinental": true,
+      "esg_score": 38,
+      "compliance_status": "open_findings",
+      "on_time_rate": 99.0,
+      "quality_ppm": 40
     }
   },
   {
@@ -44,11 +81,23 @@
     "material_group": "textiles",
     "country": "Region B",
     "annual_spend": 430000,
-    "expert_ratings": {"availability": 2, "switching_complexity": 3, "business_impact": 2},
+    "expert_ratings": {
+      "availability": 2,
+      "switching_complexity": 3,
+      "business_impact": 2,
+      "price_competitiveness": 2,
+      "responsiveness": 3
+    },
     "indicators": {
-      "credit_score": 77, "distress_signals": 0, "country_risk_index": 28,
-      "qualified_sources": 2, "transport_mode": "road",
-      "esg_score": 22, "compliance_status": "critical_findings"
+      "credit_score": 77,
+      "distress_signals": 0,
+      "country_risk_index": 28,
+      "qualified_sources": 2,
+      "transport_mode": "road",
+      "esg_score": 22,
+      "compliance_status": "critical_findings",
+      "on_time_rate": 88.0,
+      "quality_ppm": 650
     }
   },
   {
@@ -57,11 +106,23 @@
     "material_group": "packaging",
     "country": "Region A",
     "annual_spend": 150000,
-    "expert_ratings": {"availability": 1, "switching_complexity": 1, "business_impact": 2},
+    "expert_ratings": {
+      "availability": 1,
+      "switching_complexity": 1,
+      "business_impact": 2,
+      "price_competitiveness": 1,
+      "responsiveness": 2
+    },
     "indicators": {
-      "credit_score": 58, "distress_signals": 3, "country_risk_index": 15,
-      "qualified_sources": 4, "transport_mode": "road",
-      "esg_score": 64, "compliance_status": "compliant"
+      "credit_score": 58,
+      "distress_signals": 3,
+      "country_risk_index": 15,
+      "qualified_sources": 4,
+      "transport_mode": "road",
+      "esg_score": 64,
+      "compliance_status": "compliant",
+      "on_time_rate": 96.0,
+      "quality_ppm": 150
     }
   },
   {
@@ -70,9 +131,14 @@
     "material_group": "electronics",
     "country": "Region D",
     "annual_spend": 610000,
-    "expert_ratings": {"business_impact": 4},
+    "expert_ratings": {
+      "business_impact": 4,
+      "responsiveness": 3
+    },
     "indicators": {
-      "country_risk_index": 55, "transport_mode": "air", "intercontinental": true
+      "country_risk_index": 55,
+      "transport_mode": "air",
+      "intercontinental": true
     }
   }
 ]

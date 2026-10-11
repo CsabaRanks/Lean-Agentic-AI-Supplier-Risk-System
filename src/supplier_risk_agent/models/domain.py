@@ -35,6 +35,10 @@ class SupplierProfile(BaseModel):
         le=100,
         description="Holistic subjective risk label (0..100) from a category manager; used for calibration",
     )
+    expert_scores: dict[str, float] = Field(
+        default_factory=dict,
+        description="Holistic labels for other views, e.g. {'performance': 85}, on each view's display scale",
+    )
 
 
 class FactorScore(BaseModel):
@@ -89,6 +93,7 @@ class RiskAssessment(BaseModel):
     material_group: str | None = None
     model_name: str
     model_version: str
+    view: str = "risk"
     weights_scope: str = "global"
     weights_origin: str = "default"
     overall_score: float | None

@@ -48,6 +48,10 @@ class WeightStore:
     def __init__(self, directory: str | Path):
         self.directory = Path(directory)
 
+    def for_view(self, view: str) -> WeightStore:
+        """A store in a sub-folder per view, so that risk and performance weights never mix."""
+        return WeightStore(self.directory / _safe_scope(view))
+
     # --- read ------------------------------------------------------------------
 
     def versions(self, scope: str) -> list[tuple[int, Path]]:
