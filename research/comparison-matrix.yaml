@@ -115,7 +115,8 @@ factors:
         confidence: H
         rationale: >-
           Pure scoring functions with automated tests; append-only audit trail per run; versioned weight files with
-          approver; model version on every result. Not 5: runs are not persisted centrally yet.
+          approver; model version on every result; timestamped assessment snapshots per view (local JSONL files).
+          Not 5: no central, access-controlled persistence of runs yet.
 
   - id: 3
     key: transparency
@@ -219,7 +220,9 @@ factors:
       lean:
         value: 3
         confidence: H
-        rationale: Rule-based actions per class and per elevated dimension, review cycles; no action tracking / closure.
+        rationale: >-
+          Configurable actions per class, per elevated dimension and per factor level, with review cycles and
+          owners; exportable action plan. Not 4: no action tracking / closure.
 
   - id: 7
     key: hitl
@@ -271,7 +274,9 @@ factors:
       lean:
         value: 1
         confidence: H
-        rationale: Not implemented; indicators are provided as data. On the roadmap.
+        rationale: >-
+          No signal monitoring. A provider interface fills indicators from files (e.g. a downloaded governance
+          indicator table, system exports); API feeds are placeholders.
 
   - id: 9
     key: regulatory
@@ -421,7 +426,9 @@ factors:
       lean:
         value: 4
         confidence: H
-        rationale: Supervisor graph with documented extension points (data sources, rating sources, agents); few agents yet.
+        rationale: >-
+          Supervisor graph with documented extension points (data sources, data providers, rating sources, views,
+          agents); few agents yet.
 
   - id: 15
     key: operations

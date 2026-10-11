@@ -65,7 +65,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 - **Excel** *(M)*: Formulas are deterministic, but there is no per-result record and copy-paste / versioning errors are common.
 - **SaaS** *(L)*: Audit-ready due-diligence documentation is claimed (Prewave); audit-trail controls not found publicly (Sphera). Continuously updated, partly NLP-based scores cannot be recomputed by the customer from documented inputs, a design consequence of real-time monitoring rather than a flaw.
 - **Open repos** *(H)*: History lists / tracing in some repos; 2 of 5 repos use LLM-judged scores.
-- **Lean Agentic** *(H)*: Pure scoring functions with automated tests; append-only audit trail per run; versioned weight files with approver; model version on every result. Not 5: runs are not persisted centrally yet.
+- **Lean Agentic** *(H)*: Pure scoring functions with automated tests; append-only audit trail per run; versioned weight files with approver; model version on every result; timestamped assessment snapshots per view (local JSONL files). Not 5: no central, access-controlled persistence of runs yet.
 
 ### 3. Methodological transparency: Excel 4 · SaaS 2.5 · Open repos 3 · Lean Agentic 5
 
@@ -93,7 +93,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 - **Excel** *(M)*: Actions are usually free text.
 - **SaaS** *(M)*: Response playbooks, action planners and tracked closure are described on product pages.
 - **Open repos** *(H)*: Narrative recommendations.
-- **Lean Agentic** *(H)*: Rule-based actions per class and per elevated dimension, review cycles; no action tracking / closure.
+- **Lean Agentic** *(H)*: Configurable actions per class, per elevated dimension and per factor level, with review cycles and owners; exportable action plan. Not 4: no action tracking / closure.
 
 ### 7. Human-in-the-loop & governance: Excel 2 · SaaS 4 · Open repos 2 · Lean Agentic 3
 
@@ -107,7 +107,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 - **Excel** *(H)*: Manual research only.
 - **SaaS** *(M)*: Core strength: continuous multi-source monitoring, many languages, Tier-N mapping (feature verified; volumes are vendor claims).
 - **Open repos** *(H)*: Internal databases, retrieval, mocks.
-- **Lean Agentic** *(H)*: Not implemented; indicators are provided as data. On the roadmap.
+- **Lean Agentic** *(H)*: No signal monitoring. A provider interface fills indicators from files (e.g. a downloaded governance indicator table, system exports); API feeds are placeholders.
 
 ### 9. Regulatory evidence (due-diligence documentation): Excel 2 · SaaS 4.5 · Open repos 1 · Lean Agentic 2
 
@@ -149,7 +149,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 - **Excel** *(H)*: None beyond macros.
 - **SaaS** *(M)*: Prewave: REST APIs, ERP write-back and connectors for AI agents; Sphera: workflow embedding stated, public API documentation not found. Both closed.
 - **Open repos** *(H)*: Agent architectures are their main asset.
-- **Lean Agentic** *(H)*: Supervisor graph with documented extension points (data sources, rating sources, agents); few agents yet.
+- **Lean Agentic** *(H)*: Supervisor graph with documented extension points (data sources, data providers, rating sources, views, agents); few agents yet.
 
 ### 15. Operational maturity & support: Excel 3 · SaaS 5 · Open repos 1 · Lean Agentic 2
 

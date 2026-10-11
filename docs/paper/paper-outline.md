@@ -11,9 +11,9 @@ series), whose formal conventions are reused:
 - **Section order.** Limitations, then Future work, then Conclusion.
 
 Status: outline with bullet points. Sources: `research/` files, linked per section.
-**Draft text:** all sections 1–12 are drafted in [paper.md](paper.md) (working draft v0.3).
+**Draft text:** all sections 1–12 are drafted in [paper.md](paper.md) (working draft v0.4).
 
-### Remaining gaps (draft v0.3)
+### Remaining gaps (draft v0.4)
 
 - **[TBD-RESULT] Section 7:**
   - optional label-vs-score scatter
@@ -24,7 +24,8 @@ Status: outline with bullet points. Sources: `research/` files, linked per secti
 - **[TBD-LIT] Section 7.8:** a reference on the variance of k-fold cross-validation estimates
   (dependence between folds).
 - **[TBD-INPUT] Figure 3:** static rendering for the typeset version (currently Mermaid).
-- **Section 9, Table 7:** source versioning for external indicators is not implemented.
+- **Section 9, Table 9:** provider and data vintage are recorded per indicator; the source data
+  itself is not versioned.
 - **References:** verify wording against full texts (read at abstract level).
 - **Typesetting:** convert to LaTeX in the companion paper's template; insert the generated Table 2
   in Appendix A.
@@ -191,7 +192,12 @@ with Open Agentic Workflows"*
   - **Equation box** (→ `docs/calibration.md`)
 - **6.5 Human-in-the-loop.** Graph interrupt, review decisions, overrides that survive
   re-scoring, approval of weights.
-- **6.6 Engineering quality.** Tests, CI, determinism, allow-listed checkpoint types.
+- **6.6 Two views.** Performance evaluation and risk management on one criteria catalogue; one
+  configuration per view; separate labels, weights and reviews.
+- **6.7 Actions, data providers and history.** Factor-level action framework with owners; provider
+  interface (political stability from WGI, tabular exports, API placeholders); timestamped
+  snapshots; spreadsheet surface.
+- **6.8 Engineering quality.** Tests, CI, determinism, allow-listed checkpoint types.
 
 ## 7 Demonstration on synthetic data
 

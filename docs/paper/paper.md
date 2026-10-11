@@ -2,7 +2,7 @@
 
 ### Turning spreadsheet scorecards into transparent, expert-calibrated multi-agent systems: a benchmark of four approaches and an open-source demonstrator
 
-*Csaba Bakay · Working paper, draft v0.3 · October 2026*
+*Csaba Bakay · Working paper, draft v0.4 · October 2026*
 
 > **Draft status.** All sections (1–12) exist as a first, continuous draft. Remaining gaps are
 > marked in the text and summarised in [paper-outline.md](paper-outline.md). Markers in the text:
@@ -11,7 +11,11 @@
 >   references verified via Crossref or OpenAlex, read at abstract level)
 > - **[TBD-INPUT]** — needs a decision or input from the author
 >
-> Numbers quoted from the demonstrator come from runs of commit `6bb05b9` on synthetic data.
+> Numbers quoted from the demonstrator come from runs of commit `6bb05b9` on synthetic data. They
+> were re-checked on commit `c9a500f`, which adds the two views, the supply chain sub-score, change
+> complexity from the time to exit, the action framework, data providers and the history: the
+> reference run (Section 7.2) reproduces exactly, and the synthetic suppliers of E1–E5 receive
+> identical factor ratings, so Sections 7.2–7.8 and Figures 4–7 are unaffected.
 
 ---
 
@@ -41,7 +45,9 @@ This paper makes three contributions.
    scorecard practice and builds on open agentic workflows. Its scoring is deterministic and
    configurable, with material-group-specific weights. Weights are calibrated against category
    managers' expert labels by constrained least squares. A human-in-the-loop step pauses the
-   workflow for approval, and approved weights are versioned.
+   workflow for approval, and approved weights are versioned. The same criteria serve two views,
+   supplier performance evaluation and supplier risk management, and results map to concrete
+   actions per factor.
 
 On synthetic portfolios whose labels were generated from a hidden weighting plus noise:
 - **Cross-validated error.** Calibration reduced the cross-validated mean squared error between
@@ -145,6 +151,8 @@ weighting is applied, and no total or ranking is derived.*
    - constrained least-squares calibration
    - a graph-interrupt human-review step
    - a versioned weight store
+   - two views on one criteria catalogue: performance evaluation and risk management
+   - an action framework and an assessment history
    - an automated test suite (Section 6)
 5. **An explicit statement of what is not established**, and of the work that would close each gap
    (Sections 10–11).
@@ -496,7 +504,7 @@ versioned and testable.
 - an action framework with review cycles
 
 External signal feeds are not implemented. They are intended to come from open data or an existing
-platform subscription.
+platform subscription, through the provider interface described in Section 6.7.
 
 **From open-source agent projects**, it takes the architecture: a supervisor coordinating
 specialised agents over a typed shared state. It also takes the lesson the better projects teach:
@@ -565,9 +573,11 @@ around it:
 ### 5.4 What the approach is not
 
 Equally important for the positioning, the approach is **not**:
-- a data provider: it monitors no news, disasters or Tier-N networks
+- a data provider: it monitors no news, disasters or Tier-N networks. It has an interface for
+  external indicators, but ships no real data (Section 6.7)
 - a regulatory compliance product
-- production-hardened: it has no roles or permissions and no persistent run store
+- production-hardened: it has no roles or permissions and no central run store (assessment
+  snapshots are local files)
 - empirically validated: its calibration has so far been shown on synthetic labels only
 
 The claim of this paper is narrower. The *method layer* of supplier risk evaluation can be made
@@ -579,18 +589,20 @@ platforms leave partly opaque and spreadsheets leave ungoverned.
 ## 6 Architecture of the demonstrator
 
 This section summarises the demonstrator. Design details are in `docs/architecture.md`,
-`docs/scoring-model.md` and `docs/calibration.md`.
+`docs/scoring-model.md`, `docs/calibration.md` and `docs/data-providers.md`.
 
 ### 6.1 Workflow
 
 The demonstrator is a LangGraph state graph in hub-and-spoke form (Figure 3). A rule-based
 **supervisor** inspects the shared state and routes to one of five workers:
 - **data collection**: loads the suppliers in scope, optionally restricted to one material group,
-  together with indicators and expert labels from a pluggable source
+  together with indicators and expert labels from a pluggable source. Optional data providers then
+  fill missing indicators (Section 6.7)
 - **scoring**: rates factors, aggregates, normalises and classifies, applies escalation rules and
   checks data completeness
 - **calibration**: optional
-- **recommendation**: maps classes and elevated dimensions to actions and review cycles
+- **recommendation**: maps classes, elevated dimensions and factor levels to actions, owners and
+  review cycles (Section 6.7)
 - **human review**
 
 Every worker returns control to the supervisor. The routing rules fit in one function, which is
@@ -659,6 +671,21 @@ problem.
   share of weight actually backed by data is reported. Below a threshold, the result is flagged for
   review.
 
+**Sub-scores.** Dimension scores are reported alongside the overall score. Two of them combine
+data from different origins:
+- **Supply chain risk** combines three factors:
+  - *political stability*, from the percentile rank of the World Bank Worldwide Governance
+    Indicator "Political Stability and Absence of Violence/Terrorism" (Kaufmann et al., 2011) in
+    bands of 20 points: ≥ 80 → 1 … < 20 → 5. A generic country risk index is the fallback
+  - *sourcing strategy*, from the number of qualified sources
+  - *transport dependency*, from transport mode and routes
+- **Severity** includes *change complexity*: how long it would take to move the volume to another
+  source, including qualification, tooling and ramp-up. It can be derived from the *time to exit*
+  in months (≤ 3, ≤ 6, ≤ 12, ≤ 24, > 24 → 1 … 5). An expert rating still takes precedence.
+
+Both mappings are ordinary rating sources. Their bands are illustrative and are not calibrated;
+only the weights are (Section 6.4).
+
 The default criteria, weights and thresholds are an **illustrative template**, not a
 recommendation.
 
@@ -718,13 +745,72 @@ The review step uses the graph framework's interrupt mechanism.
   - Recommendations are rebuilt after any change.
 - **Invalid decisions** are reported and ignored.
 
-### 6.6 Engineering properties
+### 6.6 Two views: performance evaluation and risk management
+
+Practice distinguishes two questions about the same supplier:
+- **Performance evaluation:** how well does the supplier deliver? It looks back, at delivery
+  reliability, quality, price and responsiveness, and grades suppliers A, B or C.
+- **Risk management:** how exposed are we if the supplier fails? It looks forward, at
+  replaceability, financial stability, supply chain structure and compliance, and assigns a risk
+  class.
+
+The two answers can diverge. A supplier can deliver excellently and still be a critical
+dependency; in the sample portfolio, two suppliers are critical in the risk view and A in the
+performance view. The demonstrator therefore keeps both as separate **views** on one engine:
+- **Shared catalogue.** Each criterion, with its meaning and rating source, is defined once.
+  Criteria such as credit risk or compliance status are used by both views.
+- **One configuration per view.** It selects criteria and sets its own dimensions, weights,
+  classes, escalation rules and actions.
+- **One direction internally.** Every view computes 0 = favourable … 100 = unfavourable. The
+  performance view is only *displayed* as higher-is-better.
+- **Separation where it matters.** Expert labels, weight versions, runs and reviews are kept per
+  view, so calibrating one view never changes the other.
+
+Everything in Sections 6.1–6.5 applies to each view unchanged. The calibration experiments in
+Section 7 use the risk view; in the template, calibration of the performance view is switched off.
+
+### 6.7 Actions, data providers and history
+
+**Action framework.** Recommendations are produced at three levels, all configured per view:
+1. per class, with a review cycle
+2. per elevated dimension score
+3. per factor and level, with a typical owner; the most specific level reached applies
+
+An example of the third level: availability of alternatives rated 4 leads to a market scan for
+alternative sources, rated 5 to the qualification of an alternative source. The actions of a
+portfolio form an exportable action plan. Tracking actions to closure is not implemented.
+
+**Data providers.** A slim provider interface fills indicators that are missing in the supplier
+data and records the origin of each value. Values entered by hand are never overwritten, and a
+failing provider is reported without stopping the assessment. Bundled are:
+- a provider for the political stability indicator, reading a user-downloaded table. A fictional
+  table, explicitly marked as such, serves the sample data
+- a generic provider for tabular exports, for example from an ERP system, an ESG rating platform
+  or a credit agency
+- documented placeholders for API integrations
+
+Providers deliver indicators only. Turning them into ratings stays with the rating sources, so the
+method does not change when a source does.
+
+**History.** Assessments can be recorded as timestamped snapshots per view, explicitly or
+automatically after an approved review. Each snapshot holds scores, classes, dimension scores, the
+weights used and the approver. This allows scores to be followed per supplier and per material
+group over time. Snapshots are deliberately not taken on every recalculation: scores can be
+recomputed at any time, and recording every intermediate state would add noise.
+
+**Spreadsheet surface.** A browser interface presents all of this as a sheet: suppliers in rows,
+criteria and scores in columns, with dashboards per material group, the action plan and the
+history. All numbers come from the package; the interface only collects input and shows results.
+
+### 6.8 Engineering properties
 
 These properties make the claims in Sections 5 and 6 checkable:
-- **Tests.** The demonstrator ships with 57 automated tests. They cover:
-  - scoring and weights
+- **Tests.** The demonstrator ships with 121 automated tests. They cover:
+  - scoring and weights, in both views
   - calibration, including recovery of known weights from noise-free labels
   - the weight store and the human-review flow
+  - rating sources, data providers, the action framework, reporting and history
+  - the spreadsheet interface
   - the consistency of the benchmark data
   - reproducibility of the synthetic datasets
 - **CI.** Continuous integration runs linting and tests on two Python versions.
@@ -1320,6 +1406,9 @@ the integration points already exist:
 - **Rating sources.** A rating source turns any indicator into a 1–5 rating. This could be a
   platform's supplier score, an alert count or a country index (`tools/indicators.py`).
 - **Data source protocol.** A pluggable data source can deliver those indicators.
+- **Data providers.** A provider fills missing indicators and records their origin
+  (Section 6.7). The political stability provider is a small instance of the signal layer built on
+  open data.
 
 Prewave's published score composition (Section 2.2) makes it possible to reason about what such an
 input already contains. Where the composition is not published, the input has to be treated as a
@@ -1416,7 +1505,7 @@ demonstrator does not enforce roles (Section 10).
 | Holistic expert labels for calibration | **Category managers**, collected blind to the model score | Annual or periodic labelling round | Supplier record (`expert_risk_score`) |
 | Calibrated weights | **Approver** distinct from the label providers (four-eyes, recommended) | Approval at the human-review pause | Versioned weight store, with approver, metrics and timestamp |
 | Manual class overrides | **Decision owner** for the supplier | Review decision, with mandatory comment | Assessment (`manual_override`, `review_comment`); audit trail |
-| Indicators from external sources | **Data owner** per source | Data refresh | Indicator provenance; [TBD: source versioning not yet implemented] |
+| Indicators from external sources | **Data owner** per source | Data refresh | Indicator provenance: provider and data vintage per indicator (Section 6.7); the source data itself is not versioned |
 
 Two principles follow from the method:
 1. **The method owner sets the floor.** Escalation rules ("a critical compliance finding means at
@@ -1516,10 +1605,17 @@ already run:
   synthetic data. Cross-validated selection was tested and not adopted, and it remains available
   as an option.
 - **Default template.** The criteria, weights and thresholds are illustrative, not recommended.
+  This includes the bands that map the political stability percentile and the time to exit to
+  ratings (Section 6.2), and the factor-level actions. None of them was calibrated or validated.
+- **Second view not examined.** The performance view uses the same engine, but none of the
+  experiments in Section 7 covers it, and its calibration is switched off in the template.
 - **Not production-hardened.** The demonstrator has:
   - no roles or permissions
   - review pauses held in memory only
-  - no external signal feeds
+  - no external signal feeds: the provider interface reads files, the bundled political
+    stability table is fictional, and API integrations are placeholders
+  - an assessment history in local files, without access control
+  - no tracking of actions to closure
 
 ---
 
@@ -1568,14 +1664,29 @@ value relative to effort.
    calibrated scores anticipate risk better.
 
 **System: from demonstrator to tool.**
-1. **External-signal agent based on open data.** Turn the dip at "external signals" in Figure 1
-   into a design choice the user can reverse. Possible sources are public governance indicators,
-   sanction lists and insolvency announcements.
-2. **Explanation agent.** A language model writes a short narrative per supplier from the locked,
+1. **External data sources behind the provider interface.** The interface and its placeholders
+   exist (Section 6.7). Planned integrations are:
+   - the World Bank governance indicators, retrieved online instead of from a downloaded table
+   - an ESG rating platform, for ESG scores and questionnaire status
+   - an ERP system, for on-time delivery and quality per supplier
+   - a credit agency, for credit scores and insolvency signals
+
+   Each integration should record the data vintage, so that results stay recomputable.
+2. **External-signal agent based on open data.** Turn the dip at "external signals" in Figure 1
+   into a design choice the user can reverse. Possible sources are sanction lists, insolvency
+   announcements and event monitoring, turned into time-varying indicators.
+3. **Further views and a joint reading.** The view mechanism (Section 6.6) is not limited to two
+   views. A sustainability view or a view for strategic suppliers would need only a configuration
+   on the shared catalogue. Two extensions are open:
+   - a joint portfolio reading of performance and risk, for example a matrix of performance grade
+     against risk class
+   - calibration of the performance view against its own expert labels, with the same safeguards
+4. **Explanation agent.** A language model writes a short narrative per supplier from the locked,
    computed numbers, and never changes them.
-3. **Roles and persistence.** A role model that enforces separation of duties (Section 9.2), and
-   a persistent checkpointer so that reviews can be decided in a later session.
-4. **Platform integration pattern.** A documented adapter that turns a platform score into a
+5. **Roles and persistence.** A role model that enforces separation of duties (Section 9.2), a
+   persistent checkpointer so that reviews can be decided in a later session, a central store for
+   the assessment history, and tracking of actions to closure.
+6. **Platform integration pattern.** A documented adapter that turns a platform score into a
    rating source, including handling of overlapping factors (Section 8.2).
 
 **Benchmark maintenance.**
@@ -1664,6 +1775,7 @@ was read at abstract level unless noted, and claims in the text are phrased acco
 - Jacquet-Lagrèze, E., & Siskos, J. (1982). Assessing a set of additive utility functions for multicriteria decision-making, the UTA method. *European Journal of Operational Research, 10*(2), 151–164. https://doi.org/10.1016/0377-2217(82)90155-2
 - Jacquet-Lagrèze, E., & Siskos, Y. (2001). Preference disaggregation: 20 years of MCDA experience. *European Journal of Operational Research, 130*(2), 233–245. https://doi.org/10.1016/S0377-2217(00)00035-7
 - Karelaia, N., & Hogarth, R. M. (2008). Determinants of linear judgment: A meta-analysis of lens model studies. *Psychological Bulletin, 134*(3), 404–426. https://doi.org/10.1037/0033-2909.134.3.404
+- Kaufmann, D., Kraay, A., & Mastruzzi, M. (2011). The Worldwide Governance Indicators: Methodology and analytical issues. *Hague Journal on the Rule of Law, 3*(2), 220–246. https://doi.org/10.1017/S1876404511200046
 - Karren, R. J., & Barringer, M. W. (2002). A review and analysis of the policy-capturing methodology in organizational research: Guidelines for research and practice. *Organizational Research Methods, 5*(4), 337–361. https://doi.org/10.1177/109442802237115
 - Kohavi, R. (1995). A study of cross-validation and bootstrap for accuracy estimation and model selection. In *Proceedings of the 14th International Joint Conference on Artificial Intelligence (IJCAI)*, Vol. 2, 1137–1143.
 - Lawson, C. L., & Hanson, R. J. (1995). *Solving Least Squares Problems* (Classics in Applied Mathematics 15; reprint of the 1974 edition). SIAM. https://doi.org/10.1137/1.9781611971217
