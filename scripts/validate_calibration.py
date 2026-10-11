@@ -33,10 +33,11 @@ import numpy as np
 from supplier_risk_agent import load_risk_model
 from supplier_risk_agent.models import CalibrationSettings
 from supplier_risk_agent.tools.calibration import (
-    ABS_TOL,
     build_design_matrix,
     class_agreement,
+    cross_validated_mse,
     mse,
+    relative_improvement,
     solve_weights,
 )
 from supplier_risk_agent.tools.data_sources import JsonFileSource
@@ -87,13 +88,18 @@ class Context:
         X, y, _, _ = build_design_matrix(profiles, self.model, self.default)
         return X, y
 
-    def fit(self, X: np.ndarray, y: np.ndarray, lam: float) -> tuple[np.ndarray, bool]:
-        """Calibrate on (X, y); return weights and whether the production rule would accept them."""
+    def fit(self, X: np.ndarray, y: np.ndarray, lam: float) -> tuple[np.ndarray, bool, bool]:
+        """Calibrate on (X, y). Returns (weights, accepted by the in-sample rule, accepted by the CV rule).
+
+        Both rules are evaluated exactly as in ``tools.calibration.calibrate_weights``.
+        """
         settings = self.settings(lam)
         theta, success = solve_weights(X, y, self.theta_default, self.model, settings)[:2]
-        before, after = mse(X, y, self.theta_default, self.model), mse(X, y, theta, self.model)
-        improvement = (before - after) / before if before - after > ABS_TOL else 0.0
-        return theta, bool(success and improvement >= settings.min_improvement)
+        in_sample = relative_improvement(mse(X, y, self.theta_default, self.model), mse(X, y, theta, self.model))
+        cv_before, cv_after = cross_validated_mse(X, y, self.theta_default, self.theta_default, self.model, settings)
+        cv = relative_improvement(cv_before, cv_after)
+        threshold = settings.min_improvement
+        return theta, bool(success and in_sample >= threshold), bool(success and cv >= threshold)
 
     def l1_to_hidden(self, theta: np.ndarray) -> float:
         return float(np.abs(theta - self.theta_hidden).sum())
@@ -114,7 +120,7 @@ def run_cv(ctx: Context, cfg: dict) -> tuple[list[dict], list[dict]]:
         for f, test in enumerate(folds):
             train = [i for i in idx if i not in set(test)]
             for lam in cfg["lambdas"]:
-                theta, accepted = ctx.fit(X[train], y[train], lam)
+                theta, acc_in, acc_cv = ctx.fit(X[train], y[train], lam)
                 rows.append({
                     "lambda": lam, "repeat": rep, "fold": f, "n_train": len(train), "n_test": len(test),
                     "mse_train_default": mse(X[train], y[train], ctx.theta_default, ctx.model),
@@ -124,7 +130,8 @@ def run_cv(ctx: Context, cfg: dict) -> tuple[list[dict], list[dict]]:
                     "class_agreement_test_default": class_agreement(X[test], y[test], ctx.theta_default, ctx.model),
                     "class_agreement_test_calibrated": class_agreement(X[test], y[test], theta, ctx.model),
                     "l1_to_hidden": ctx.l1_to_hidden(theta),
-                    "accepted": accepted,
+                    "accepted_in_sample": acc_in,
+                    "accepted_cv": acc_cv,
                 })
     summary = []
     for lam in cfg["lambdas"]:
@@ -148,7 +155,8 @@ def run_cv(ctx: Context, cfg: dict) -> tuple[list[dict], list[dict]]:
             "class_agreement_test_default": statistics.mean(row["class_agreement_test_default"] for row in r),
             "class_agreement_test_calibrated": statistics.mean(row["class_agreement_test_calibrated"] for row in r),
             "l1_to_hidden": statistics.mean(row["l1_to_hidden"] for row in r),
-            "acceptance_rate": statistics.mean(row["accepted"] for row in r),
+            "acceptance_rate_in_sample": statistics.mean(row["accepted_in_sample"] for row in r),
+            "acceptance_rate_cv": statistics.mean(row["accepted_cv"] for row in r),
         })
     return rows, summary
 
@@ -163,16 +171,22 @@ def run_sample_size(ctx: Context, cfg: dict) -> tuple[list[dict], list[dict]]:
         for seed in range(cfg["size_seeds"]):
             X, y = ctx.design(synthetic_portfolio(n, seed, ctx.model))
             for lam in cfg["size_lambdas"]:
-                theta, accepted = ctx.fit(X, y, lam)
+                theta, acc_in, acc_cv = ctx.fit(X, y, lam)
+                true_default = mse(X_test, y_true, ctx.theta_default, ctx.model)
+                true_calibrated = mse(X_test, y_true, theta, ctx.model)
                 rows.append({
                     "n": n, "seed": seed, "lambda": lam,
                     "mse_in_sample": mse(X, y, theta, ctx.model),
                     "mse_test_labels_default": mse(X_test, y_test, ctx.theta_default, ctx.model),
                     "mse_test_labels_calibrated": mse(X_test, y_test, theta, ctx.model),
-                    "mse_test_true_default": mse(X_test, y_true, ctx.theta_default, ctx.model),
-                    "mse_test_true_calibrated": mse(X_test, y_true, theta, ctx.model),
+                    "mse_test_true_default": true_default,
+                    "mse_test_true_calibrated": true_calibrated,
                     "l1_to_hidden": ctx.l1_to_hidden(theta),
-                    "accepted": accepted,
+                    "accepted_in_sample": acc_in,
+                    "accepted_cv": acc_cv,
+                    # error of the weights that would actually be in use after each rule's decision
+                    "mse_test_true_applied_in_sample": true_calibrated if acc_in else true_default,
+                    "mse_test_true_applied_cv": true_calibrated if acc_cv else true_default,
                 })
     summary = []
     for n in cfg["sizes"]:
@@ -187,7 +201,16 @@ def run_sample_size(ctx: Context, cfg: dict) -> tuple[list[dict], list[dict]]:
                 "mse_test_true_default": r[0]["mse_test_true_default"],
                 "share_better_than_default_true": statistics.mean(
                     bool(row["mse_test_true_calibrated"] < row["mse_test_true_default"]) for row in r),
-                "acceptance_rate": statistics.mean(row["accepted"] for row in r),
+                "acceptance_rate_in_sample": statistics.mean(row["accepted_in_sample"] for row in r),
+                "acceptance_rate_cv": statistics.mean(row["accepted_cv"] for row in r),
+                "mse_test_true_applied_in_sample_mean": statistics.mean(
+                    row["mse_test_true_applied_in_sample"] for row in r),
+                "mse_test_true_applied_cv_mean": statistics.mean(row["mse_test_true_applied_cv"] for row in r),
+                # share of runs in which the applied weights are worse than keeping the defaults
+                "harm_rate_in_sample": statistics.mean(
+                    bool(row["mse_test_true_applied_in_sample"] > row["mse_test_true_default"]) for row in r),
+                "harm_rate_cv": statistics.mean(
+                    bool(row["mse_test_true_applied_cv"] > row["mse_test_true_default"]) for row in r),
             })
     return rows, summary
 
@@ -196,8 +219,9 @@ def run_stability(ctx: Context, cfg: dict) -> tuple[list[dict], list[dict]]:
     rows = []
     for seed in range(cfg["stability_seeds"]):
         X, y = ctx.design(synthetic_portfolio(cfg["stability_n"], seed, ctx.model))
-        theta, accepted = ctx.fit(X, y, cfg["stability_lambda"])
-        rows.append({"seed": seed, "accepted": accepted, "l1_to_hidden": ctx.l1_to_hidden(theta),
+        theta, acc_in, acc_cv = ctx.fit(X, y, cfg["stability_lambda"])
+        rows.append({"seed": seed, "accepted_in_sample": acc_in, "accepted_cv": acc_cv,
+                     "l1_to_hidden": ctx.l1_to_hidden(theta),
                      **{k: float(v) for k, v in zip(ctx.keys, theta)}})
     summary = []
     for j, k in enumerate(ctx.keys):
@@ -248,7 +272,8 @@ def headline(ctx: Context, cfg: dict, cv: list[dict], size: list[dict], stab_row
         ],
         "stability": {
             "n": cfg["stability_n"], "seeds": cfg["stability_seeds"], "lambda": cfg["stability_lambda"],
-            "acceptance_rate": r(statistics.mean(row["accepted"] for row in stab_rows), 3),
+            "acceptance_rate_in_sample": r(statistics.mean(row["accepted_in_sample"] for row in stab_rows), 3),
+            "acceptance_rate_cv": r(statistics.mean(row["accepted_cv"] for row in stab_rows), 3),
             "l1_to_hidden_mean": r(statistics.mean(row["l1_to_hidden"] for row in stab_rows), 3),
             "l1_default_to_hidden": r(ctx.l1_to_hidden(ctx.theta_default), 3),
             "factors_moving_towards_hidden_in_most_seeds": [
@@ -270,7 +295,7 @@ def markdown_summary(h: dict, cv: list[dict], size: list[dict], stab: list[dict]
         f"{h['config']['cv_repeats']} repeats)"),
         "",
         ("| λ | CV MSE default | CV MSE calibrated (± sd) | rel. improvement | in-sample MSE | "
-        "class agreement (test) default → calibrated | L1 to hidden | acceptance |"),
+        "class agreement (test) default → calibrated | L1 to hidden | accepted: in-sample / CV rule |"),
         "|---:|---:|---:|---:|---:|---|---:|---:|",
     ]
     for s in cv:
@@ -278,27 +303,45 @@ def markdown_summary(h: dict, cv: list[dict], size: list[dict], stab: list[dict]
             f"| {s['lambda']:g} | {s['cv_mse_default']:.2f} | {s['cv_mse_calibrated']:.2f} "
             f"(± {s['cv_mse_calibrated_sd_over_repeats']:.2f}) | {s['cv_relative_improvement']:.1%} | "
             f"{s['in_sample_mse_calibrated']:.2f} | {s['class_agreement_test_default']:.0%} → "
-            f"{s['class_agreement_test_calibrated']:.0%} | {s['l1_to_hidden']:.3f} | {s['acceptance_rate']:.0%} |")
+            f"{s['class_agreement_test_calibrated']:.0%} | {s['l1_to_hidden']:.3f} | "
+            f"{s['acceptance_rate_in_sample']:.0%} / {s['acceptance_rate_cv']:.0%} |")
     lines += [
         "",
         "## E2 · Sample size (independent test set; MSE vs. noise-free true scores)",
         "",
         ("| n | λ | in-sample MSE | test MSE vs labels | test MSE vs true (default → calibrated, p90) | "
-        "better than default | L1 to hidden | acceptance |"),
-        "|---:|---:|---:|---:|---|---:|---:|---:|",
+        "better than default | L1 to hidden |"),
+        "|---:|---:|---:|---:|---|---:|---:|",
     ]
     for s in size:
         lines.append(
             f"| {s['n']} | {s['lambda']:g} | {s['mse_in_sample_mean']:.2f} | {s['mse_test_labels_calibrated_mean']:.2f} | "
             f"{s['mse_test_true_default']:.2f} → {s['mse_test_true_calibrated_mean']:.2f} "
             f"(p90 {s['mse_test_true_calibrated_p90']:.2f}) | {s['share_better_than_default_true']:.0%} | "
-            f"{s['l1_to_hidden_mean']:.3f} | {s['acceptance_rate']:.0%} |")
+            f"{s['l1_to_hidden_mean']:.3f} |")
+    lines += [
+        "",
+        "### E2b · Acceptance rules: what ends up in use",
+        "",
+        ("Applied weights = calibrated weights if the rule accepts them, otherwise the defaults. "
+        "Harm = applied weights worse than the defaults (test MSE vs. true scores)."),
+        "",
+        ("| n | λ | accepted: in-sample / CV | applied MSE: in-sample rule / CV rule (default) | "
+        "harm rate: in-sample / CV |"),
+        "|---:|---:|---|---|---|",
+    ]
+    for s in size:
+        lines.append(
+            f"| {s['n']} | {s['lambda']:g} | {s['acceptance_rate_in_sample']:.0%} / {s['acceptance_rate_cv']:.0%} | "
+            f"{s['mse_test_true_applied_in_sample_mean']:.2f} / {s['mse_test_true_applied_cv_mean']:.2f} "
+            f"({s['mse_test_true_default']:.2f}) | {s['harm_rate_in_sample']:.0%} / {s['harm_rate_cv']:.0%} |")
     st = h["stability"]
     lines += [
         "",
         f"## E3 · Weight stability (n = {st['n']}, {st['seeds']} seeds, λ = {st['lambda']})",
         "",
-        (f"Acceptance rate {st['acceptance_rate']:.0%}; mean L1 distance to hidden weights "
+        (f"Accepted: {st['acceptance_rate_in_sample']:.0%} (in-sample rule) / {st['acceptance_rate_cv']:.0%} "
+         "(CV rule); mean L1 distance to hidden weights "
         f"{st['l1_to_hidden_mean']:.3f} (default weights: {st['l1_default_to_hidden']:.3f})."),
         "",
         "| factor | default | hidden | calibrated mean ± sd | p05–p95 | moved towards hidden |",

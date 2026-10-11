@@ -98,6 +98,8 @@ class CalibrationAgent:
                         "mse_before": report.mse_before,
                         "mse_after": report.mse_after,
                         "improvement": report.improvement,
+                        "acceptance_basis": report.acceptance_basis,
+                        "cv_mse": [report.cv_mse_before, report.cv_mse_after],
                         "class_agreement": [report.class_agreement_before, report.class_agreement_after],
                         "stored_as": report.stored_as,
                         "message": report.message,

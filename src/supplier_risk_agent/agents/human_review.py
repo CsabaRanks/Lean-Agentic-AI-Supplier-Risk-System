@@ -61,6 +61,10 @@ def review_request(state: SupplierRiskState, model: RiskModelConfig) -> dict:
             "new_weights": rep.new_weights,
             "mse_before": rep.mse_before,
             "mse_after": rep.mse_after,
+            "acceptance_basis": rep.acceptance_basis,
+            "cv_mse_before": rep.cv_mse_before,
+            "cv_mse_after": rep.cv_mse_after,
+            "n_samples": rep.n_samples,
             "class_agreement_before": rep.class_agreement_before,
             "class_agreement_after": rep.class_agreement_after,
         }

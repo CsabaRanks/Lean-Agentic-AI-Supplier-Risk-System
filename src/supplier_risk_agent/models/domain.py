@@ -124,6 +124,10 @@ class CalibrationReport(BaseModel):
         default=None, description="Share of suppliers whose model class equals the class derived from the label"
     )
     class_agreement_after: float | None = None
+    acceptance_basis: str = "in_sample"
+    cv_mse_before: float | None = Field(default=None, description="Out-of-fold MSE of the prior weights")
+    cv_mse_after: float | None = Field(default=None, description="Out-of-fold MSE of weights refitted per fold")
+    cv_improvement: float | None = None
     accepted: bool = False
     applied: bool = False
     stored_as: str | None = Field(default=None, description="Weight store file, if persisted")

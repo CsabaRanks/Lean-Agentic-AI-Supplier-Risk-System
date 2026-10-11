@@ -52,7 +52,8 @@
       "class_agreement_test_default": 0.8431,
       "class_agreement_test_calibrated": 0.8595,
       "l1_to_hidden": 0.1626,
-      "acceptance_rate": 1.0
+      "acceptance_rate_in_sample": 1.0,
+      "acceptance_rate_cv": 1.0
     },
     "best_lambda": 0.05,
     "best_cv_mse": 20.632
@@ -69,7 +70,12 @@
       "mse_test_labels_default": 49.324,
       "mse_test_true_default": 29.724,
       "share_better_than_default_true": 0.9,
-      "acceptance_rate": 1.0
+      "acceptance_rate_in_sample": 1.0,
+      "acceptance_rate_cv": 0.567,
+      "mse_test_true_applied_in_sample_mean": 16.731,
+      "mse_test_true_applied_cv_mean": 20.816,
+      "harm_rate_in_sample": 0.1,
+      "harm_rate_cv": 0.033
     },
     {
       "n": 12.0,
@@ -82,7 +88,12 @@
       "mse_test_labels_default": 49.324,
       "mse_test_true_default": 29.724,
       "share_better_than_default_true": 0.933,
-      "acceptance_rate": 1.0
+      "acceptance_rate_in_sample": 1.0,
+      "acceptance_rate_cv": 0.7,
+      "mse_test_true_applied_in_sample_mean": 12.108,
+      "mse_test_true_applied_cv_mean": 16.278,
+      "harm_rate_in_sample": 0.067,
+      "harm_rate_cv": 0.033
     },
     {
       "n": 16.0,
@@ -95,7 +106,12 @@
       "mse_test_labels_default": 49.324,
       "mse_test_true_default": 29.724,
       "share_better_than_default_true": 1.0,
-      "acceptance_rate": 1.0
+      "acceptance_rate_in_sample": 1.0,
+      "acceptance_rate_cv": 0.867,
+      "mse_test_true_applied_in_sample_mean": 9.863,
+      "mse_test_true_applied_cv_mean": 11.844,
+      "harm_rate_in_sample": 0.0,
+      "harm_rate_cv": 0.0
     },
     {
       "n": 24.0,
@@ -108,7 +124,12 @@
       "mse_test_labels_default": 49.324,
       "mse_test_true_default": 29.724,
       "share_better_than_default_true": 1.0,
-      "acceptance_rate": 1.0
+      "acceptance_rate_in_sample": 1.0,
+      "acceptance_rate_cv": 1.0,
+      "mse_test_true_applied_in_sample_mean": 7.532,
+      "mse_test_true_applied_cv_mean": 7.532,
+      "harm_rate_in_sample": 0.0,
+      "harm_rate_cv": 0.0
     },
     {
       "n": 32.0,
@@ -121,7 +142,12 @@
       "mse_test_labels_default": 49.324,
       "mse_test_true_default": 29.724,
       "share_better_than_default_true": 1.0,
-      "acceptance_rate": 1.0
+      "acceptance_rate_in_sample": 1.0,
+      "acceptance_rate_cv": 1.0,
+      "mse_test_true_applied_in_sample_mean": 5.921,
+      "mse_test_true_applied_cv_mean": 5.921,
+      "harm_rate_in_sample": 0.0,
+      "harm_rate_cv": 0.0
     },
     {
       "n": 48.0,
@@ -134,7 +160,12 @@
       "mse_test_labels_default": 49.324,
       "mse_test_true_default": 29.724,
       "share_better_than_default_true": 1.0,
-      "acceptance_rate": 1.0
+      "acceptance_rate_in_sample": 1.0,
+      "acceptance_rate_cv": 1.0,
+      "mse_test_true_applied_in_sample_mean": 4.984,
+      "mse_test_true_applied_cv_mean": 4.984,
+      "harm_rate_in_sample": 0.0,
+      "harm_rate_cv": 0.0
     },
     {
       "n": 64.0,
@@ -147,7 +178,12 @@
       "mse_test_labels_default": 49.324,
       "mse_test_true_default": 29.724,
       "share_better_than_default_true": 1.0,
-      "acceptance_rate": 1.0
+      "acceptance_rate_in_sample": 1.0,
+      "acceptance_rate_cv": 1.0,
+      "mse_test_true_applied_in_sample_mean": 4.191,
+      "mse_test_true_applied_cv_mean": 4.191,
+      "harm_rate_in_sample": 0.0,
+      "harm_rate_cv": 0.0
     },
     {
       "n": 96.0,
@@ -160,7 +196,12 @@
       "mse_test_labels_default": 49.324,
       "mse_test_true_default": 29.724,
       "share_better_than_default_true": 1.0,
-      "acceptance_rate": 1.0
+      "acceptance_rate_in_sample": 1.0,
+      "acceptance_rate_cv": 1.0,
+      "mse_test_true_applied_in_sample_mean": 3.178,
+      "mse_test_true_applied_cv_mean": 3.178,
+      "harm_rate_in_sample": 0.0,
+      "harm_rate_cv": 0.0
     },
     {
       "n": 128.0,
@@ -173,7 +214,12 @@
       "mse_test_labels_default": 49.324,
       "mse_test_true_default": 29.724,
       "share_better_than_default_true": 1.0,
-      "acceptance_rate": 1.0
+      "acceptance_rate_in_sample": 1.0,
+      "acceptance_rate_cv": 1.0,
+      "mse_test_true_applied_in_sample_mean": 2.858,
+      "mse_test_true_applied_cv_mean": 2.858,
+      "harm_rate_in_sample": 0.0,
+      "harm_rate_cv": 0.0
     },
     {
       "n": 192.0,
@@ -186,14 +232,20 @@
       "mse_test_labels_default": 49.324,
       "mse_test_true_default": 29.724,
       "share_better_than_default_true": 1.0,
-      "acceptance_rate": 1.0
+      "acceptance_rate_in_sample": 1.0,
+      "acceptance_rate_cv": 1.0,
+      "mse_test_true_applied_in_sample_mean": 2.523,
+      "mse_test_true_applied_cv_mean": 2.523,
+      "harm_rate_in_sample": 0.0,
+      "harm_rate_cv": 0.0
     }
   ],
   "stability": {
     "n": 32,
     "seeds": 100,
     "lambda": 0.05,
-    "acceptance_rate": 1.0,
+    "acceptance_rate_in_sample": 1.0,
+    "acceptance_rate_cv": 1.0,
     "l1_to_hidden_mean": 0.17,
     "l1_default_to_hidden": 0.345,
     "factors_moving_towards_hidden_in_most_seeds": [

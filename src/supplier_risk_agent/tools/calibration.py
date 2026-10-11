@@ -30,6 +30,15 @@ which handles the bound and equality constraints directly. Only suppliers with
 an expert label *and* complete data are used, because missing-data
 re-weighting would make the score non-linear in ``theta``.
 
+Acceptance
+----------
+New weights are accepted only if the MSE drops by at least ``min_improvement``.
+By default this is tested **out of sample**: the calibration is refitted on
+k-1 folds and evaluated on the held-out fold, repeated with reshuffled folds,
+and the pooled out-of-fold MSE is compared with that of the prior weights.
+An in-sample test (legacy option) accepts almost any fit, including fits that
+mostly reproduce label noise when only a few labels are available.
+
 Expert labels are expected as 0..100 scores; classes for the labels are
 derived with the model's own thresholds (used for the class-agreement metric).
 Reported MSE values are in score points squared (0..100 scale).
@@ -86,6 +95,41 @@ def class_agreement(X: np.ndarray, y: np.ndarray, theta: np.ndarray, model: Risk
     pred = _predict(X, theta, model)
     hits = [classify(float(p), model) == classify(float(t), model) for p, t in zip(pred, y)]
     return float(np.mean(hits)) if hits else 0.0
+
+
+def relative_improvement(before: float, after: float) -> float:
+    # Below ABS_TOL the prior already reproduces the labels (up to rounding);
+    # a relative improvement of numerical noise must not count as a gain.
+    return (before - after) / before if before - after > ABS_TOL else 0.0
+
+
+def cross_validated_mse(
+    X: np.ndarray,
+    y: np.ndarray,
+    theta_prior: np.ndarray,
+    theta_anchor: np.ndarray,
+    model: RiskModelConfig,
+    settings: CalibrationSettings,
+    seed: int = 0,
+) -> tuple[float, float]:
+    """Pooled out-of-fold MSE of (prior weights, weights refitted on each training fold).
+
+    Folds are reshuffled ``settings.cv_repeats`` times with a fixed seed, so the
+    result is deterministic for a given dataset.
+    """
+    n = len(y)
+    k = min(settings.cv_folds, n)
+    rng = np.random.default_rng(seed)
+    sse_prior = sse_refit = 0.0
+    count = 0
+    for _ in range(settings.cv_repeats):
+        for test in np.array_split(rng.permutation(n), k):
+            train = np.setdiff1d(np.arange(n), test)
+            theta = solve_weights(X[train], y[train], theta_anchor, model, settings)[0]
+            sse_prior += mse(X[test], y[test], theta_prior, model) * len(test)
+            sse_refit += mse(X[test], y[test], theta, model) * len(test)
+            count += len(test)
+    return sse_prior / count, sse_refit / count
 
 
 def solve_weights(
@@ -158,9 +202,7 @@ def calibrate_weights(
     theta, success, solver_msg = solve_weights(X, y, theta_anchor, model, settings)
 
     before, after = mse(X, y, theta_prior, model), mse(X, y, theta, model)
-    # Below ABS_TOL the model already reproduces the labels (up to rounding);
-    # a relative improvement of numerical noise must not count as a gain.
-    improvement = (before - after) / before if before - after > ABS_TOL else 0.0
+    improvement = relative_improvement(before, after)
     new = WeightSet(
         scope=scope,
         origin="calibrated",
@@ -175,13 +217,25 @@ def calibrate_weights(
     report.class_agreement_before = round(class_agreement(X, y, theta_prior, model), 4)
     report.class_agreement_after = round(class_agreement(X, y, theta, model), 4)
     report.improvement = round(improvement, 4)
-    report.accepted = success and improvement >= settings.min_improvement
+    report.acceptance_basis = settings.acceptance
+
+    basis_improvement, basis_text = improvement, f"MSE {before:.1f} -> {after:.1f}"
+    if settings.acceptance == "cross_validated":
+        cv_before, cv_after = cross_validated_mse(X, y, theta_prior, theta_anchor, model, settings)
+        basis_improvement = relative_improvement(cv_before, cv_after)
+        report.cv_mse_before = round(cv_before, 3)
+        report.cv_mse_after = round(cv_after, 3)
+        report.cv_improvement = round(basis_improvement, 4)
+        basis_text = f"cross-validated MSE {cv_before:.1f} -> {cv_after:.1f} (in-sample {before:.1f} -> {after:.1f})"
+
+    report.accepted = success and basis_improvement >= settings.min_improvement
     if not success:
         report.message = f"solver did not converge: {solver_msg}"
     elif not report.accepted:
         report.message = (
-            f"rejected: MSE improvement {improvement:.1%} below required {settings.min_improvement:.0%}"
+            f"rejected: {basis_text}, improvement {basis_improvement:.1%} below required "
+            f"{settings.min_improvement:.0%}"
         )
     else:
-        report.message = f"accepted: MSE {before:.1f} -> {after:.1f} ({improvement:.1%} better)"
+        report.message = f"accepted: {basis_text}, {basis_improvement:.1%} better"
     return report, new

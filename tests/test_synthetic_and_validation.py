@@ -52,3 +52,16 @@ def test_validation_script_quick_run(tmp_path):
     assert cv["cv_mse_calibrated"] < cv["cv_mse_default"]
     for name in ("e1_cv_summary", "e2_sample_size_summary", "e3_stability_summary"):
         assert (tmp_path / f"{name}.csv").exists()
+
+    # figures 4-6 from the same results (matplotlib is an optional extra)
+    pytest.importorskip("matplotlib")
+    figures = tmp_path / "figures"
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "plot_calibration_validation.py"),
+         "--results", str(tmp_path), "--out", str(figures)],
+        check=False, capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    for name in ("fig04_lambda_curve", "fig05_learning_curve", "fig06_weight_stability"):
+        assert (figures / f"{name}.png").stat().st_size > 10_000
+        assert (figures / f"{name}.svg").exists()

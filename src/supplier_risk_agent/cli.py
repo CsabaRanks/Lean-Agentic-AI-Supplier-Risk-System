@@ -66,7 +66,9 @@ def _print_calibration(rep: CalibrationReport) -> None:
         print(f"  excluded: {', '.join(f'{k} ({v})' for k, v in rep.excluded.items())}")
     if rep.new_weights is None:
         return
-    print(f"  MSE {rep.mse_before} -> {rep.mse_after}  |  class agreement "
+    if rep.cv_mse_before is not None:
+        print(f"  cross-validated MSE {rep.cv_mse_before} -> {rep.cv_mse_after}  (acceptance basis)")
+    print(f"  in-sample MSE {rep.mse_before} -> {rep.mse_after}  |  class agreement "
           f"{rep.class_agreement_before:.0%} -> {rep.class_agreement_after:.0%}  |  applied: {rep.applied}")
     if rep.stored_as:
         print(f"  stored as: {rep.stored_as}")
@@ -87,7 +89,9 @@ def _interactive_review(request: dict, ask=None) -> ReviewDecision:
     approve = False
     proposed = request.get("proposed_weights")
     if proposed:
-        print(f"  Proposed weights [{proposed['scope']}]: MSE {proposed['mse_before']} -> {proposed['mse_after']}")
+        print(f"  Proposed weights [{proposed['scope']}], {proposed['n_samples']} labels: "
+              f"cross-validated MSE {proposed['cv_mse_before']} -> {proposed['cv_mse_after']} "
+              f"(in-sample {proposed['mse_before']} -> {proposed['mse_after']})")
         for key, old in proposed["old_weights"].items():
             print(f"      {key:<22} {old:6.1%} -> {proposed['new_weights'][key]:6.1%}")
         approve = ask("Approve proposed weights? [y/N] ").strip().lower() in {"y", "yes", "j", "ja"}

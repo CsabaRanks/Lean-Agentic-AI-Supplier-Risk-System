@@ -2,6 +2,20 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Cross-validated acceptance and validation figures
+
+**D21: Acceptance is tested out of sample by default.**
+- Refit on k − 1 folds, then pool out-of-fold MSE.
+- 5 folds × 3 repeats, deterministic.
+- Accept only if the pooled MSE improves by ≥ `min_improvement`.
+
+Consequence on the shipped data: the 10-label "plastics" calibration is now rejected. In-sample
+it showed 36.8 → 10.4; cross-validated it was 36.8 → 41.7. This is the behaviour the rule exists
+for.
+
+**D22: Figures 4–6 are generated.** `scripts/plot_calibration_validation.py` builds them from
+the validation CSVs into `docs/paper/figures/`.
+
 ## 2026-10 — Calibration validation (paper section 7)
 
 **D20: Calibration validated on synthetic data** (`scripts/validate_calibration.py`):
@@ -14,10 +28,19 @@ At λ = 0.05 and 32 labels:
 - the in-sample MSE of 12.4 is optimistic
 - weights move about half-way to the hidden weighting
 
-**Issues found, not yet fixed:**
-1. **The acceptance rule uses in-sample improvement.** It accepts almost everything, including
-   overfitted fits on 8 labels. A cross-validated acceptance rule is needed.
-2. **A fixed λ does not fade with n.** The error term is a mean and the penalty is unscaled, so
+**Issues found:**
+1. **The acceptance rule used in-sample improvement.** It accepted almost everything, including
+   overfitted fits on 8 labels.
+
+   **Fixed (D21):** `acceptance: cross_validated` is now the default. In E2 (8 labels, λ = 0),
+   the share of runs whose applied weights are worse than the defaults fell from 50 % to 7 %; with
+   λ = 0.05 it fell from 10 % to 3 %.
+
+   **Trade-off:** the CV rule is conservative. At 8–16 labels with λ = 0.05 it rejects some useful
+   fits, so the mean applied error rises (8 labels: 16.7 → 20.8 vs. a default of 29.7). From 24
+   labels on, both rules decide identically. The in-sample rule stays available as
+   `acceptance: in_sample` for experiments and is documented as a known limitation.
+2. **A fixed λ does not fade with n.** *Still open.* The error term is a mean and the penalty is unscaled, so
    λ becomes a bias at large n. Choose λ by CV or scale it with 1/n.
 3. **The synthetic labels are the best case.** They come from the fitted linear model family.
    Misspecification experiments are still missing.

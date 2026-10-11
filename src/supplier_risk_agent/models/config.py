@@ -118,6 +118,16 @@ class CalibrationSettings(BaseModel):
     regularization: float = Field(default=0.05, ge=0, description="Pull towards the prior weights (ridge)")
     min_factor_weight: float = Field(default=0.02, ge=0, description="Lower bound per factor weight")
     min_improvement: float = Field(default=0.05, ge=0, le=1, description="Relative MSE reduction needed to accept")
+    acceptance: Literal["cross_validated", "in_sample"] = Field(
+        default="cross_validated",
+        description=(
+            "Basis of the acceptance test. 'cross_validated' compares out-of-fold MSE of the refitted "
+            "weights with the prior weights and rejects fits that only memorise noise; 'in_sample' "
+            "compares training MSE only (legacy behaviour, no protection against overfitting)."
+        ),
+    )
+    cv_folds: int = Field(default=5, ge=2, description="Folds for cross-validated acceptance")
+    cv_repeats: int = Field(default=3, ge=1, description="Repeats with reshuffled folds (deterministic)")
     auto_apply: bool = Field(default=True, description="Re-score with accepted weights; else only propose them")
 
 

@@ -190,4 +190,7 @@ calibration:
   regularization: 0.05     # ridge pull towards the prior weights (avoids overfitting)
   min_factor_weight: 0.02  # every criterion keeps a minimum influence
   min_improvement: 0.05    # accept only if MSE drops by at least 5 %
+  acceptance: cross_validated  # test the improvement out of sample (in_sample = legacy, accepts overfits)
+  cv_folds: 5
+  cv_repeats: 3
   auto_apply: true         # re-score with accepted weights (false = propose only)

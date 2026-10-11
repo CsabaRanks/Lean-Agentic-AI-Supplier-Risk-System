@@ -74,10 +74,24 @@ def test_proposed_weights_need_approval_when_auto_apply_off(calibration_evaluato
     assert any("approval required" in r for r in state["review_reasons"])
 
 
-def test_material_group_run_calibrates_group_scope(calibration_evaluator):
+def test_material_group_run_rejects_overfit_on_few_labels(calibration_evaluator):
+    """10 plastics labels: in-sample the fit looks excellent, out of sample it is worse."""
     state = calibration_evaluator.run(material_group="plastics", calibrate=True)
+    report = state["calibration_report"]
     assert {r.material_group for r in state["results"].values()} == {"plastics"}
-    assert state["calibration_report"].scope == "plastics"
+    assert report.scope == "plastics" and report.n_samples == 10
+    assert report.mse_after < report.mse_before  # in-sample "improvement"
+    assert report.cv_mse_after > report.cv_mse_before  # but worse out of sample
+    assert not report.accepted and "plastics" not in state["active_weights"]
+
+
+def test_material_group_run_applies_group_scope_with_in_sample_rule(calibration_evaluator):
+    from supplier_risk_agent import SupplierRiskEvaluator
+
+    model = calibration_evaluator.model.model_copy(deep=True)
+    model.calibration.acceptance = "in_sample"
+    state = SupplierRiskEvaluator(calibration_evaluator.source, model).run(material_group="plastics", calibrate=True)
+    assert state["calibration_report"].accepted and state["calibration_report"].acceptance_basis == "in_sample"
     assert "plastics" in state["active_weights"]
 
 

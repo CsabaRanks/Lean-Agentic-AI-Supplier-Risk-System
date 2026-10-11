@@ -66,7 +66,15 @@ away from the methodology. A test covers this.
 1. MSE and class agreement are computed before (active weights) and after (calibrated weights)
    on the same sample.
 2. The new weights are **accepted** only if the solver converged and the MSE drops by at least
-   `min_improvement` (default 5 %).
+   `min_improvement` (default 5 %). The test is run **out of sample** by default
+   (`acceptance: cross_validated`):
+   - the calibration is refitted on k − 1 folds and evaluated on the held-out fold
+   - this is repeated with reshuffled folds (`cv_folds: 5`, `cv_repeats: 3`, deterministic)
+   - the pooled out-of-fold MSE is compared with that of the active weights
+
+   The legacy option `acceptance: in_sample` compares training error only. It accepts practically
+   every fit, including fits on a handful of labels that mostly reproduce label noise. Use it only
+   for experiments.
 3. Accepted weights are then either
    - **auto-applied** (`auto_apply: true`): they become active immediately, are written to the
      weight store, and the supervisor routes back to the **Scoring Agent** for one re-score, or
@@ -153,8 +161,13 @@ Calibration [global] — 32 labelled supplier(s): accepted: MSE 37.8 -> 13.3 (64
   - **In-sample optimism.** The in-sample MSE is optimistic by about 8 points² at 32 labels.
   - **Regularisation.** λ = 0.05 is near-optimal at that size. Without regularisation, 8 labels
     are often worse than the defaults.
-  - **Acceptance rule.** The current rule is based on in-sample error and is **not** an
-    overfitting safeguard. A cross-validated acceptance rule is planned.
+  - **Acceptance rule.** The legacy in-sample rule was **not** an overfitting safeguard. With 8
+    labels and no regularisation it let through weights that were worse than the defaults in 50 %
+    of runs. The cross-validated rule, now the default, cut this to 7 %.
+  - **Cost of the cross-validated rule.** It is conservative. With few labels it also rejects some
+    calibrations that would have helped.
+  - **Open issue: fixed λ.** A fixed λ becomes a bias at large n. Selecting λ by CV, or scaling it
+    with 1/n, is still open.
 
 ## Possible refinements
 

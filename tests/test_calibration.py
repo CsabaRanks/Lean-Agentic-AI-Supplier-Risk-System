@@ -78,3 +78,40 @@ def test_rejected_when_no_meaningful_improvement(model):
     profiles = synthetic_portfolio(model, model.default_weights(), n=20)
     report, _ = calibrate_weights(profiles, model, model.default_weights())
     assert not report.accepted
+
+
+def test_cross_validated_acceptance_is_default_and_reports_cv(model):
+    keys = model.factor_keys()
+    true = WeightSet(origin="manual", factor_weights={k: (i % 3 + 1) for i, k in enumerate(keys)})
+    report, _ = calibrate_weights(synthetic_portfolio(model, true, n=40, noise=3), model, model.default_weights())
+    assert report.acceptance_basis == "cross_validated"
+    assert report.cv_mse_after < report.cv_mse_before
+    assert report.accepted
+
+
+def test_cross_validated_rule_rejects_more_overfit_fits_than_in_sample_rule(model):
+    """Few labels, no regularisation: the in-sample rule accepts fits that are worse out of sample."""
+    from supplier_risk_agent.tools.calibration import build_design_matrix, mse
+    from supplier_risk_agent.tools.synthetic import hidden_weights
+    from supplier_risk_agent.tools.synthetic import synthetic_portfolio as portfolio
+
+    test = portfolio(400, 12345, model, noise_sd=0.0, label_step=0)
+    X_test, y_true, _, _ = build_design_matrix(test, model, model.default_weights())
+    theta_default = np.array([model.default_weights().factor_weights[k] for k in model.factor_keys()])
+    base = mse(X_test, y_true, theta_default, model)
+
+    accepted = {"in_sample": 0, "cross_validated": 0}
+    applied_error = {"in_sample": [], "cross_validated": []}
+    for seed in range(12):
+        profiles = portfolio(8, seed, model, hidden=hidden_weights())
+        for rule in accepted:
+            settings = CalibrationSettings(regularization=0.0, acceptance=rule, min_labels=8)
+            report, new = calibrate_weights(profiles, model, model.default_weights(), settings)
+            theta = np.array([new.factor_weights[k] for k in model.factor_keys()]) if report.accepted else theta_default
+            accepted[rule] += report.accepted
+            applied_error[rule].append(mse(X_test, y_true, theta, model))
+
+    assert accepted["cross_validated"] < accepted["in_sample"]
+    assert np.mean(applied_error["in_sample"]) > base  # the legacy rule makes things worse on average
+    # the CV rule reduces the damage; with 8 labels and no regularisation it does not remove it
+    assert np.mean(applied_error["cross_validated"]) < np.mean(applied_error["in_sample"])
