@@ -11,7 +11,20 @@ series), whose formal conventions are reused:
 - **Section order.** Limitations, then Future work, then Conclusion.
 
 Status: outline with bullet points. Sources: `research/` files, linked per section.
-**Draft text:** sections 1–6 are written in [paper.md](paper.md) (working draft v0.1).
+**Draft text:** all sections 1–12 are drafted in [paper.md](paper.md) (working draft v0.3).
+
+### Remaining gaps (draft v0.3)
+
+- **[TBD-RESULT] Section 7:**
+  - misspecification experiments (non-linear / knock-out expert policies)
+  - label-noise sensitivity
+  - λ selected by cross-validation
+  - optional label-vs-score scatter
+- **[TBD-INPUT] Figure 3:** static rendering for the typeset version (currently Mermaid).
+- **Section 9, Table 7:** source versioning for external indicators is not implemented.
+- **References:** verify wording against full texts (read at abstract level).
+- **Typesetting:** convert to LaTeX in the companion paper's template; insert the generated Table 2
+  in Appendix A.
 
 ---
 

@@ -2,16 +2,16 @@
 
 ### Turning spreadsheet scorecards into transparent, expert-calibrated multi-agent systems: a benchmark of four approaches and an open-source demonstrator
 
-*Csaba Bakay · Working paper, draft v0.2 · October 2026*
+*Csaba Bakay · Working paper, draft v0.3 · October 2026*
 
-> **Draft status.** Sections 1–6 are written as a first draft. Sections 7–12 are outlined in
-> [paper-outline.md](paper-outline.md). Markers in the text:
+> **Draft status.** All sections (1–12) exist as a first, continuous draft. Remaining gaps are
+> marked in the text and summarised in [paper-outline.md](paper-outline.md). Markers in the text:
 > - **[TBD-RESULT]** — to be completed or confirmed with results from the local calibration runs
 > - **[TBD-LIT]** — literature still to be cited (all such markers resolved in draft v0.2;
 >   references verified via Crossref or OpenAlex, read at abstract level)
 > - **[TBD-INPUT]** — needs a decision or input from the author
 >
-> Numbers quoted from the demonstrator come from runs of commit `461592c` on synthetic data.
+> Numbers quoted from the demonstrator come from runs of commit `6bb05b9` on synthetic data.
 
 ---
 
@@ -142,7 +142,7 @@ weighting is applied, and no total or ranking is derived.*
    - a versioned weight store
    - an automated test suite (Section 6)
 5. **An explicit statement of what is not established**, and of the work that would close each gap
-   (Section 10; future work in Section 11, to be written).
+   (Sections 10–11).
 
 ---
 
@@ -344,7 +344,7 @@ can be trusted.
    disruptions. Calibration against experts measures agreement with judgement, not predictive
    validity. No approach reviewed reports predictive validity publicly, so the factor cannot be
    rated today. It is deliberately left off the radar and treated as an open question
-   (Section 11) [TBD: link].
+   (Section 11).
 
 The resulting model keeps fifteen axes, which is about the readability limit of a radar chart.
 It now contains four factors on which the commercial examples are clearly ahead: 8, 9, 13 and 15.
@@ -433,7 +433,7 @@ The profiles do not order the approaches. In particular, Lean Agentic does not r
 coverage of a platform. The most realistic reading of Figure 1 is **complementary**. A platform
 subscription or open data can serve as the *signal source*. A transparent, calibrated model owned
 by the procurement team turns signals and internal knowledge into risk classes and actions.
-Section 8 [TBD] returns to this hybrid.
+Section 8.2 develops this hybrid reading.
 
 ### 4.4 Threats to validity of the benchmark
 
@@ -578,9 +578,8 @@ This section summarises the demonstrator. Design details are in `docs/architectu
 
 ### 6.1 Workflow
 
-The demonstrator is a LangGraph state graph in hub-and-spoke form (Figure 3 [TBD: render from
-`docs/architecture.md`]). A rule-based **supervisor** inspects the shared state and routes to one
-of five workers:
+The demonstrator is a LangGraph state graph in hub-and-spoke form (Figure 3). A rule-based
+**supervisor** inspects the shared state and routes to one of five workers:
 - **data collection**: loads the suppliers in scope, optionally restricted to one material group,
   together with indicators and expert labels from a pluggable source
 - **scoring**: rates factors, aggregates, normalises and classifies, applies escalation rules and
@@ -591,6 +590,29 @@ of five workers:
 
 Every worker returns control to the supervisor. The routing rules fit in one function, which is
 also the single extension point for a language-model-based supervisor.
+
+```mermaid
+flowchart TD
+    START([start]) --> SUP{Supervisor}
+    SUP -->|no data yet| DC[Data collection]
+    SUP -->|no scores yet| SC[Scoring]
+    SUP -->|enabled, not yet run| CA[Calibration]
+    SUP -->|weights applied, round 1| SC
+    SUP -->|scores final| RA[Recommendation]
+    SUP -->|flagged| HR[Human review · interrupt]
+    SUP -->|done| END([end])
+    DC --> SUP
+    SC --> SUP
+    CA --> SUP
+    RA --> SUP
+    HR -->|decision| SUP
+    CA -. accepted & auto-applied .-> WS[(Versioned weight store)]
+    HR -. approved .-> WS
+```
+
+*Figure 3. Workflow of the demonstrator. Every worker returns to a rule-based supervisor; the
+calibration loop and the human-review loop each run at most once per run. [TBD-INPUT: render as a
+static figure for the typeset version.]*
 
 ```
 collect_data → score → [calibrate → score] → recommend → [human_review ⏸ → score? → recommend] → end
@@ -706,8 +728,7 @@ These properties make the claims in Sections 5 and 6 checkable:
 
 ## 7 Demonstration on synthetic data
 
-All numbers in this section are produced by deterministic scripts, run on commit [TBD: hash of
-the commit that adds them]:
+All numbers in this section are produced by deterministic scripts, run on commit `6bb05b9`:
 - `examples/calibrate_weights.py`: the reference run
 - `scripts/validate_calibration.py`: experiments E1–E3
 - `scripts/plot_calibration_validation.py`: Figures 4–6
@@ -952,7 +973,6 @@ The demonstration also says nothing about **predictive validity**: whether calib
 anticipate real disruptions better than default scores.
 
 > **[TBD-RESULT] Still missing for Section 7:**
-> - Commit hash for the reported run
 > - Robustness to **model misspecification**: labels generated with interactions or knock-out
 >   rules instead of a linear policy
 > - Sensitivity to **label noise** (σ = 2, 4, 8) and to label rounding
@@ -962,11 +982,216 @@ anticipate real disruptions better than default scores.
 
 ---
 
-## 8–9 (to be written)
+## 8 Comparison and discussion
 
-See [paper-outline.md](paper-outline.md):
-- **8 Comparison and discussion**: hybrid architecture
-- **9 Governance and decision ownership**
+### 8.1 What the benchmark and the demonstrator show together
+
+The paper set out to ask what it would take to make existing scorecard practice:
+- transparent
+- reproducible
+- governed
+- able to learn
+
+and whether this can be done at the cost profile of open-source software. The two parts of the
+paper answer this from different directions.
+
+**The benchmark (Section 4, Figure 1) locates a gap rather than a winner.**
+- *Spreadsheets* keep the method in the procurement team's hands but cannot hold it to account.
+- *Commercial platforms* bring data, scale and operational maturity. Depending on the vendor, they
+  keep the method partly or largely outside the customer's view.
+- *Open-source agent projects* offer architecture without method.
+
+No approach in the comparison is strong both on *data coverage* and on *ownership of the method*.
+The profiles are complementary.
+
+**The demonstrator (Sections 5–7) shows that the method layer can be built lean.**
+- **Transparent and reproducible:** the scoring is deterministic, configurable and fully tested.
+- **Governed:** the human review is a real pause in the workflow, not a notification, and weights
+  are versioned with their approver.
+- **Able to learn:** weights are fitted to expert judgement under constraints, with a
+  cross-validated acceptance test.
+- **At open-source cost:** the code base is small and MIT-licensed: about 2,300 lines of Python
+  in total, with no agent longer than 150 lines.
+
+On synthetic data, the calibration:
+- generalises close to the noise floor of the labels
+- recovers the direction of substantial weight differences
+- with the cross-validated acceptance rule, rarely makes things worse than the defaults
+
+**What neither part shows** is equally clear:
+- that real category managers judge suppliers in a way a linear model can capture
+- that calibrated scores predict disruptions
+- that the approach scales operationally to an enterprise portfolio
+
+These are empirical questions for future work (Section 11), not conclusions of this paper.
+
+### 8.2 The hybrid reading: signals from outside, method in-house
+
+The most useful reading of Figure 1 is not "which approach is best" but "which layer each approach
+should provide". Supplier risk evaluation involves three layers with different owners.
+
+**Table 6.** *A layered reading of supplier risk evaluation.*
+
+| Layer | Question it answers | Who is strong here (Figure 1) | Suggested provider |
+|---|---|---|---|
+| **Signal layer** | What is happening to this supplier, its country, its tier-N network, right now? | Commercial platforms (external signals, coverage, scale) | Platform subscription, or open data (e.g. public governance indicators, sanction lists, insolvency registers) |
+| **Method layer** | How do signals and internal knowledge become a risk class, with which weights, and why? | Lean Agentic (transparency, reproducibility, calibration, material-group weights) | In-house, owned by procurement: the approach of this paper |
+| **Decision layer** | What do we do about it, and who decides? | Shared: platforms (workflows), Lean Agentic (review pause, versioned approvals) | Category managers and a named decision owner (Section 9) |
+
+In this reading, the demonstrator does not compete with a platform. It *consumes* one. Technically,
+the integration points already exist:
+- **Rating sources.** A rating source turns any indicator into a 1–5 rating. This could be a
+  platform's supplier score, an alert count or a country index (`tools/indicators.py`).
+- **Data source protocol.** A pluggable data source can deliver those indicators.
+
+Prewave's published score composition (Section 2.2) makes it possible to reason about what such an
+input already contains. Where the composition is not published, the input has to be treated as a
+black-box indicator. Its weight should then be calibrated like any other.
+
+The hybrid reading has three practical consequences.
+1. **Platform scores become inputs, not verdicts.** A platform score enters the model as one factor
+   among others. The procurement team decides, and calibrates, how much it counts for which
+   material group. The final class remains recomputable from documented inputs.
+2. **Double counting must be managed.** A platform score that already includes country risk
+   overlaps with a separate country-risk factor. Either the overlapping factor is dropped, or the
+   calibration is left to down-weight one of them. The second option works only with enough
+   labels (Section 7.4).
+3. **Licence terms matter.** Whether a platform's scores or alerts may be stored, versioned and
+   recomputed in an in-house model depends on the subscription contract. This paper did not
+   examine any such contract. *(Assumption: constraints of this kind are common.)*
+
+### 8.3 When which approach fits
+
+Because the profiles are not ranked, the choice depends on the situation. The following
+conditions are offered as orientation, not as a decision rule.
+- **A spreadsheet with discipline** is adequate for a small portfolio with few critical suppliers,
+  stable risk drivers and no regulatory documentation duty. It needs a written definition of
+  every criterion, versioned weights and a fixed review date.
+- **A commercial platform** is hard to replace where tier-N exposure, real-time monitoring or
+  regulatory due-diligence evidence dominate the requirement. Building that data coverage
+  in-house is neither lean nor realistic.
+- **A Lean Agentic method layer** fits organisations that:
+  - have outgrown the spreadsheet
+  - want to own and justify their method
+  - need material-group-specific weighting
+  - want the judgement of their category managers to shape the model systematically
+
+  It also fits *alongside* a platform, as in Section 8.2.
+
+In practice, the most likely configuration for a mid-sized procurement organisation is the
+combination: a signal source it buys or obtains openly, and a method it owns.
+
+### 8.4 The cost of being lean
+
+"Lean" and "open source" do not mean free. The demonstrator shifts cost from licences to:
+- **Ownership.** Someone must maintain the model configuration, the code and the data
+  connections.
+- **Skills.** Changing the method requires familiarity with a configuration file. Extending the
+  system requires Python.
+- **Responsibility.** No vendor carries operational responsibility. The demonstrator has no
+  support organisation, no service levels and no security hardening (operational maturity is
+  rated 2 in Figure 1).
+
+These costs are real and fall on the adopting organisation. The approach is lean in what it
+*builds*, not necessarily in what it *requires* to run.
+
+### 8.5 What the "agentic" part contributes, and what it does not
+
+The demonstrator is a multi-agent workflow, but its scoring, calibration and recommendations use
+no language model at all. This is deliberate (Section 2.5). It also raises a fair question: is the
+agent architecture necessary?
+
+**For the current scope, it is not strictly necessary.** The same logic could run as a plain
+pipeline.
+
+**The architecture pays off as the system grows,** which is why it was chosen:
+- **Bounded loops.** The supervisor routes the calibration loop and the human-review pause
+  explicitly, and each loop is bounded.
+- **New capabilities as nodes.** Additions that are already foreseeable become new nodes rather
+  than rewrites:
+  - an external-signal agent
+  - a document-extraction agent
+  - an explanation agent that writes a narrative from locked numbers
+- **Pausing and resuming.** The graph framework's checkpointing provides the interrupt-and-resume
+  mechanism that human review needs.
+
+The value of "agentic" here is **orchestration and extensibility, not autonomy**. The approach
+gives agents no authority over scores or decisions. Following the positioning of this paper, that
+authority stays with code that can be recomputed and with people who can be named.
+
+---
+
+## 9 Governance and decision ownership
+
+A risk score does not decide anything. It informs a decision made by someone who can be held
+accountable for it. The demonstrator's governance features are only as useful as the roles that
+use them. This section proposes how those roles could be assigned. It is a recommendation; the
+demonstrator does not enforce roles (Section 10).
+
+### 9.1 Who owns what
+
+**Table 7.** *Proposed ownership of the elements of the method.*
+
+| Element | Owner (proposed) | Changed how | Recorded where |
+|---|---|---|---|
+| Criteria, scales, default weights, class thresholds, escalation rules | **Method owner** (e.g. procurement excellence) | Reviewed change of the model configuration, new model version | Version control of the configuration; model version on every result |
+| Expert ratings per supplier (e.g. business consequence, change complexity) | **Category manager** for the supplier | During the supplier review | Supplier record; rating provenance on every factor |
+| Holistic expert labels for calibration | **Category managers**, collected blind to the model score | Annual or periodic labelling round | Supplier record (`expert_risk_score`) |
+| Calibrated weights | **Approver** distinct from the label providers (four-eyes, recommended) | Approval at the human-review pause | Versioned weight store, with approver, metrics and timestamp |
+| Manual class overrides | **Decision owner** for the supplier | Review decision, with mandatory comment | Assessment (`manual_override`, `review_comment`); audit trail |
+| Indicators from external sources | **Data owner** per source | Data refresh | Indicator provenance; [TBD: source versioning not yet implemented] |
+
+Two principles follow from the method:
+1. **The method owner sets the floor.** Escalation rules ("a critical compliance finding means at
+   least *high*") express non-negotiable positions. They are not subject to calibration, because
+   calibration optimises agreement with average judgement, and floors exist precisely for cases
+   that averages hide.
+2. **Calibration proposes, people decide.** For weights that drive supplier decisions, the
+   recommended setting is to propose rather than auto-apply (`auto_apply: false`). Approval then
+   happens at the review pause. The approver sees the following, and the approval is recorded:
+   - the number of labels
+   - the cross-validated and in-sample error
+   - old and new weights
+
+### 9.2 Separation of duties
+
+The people whose labels drive a calibration should not be the only ones to approve its result.
+Otherwise a team could, deliberately or not, steer the weights towards a preferred outcome by the
+way it labels. The demonstrator records who approved a weight set, but it has no role model that
+would *enforce* separation. That is a limitation for production use (Section 10) and a
+straightforward extension (Section 11).
+
+### 9.3 A calibration cycle embedded in the supplier review
+
+The method fits naturally into the periodic supplier review that most procurement organisations
+already run:
+1. **Label before scoring.** Category managers record a holistic risk score (0–100) for the
+   suppliers they know well, before seeing the model score. This avoids anchoring on the model.
+2. **Score and calibrate.** The portfolio is scored. Calibration runs per scope (globally, or per
+   material group with enough labels) and is accepted or rejected on cross-validated error.
+3. **Review and approve.** The approver reviews proposed weights, together with suppliers flagged
+   for insufficient data. Decisions are recorded, and approved weights become a new version.
+4. **Communicate.** Changes in weights and the resulting class changes are communicated to the
+   category managers concerned. A weight change that moves suppliers between classes is itself a
+   decision that should be explained.
+5. **Repeat.** In the next cycle, the previous approved weights are the starting point. The
+   regularisation keeps anchoring on the method owner's defaults, so repeated calibration does
+   not drift (Section 5.3).
+
+### 9.4 Risks to governance
+
+- **Label gaming.** Labels can be shaped to produce desired weights.
+  - Mitigations: blind labelling; separation of duties; reporting how much each weight moved and
+    why; the minimum-weight constraint, which prevents criteria from being calibrated away
+    entirely.
+- **Label drift.** Expert judgement changes with events, and a calibration may encode a
+  temporary mood. Versioned weights make this visible over time; they do not prevent it.
+- **Automation bias.** A precise-looking score invites more trust than its inputs deserve. The
+  data-completeness flag and the stated number of labels behind each weight set are partial
+  counter-measures. The class, not the decimal score, should be the unit of communication.
+- **Accountability gaps.** The score supports a decision; it does not make one. For due-diligence
+  documentation, the record must show who decided, on what basis, and what was done. The audit
+  trail provides the basis; the decision owner remains responsible.
 
 ---
 
@@ -1008,16 +1233,90 @@ See [paper-outline.md](paper-outline.md):
 
 ---
 
-## 11–12 (to be written)
+## 11 Future work
 
-- **11 Future work**:
-  - λ selection by cross-validation
-  - misspecification and noise experiments
-  - field pilot with real labels
-  - independent multi-rater benchmark
-  - external signal agent
-  - predictive validation
-- **12 Conclusion**
+Future work is grouped by what it would establish. Within each group, items are ordered by expected
+value relative to effort.
+
+**Method: making calibration robust.**
+1. **Choose λ by cross-validation, or scale it with the number of labels.** This removes the bias
+   at large samples (Section 7.4) while keeping protection at small ones. It is the most direct
+   improvement suggested by the validation.
+2. **Misspecification experiments.** Generate labels from non-linear policies, implicit knock-out
+   rules and inconsistent experts, and measure how calibration and the acceptance rule behave
+   outside the best case. Varying label noise (σ = 2, 4, 8) and rounding belongs to the same
+   experiment.
+3. **Uncertainty of weights.** Report bootstrap intervals for calibrated weights, so that
+   reviewers see which shifts are well supported. Figure 6 shows that small shifts are not.
+4. **Ordinal labels.** Some organisations will only collect classes (low to critical). Ordinal
+   regression would allow calibration from such labels, at the cost of information.
+5. **Hierarchical calibration across material groups.** Partial pooling would let groups with few
+   labels borrow strength from the global fit. The "plastics" example (Section 7.6) shows why
+   this matters.
+
+**Evidence: from synthetic to real.**
+1. **Field pilot with real expert labels.** One or two material groups, labels collected blind to
+   the model score, and a pre-registered comparison of cross-validated error with and without
+   calibration.
+2. **Independent re-rating of the benchmark.** Three to five practitioners rate the comparison
+   matrix independently, and the spread is reported as bands in Figure 1.
+3. **Predictive validation.** Link scores to observed supplier incidents (delivery failures,
+   insolvencies, compliance findings) over time. This needs incident data and a longitudinal
+   design. It is the only route to the question this paper explicitly leaves open: whether
+   calibrated scores anticipate risk better.
+
+**System: from demonstrator to tool.**
+1. **External-signal agent based on open data.** Turn the dip at "external signals" in Figure 1
+   into a design choice the user can reverse. Possible sources are public governance indicators,
+   sanction lists and insolvency announcements.
+2. **Explanation agent.** A language model writes a short narrative per supplier from the locked,
+   computed numbers, and never changes them.
+3. **Roles and persistence.** A role model that enforces separation of duties (Section 9.2), and
+   a persistent checkpointer so that reviews can be decided in a later session.
+4. **Platform integration pattern.** A documented adapter that turns a platform score into a
+   rating source, including handling of overlapping factors (Section 8.2).
+
+**Benchmark maintenance.**
+- Repeat the public-information review of the platform examples periodically, and record the
+  date of each rating.
+- Add further vendors where their methodology is publicly documented.
+
+---
+
+## 12 Conclusion
+
+Supplier risk evaluation in mid-sized organisations sits between two imperfect options:
+- a spreadsheet the team owns but cannot hold to account
+- a platform that brings data and scale, but whose method the team does not fully own
+
+A third option, open-source agent projects, offers architecture but rarely a method. Across all
+three, the weights that turn criteria into a score are usually set once and never tested against
+the judgement of the people who know the suppliers.
+
+This paper proposed fifteen success factors and used them to profile four approaches without
+ranking them. The comparison locates a gap rather than a winner: no approach combines data
+coverage with ownership of the method. The paper then presented Lean Agentic AI as a way to fill
+the method side of that gap:
+- start from existing scorecard practice
+- build on open agentic blueprints
+- keep every number deterministic
+- calibrate weights against expert labels under constraints, with a cross-validated acceptance
+  test
+- pause for human approval wherever judgement is required
+
+On synthetic data, the calibration generalises close to the noise floor and recovers substantial
+weight differences. With few labels it needs both regularisation and an out-of-sample acceptance
+test. The validation found, and the demonstrator now corrects, an acceptance rule that would
+otherwise have let harmful calibrations through.
+
+What remains open is stated as plainly:
+- The labels were synthetic and generated by the fitted model family.
+- Agreement with experts is not predictive validity.
+- The approach does not supply external signals.
+
+The most realistic deployment is therefore hybrid. Signals come from a platform or from open data.
+The method that turns them into risk classes and actions is transparent, versioned, calibrated
+and owned by the procurement team that is accountable for it.
 
 ---
 
