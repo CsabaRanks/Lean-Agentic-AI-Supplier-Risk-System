@@ -39,6 +39,17 @@ and the pooled out-of-fold MSE is compared with that of the prior weights.
 An in-sample test (legacy option) accepts almost any fit, including fits that
 mostly reproduce label noise when only a few labels are available.
 
+Level-offset diagnostic
+-----------------------
+Weights sum to one, so they cannot shift the level of the score. If experts are
+systematically stricter or more lenient than the model's scale, a calibration
+distorts the weights to imitate the offset (in experiment E4 it pushed the
+rarely-high factors, insolvency and compliance, to the minimum weight). The
+report therefore states the mean label-score difference and flags it when it
+is both material (``level_bias_threshold`` points) and clear
+(``level_bias_min_t`` standard errors). A flagged offset is a reason to review
+the class thresholds, not to approve new weights.
+
 Expert labels are expected as 0..100 scores; classes for the labels are
 derived with the model's own thresholds (used for the class-agreement metric).
 Reported MSE values are in score points squared (0..100 scale).
@@ -95,6 +106,16 @@ def class_agreement(X: np.ndarray, y: np.ndarray, theta: np.ndarray, model: Risk
     pred = _predict(X, theta, model)
     hits = [classify(float(p), model) == classify(float(t), model) for p, t in zip(pred, y)]
     return float(np.mean(hits)) if hits else 0.0
+
+
+def level_offset(X: np.ndarray, y: np.ndarray, theta: np.ndarray, model: RiskModelConfig) -> tuple[float, float]:
+    """Mean of (label - score) and its t-statistic (0 if undefined)."""
+    residual = y - _predict(X, theta, model)
+    mean = float(residual.mean()) if len(residual) else 0.0
+    if len(residual) < 2:
+        return mean, 0.0
+    se = float(residual.std(ddof=1) / np.sqrt(len(residual)))
+    return mean, (float(mean / se) if se > 0 else 0.0)
 
 
 def relative_improvement(before: float, after: float) -> float:
@@ -199,6 +220,21 @@ def calibrate_weights(
 
     theta_prior = np.array([prior.factor_weights.get(k, 0.0) for k in keys])
     theta_anchor = np.array([anchor.factor_weights.get(k, 0.0) for k in keys])
+
+    offset, offset_t = level_offset(X, y, theta_prior, model)
+    report.level_offset = round(offset, 2)
+    report.level_offset_t = round(offset_t, 2)
+    report.level_bias_detected = bool(
+        abs(offset) >= settings.level_bias_threshold and abs(offset_t) >= settings.level_bias_min_t
+    )
+    if report.level_bias_detected:
+        direction = "higher (stricter)" if offset > 0 else "lower (more lenient)"
+        report.warnings.append(
+            f"level offset: expert labels are on average {abs(offset):.1f} points {direction} than model "
+            f"scores (t = {offset_t:.1f}). Weights cannot express a level offset; calibrating them would "
+            "distort them. Review the class thresholds instead of approving new weights."
+        )
+
     theta, success, solver_msg = solve_weights(X, y, theta_anchor, model, settings)
 
     before, after = mse(X, y, theta_prior, model), mse(X, y, theta, model)

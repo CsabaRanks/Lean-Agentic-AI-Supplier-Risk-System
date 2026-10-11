@@ -65,6 +65,8 @@ def review_request(state: SupplierRiskState, model: RiskModelConfig) -> dict:
             "cv_mse_before": rep.cv_mse_before,
             "cv_mse_after": rep.cv_mse_after,
             "n_samples": rep.n_samples,
+            "level_offset": rep.level_offset,
+            "warnings": rep.warnings,
             "class_agreement_before": rep.class_agreement_before,
             "class_agreement_after": rep.class_agreement_after,
         }

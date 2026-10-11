@@ -88,8 +88,13 @@ or decided by an LLM. Nobody checks them against reality. This project adds a
 2. **Fit.** The agent adjusts the factor weights to **minimise the mean squared error** between model score and expert label.
 3. **Constraints.** Weights stay ≥ a minimum and sum to 1, with regularisation towards the configured defaults. Calibration *refines* the methodology. It does not replace it.
 4. **Feedback loop.** If the improvement is significant, the new weights are applied and the **Scoring Agent re-runs**. They are applied either automatically or after a reviewer approves them at the human-review pause.
-5. **Logging and persistence.** Old vs. new weights, MSE and class agreement before/after are logged. Applied weights are saved as a new version in the weight store (`data/weights/global_v002.yaml`, …).
-6. **Scope.** Calibration runs **globally** or **per material group**.
+5. **Safeguards.**
+   - Acceptance is tested out of sample (cross-validation), so fits that only memorise label
+     noise are rejected.
+   - A level-offset check stops weights from being distorted when experts are systematically
+     stricter or more lenient than the model's scale. Such cases go to review.
+6. **Logging and persistence.** Old vs. new weights, MSE and class agreement before/after are logged. Applied weights are saved as a new version in the weight store (`data/weights/global_v002.yaml`, …).
+7. **Scope.** Calibration runs **globally** or **per material group**.
 
 ```
 Calibration [global] — 32 labelled supplier(s): accepted: MSE 37.8 -> 13.3 (64.9% better)

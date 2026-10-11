@@ -47,6 +47,7 @@ from supplier_risk_agent.tools.calibration import (
     build_design_matrix,
     class_agreement,
     cross_validated_mse,
+    level_offset,
     mse,
     relative_improvement,
     solve_weights,
@@ -166,12 +167,18 @@ def run(cfg: dict) -> tuple[list[dict], list[dict]]:
                 X = ratings(n, seed, "CAL")
                 y = labels(X, policy, np.random.default_rng(10_000 * (p_idx + 1) + seed))
                 theta, accepted = fit(X, y, settings)
+                offset, offset_t = level_offset(X, y, THETA_DEFAULT, MODEL)
+                flagged = abs(offset) >= settings.level_bias_threshold and abs(offset_t) >= settings.level_bias_min_t
                 calibrated = mse(X_test, y_true, theta, MODEL)
                 applied = calibrated if accepted else default_err
+                # with the level check, flagged calibrations go to review instead of being applied
+                applied_checked = calibrated if accepted and not flagged else default_err
                 row = {
                     "policy": name, "n": n, "seed": seed,
                     "mse_default": default_err, "mse_calibrated": calibrated, "mse_applied": applied,
                     "accepted_cv": accepted, "harm": bool(applied > default_err),
+                    "level_offset": offset, "level_flag": bool(flagged),
+                    "mse_applied_level_check": applied_checked, "harm_level_check": bool(applied_checked > default_err),
                     "class_agreement_calibrated": class_agreement(X_test, y_true, theta, MODEL),
                 }
                 rows.append(row)
@@ -189,6 +196,9 @@ def run(cfg: dict) -> tuple[list[dict], list[dict]]:
                     bool(r["mse_calibrated"] < r["mse_default"]) for r in runs),
                 "acceptance_rate_cv": statistics.mean(r["accepted_cv"] for r in runs),
                 "harm_rate_cv": statistics.mean(r["harm"] for r in runs),
+                "level_offset_mean": statistics.mean(r["level_offset"] for r in runs),
+                "level_flag_rate": statistics.mean(r["level_flag"] for r in runs),
+                "harm_rate_level_check": statistics.mean(r["harm_level_check"] for r in runs),
                 "class_agreement_default": ca_default,
                 "class_agreement_calibrated_mean": statistics.mean(r["class_agreement_calibrated"] for r in runs),
             })
@@ -217,14 +227,16 @@ def markdown(summary: list[dict], cfg: dict) -> str:
         "that calibration removes."),
         "",
         ("| policy | n | linear floor | default | calibrated | excess removed | better than default | "
-        "accepted (CV) | harm (CV rule) | class agreement default → calibrated |"),
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---|",
+        "accepted (CV) | harm (CV rule) | mean label−score | level flag | harm (CV + level check) | "
+        "class agreement default → calibrated |"),
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
     ]
     for s in summary:
         lines.append(
             f"| {s['policy']} | {s['n']} | {s['linear_floor_mse']:.1f} | {s['mse_default']:.1f} | "
             f"{s['mse_calibrated_mean']:.1f} | {s['excess_error_removed']:.0%} | "
             f"{s['share_better_than_default']:.0%} | {s['acceptance_rate_cv']:.0%} | {s['harm_rate_cv']:.0%} | "
+            f"{s['level_offset_mean']:+.1f} | {s['level_flag_rate']:.0%} | {s['harm_rate_level_check']:.0%} | "
             f"{s['class_agreement_default']:.0%} → {s['class_agreement_calibrated_mean']:.0%} |")
     return "\n".join(lines) + "\n"
 

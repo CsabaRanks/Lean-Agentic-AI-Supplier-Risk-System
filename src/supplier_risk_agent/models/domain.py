@@ -131,6 +131,12 @@ class CalibrationReport(BaseModel):
     accepted: bool = False
     applied: bool = False
     stored_as: str | None = Field(default=None, description="Weight store file, if persisted")
+    level_offset: float | None = Field(
+        default=None, description="Mean (label - score) under the active weights, in score points"
+    )
+    level_offset_t: float | None = Field(default=None, description="level_offset / its standard error")
+    level_bias_detected: bool = False
+    warnings: list[str] = Field(default_factory=list)
     message: str = ""
 
 

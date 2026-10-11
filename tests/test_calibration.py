@@ -115,3 +115,32 @@ def test_cross_validated_rule_rejects_more_overfit_fits_than_in_sample_rule(mode
     assert np.mean(applied_error["in_sample"]) > base  # the legacy rule makes things worse on average
     # the CV rule reduces the damage; with 8 labels and no regularisation it does not remove it
     assert np.mean(applied_error["cross_validated"]) < np.mean(applied_error["in_sample"])
+
+
+def _shifted(profiles, points):
+    for p in profiles:
+        p.expert_risk_score = float(min(100, max(0, p.expert_risk_score + points)))
+    return profiles
+
+
+def test_level_offset_is_detected_and_warned(model):
+    from supplier_risk_agent.tools.synthetic import synthetic_portfolio as portfolio
+
+    report, _ = calibrate_weights(_shifted(portfolio(32, 1, model), 10), model, model.default_weights())
+    assert report.level_bias_detected
+    assert report.level_offset > 5 and report.level_offset_t > 2
+    assert any("level offset" in w and "stricter" in w for w in report.warnings)
+
+    lenient, _ = calibrate_weights(_shifted(portfolio(32, 1, model), -12), model, model.default_weights())
+    assert lenient.level_bias_detected and lenient.level_offset < 0
+    assert any("lenient" in w for w in lenient.warnings)
+
+
+def test_no_level_flag_without_offset(model):
+    from supplier_risk_agent.tools.synthetic import synthetic_portfolio as portfolio
+
+    flagged = sum(
+        calibrate_weights(portfolio(32, seed, model), model, model.default_weights())[0].level_bias_detected
+        for seed in range(10)
+    )
+    assert flagged == 0

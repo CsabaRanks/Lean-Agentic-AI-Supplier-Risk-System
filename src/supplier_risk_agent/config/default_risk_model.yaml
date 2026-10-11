@@ -193,4 +193,7 @@ calibration:
   acceptance: cross_validated  # test the improvement out of sample (in_sample = legacy, accepts overfits)
   cv_folds: 5
   cv_repeats: 3
+  level_bias_threshold: 5.0   # flag if labels differ from scores by >= 5 points on average ...
+  level_bias_min_t: 2.0       # ... and by >= 2 standard errors
+  level_bias_action: review   # review = never auto-apply such weights; warn = report only
   auto_apply: true         # re-score with accepted weights (false = propose only)

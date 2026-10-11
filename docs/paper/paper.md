@@ -694,6 +694,9 @@ and an analytic gradient. In the default configuration:
 Only suppliers with complete data are used. Missing-data re-weighting would make the score
 non-linear in θ.
 
+Before fitting, the report also checks for a **level offset** between labels and scores, which
+weights cannot express (Section 7.7). A flagged offset withholds the calibration for review.
+
 The expert's class is derived from the label with the model's own thresholds. Labels are therefore
 expected as scores rather than classes: a score carries more information than a class, and it keeps
 the fit linear. Class agreement is reported alongside the error.
@@ -1033,10 +1036,22 @@ Five findings.
      protect most.
    - **Class agreement** stays at 60 %.
 
-   The weights end up wrong for a reason that has nothing to do with what the experts value. Part of the worst-factor result has the same cause. A systematic
-   offset belongs in the class thresholds, or in an explicit offset term, not in the weights. The
-   mean difference between labels and scores is a cheap diagnostic for it.
-   [TBD: add this diagnostic to the calibration report; Section 11.]
+   The weights end up wrong for a reason that has nothing to do with what the experts value.
+   Part of the worst-factor result has the same cause. A systematic offset belongs in the class
+   thresholds, or in an explicit offset term, not in the weights.
+
+   **The demonstrator now diagnoses it.** The calibration report states the mean difference
+   between labels and scores under the active weights, with its t-statistic. It flags an offset of
+   at least 5 points that is also at least two standard errors from zero. A flagged calibration is
+   never auto-applied: it goes to human review with a warning to check the class thresholds. In
+   the E4 runs, the flag:
+   - caught **every** level-shift and worst-factor run (100 %)
+   - caught 30–37 % of knock-out runs, whose floors also lift the average label. This halved
+     harmful applications under the knock-out policy (16 labels: 10 % → 3 %; 32 labels:
+     13 % → 7 %).
+   - fired in at most 7 % of runs with purely linear experts (σ = 8, 16 labels), and in no run at
+     32 labels or more
+   - did not help with disagreeing experts, whose labels show no offset
 
 5. **Disagreeing experts are the hardest case for the acceptance rule.** When two experts with
    different weightings label different suppliers, their disagreement acts as large, structured
@@ -1332,8 +1347,9 @@ already run:
   conservative and forgoes some useful calibrations. The in-sample rule remains available as an
   option and should not be used for real decisions.
 - **Policies weights cannot express.** Knock-out judgements, level offsets and non-additive
-  policies cannot be learned by weights (Section 7.7). The demonstrator does not yet diagnose them
-  (no level-bias or residual check in the calibration report).
+  policies cannot be learned by weights (Section 7.7). The demonstrator diagnoses level offsets
+  and withholds such calibrations for review. It does not yet diagnose knock-outs or
+  non-additivity directly, and disagreement between experts is not detected at all.
 - **Fixed regularisation strength.** Because the penalty is not scaled with the number of labels,
   λ = 0.05 becomes a bias once labels are plentiful (Section 7.4). λ is not yet selected by
   cross-validation.
@@ -1354,9 +1370,9 @@ value relative to effort.
 1. **Choose λ by cross-validation, or scale it with the number of labels.** This removes the bias
    at large samples (Section 7.4) while keeping protection at small ones. It is the most direct
    improvement suggested by the validation.
-2. **Diagnostics for misspecification** (from E4). The calibration report should state:
-   - the mean label–score difference (level offset)
-   - the residual error left after calibration
+2. **Further diagnostics for misspecification** (from E4). The level-offset check is
+   implemented (Section 7.7). Two diagnostics remain:
+   - the residual error left after calibration, reported as a share of the label variance
    - for suppliers with severe single findings, the residual error separately (candidate
      knock-outs)
 

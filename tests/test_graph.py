@@ -104,3 +104,34 @@ def test_recommendations_include_review_cycle(evaluator):
 def test_unknown_supplier_raises(evaluator):
     with pytest.raises(LookupError, match="not found"):
         evaluator.assess("DOES-NOT-EXIST")
+
+
+def _level_shifted_source(model, points=10):
+    from supplier_risk_agent.tools import InMemorySource
+    from supplier_risk_agent.tools.synthetic import synthetic_portfolio
+
+    profiles = synthetic_portfolio(32, 3, model)
+    for p in profiles:
+        p.expert_risk_score = float(min(100, p.expert_risk_score + points))
+    return InMemorySource(profiles)
+
+
+def test_level_offset_blocks_auto_apply(model):
+    from supplier_risk_agent import SupplierRiskEvaluator
+
+    state = SupplierRiskEvaluator(_level_shifted_source(model), model).run(calibrate=True)
+    report = state["calibration_report"]
+    assert report.level_bias_detected and report.accepted  # the fit "improves", but for the wrong reason
+    assert not state["calibration_applied"]
+    assert all(r.weights_origin == "default" for r in state["results"].values())
+    assert any("level offset" in r for r in state["review_reasons"])
+    assert SupplierRiskEvaluator.pending_review(state)["proposed_weights"]["warnings"]
+
+
+def test_level_offset_warn_mode_applies(model):
+    from supplier_risk_agent import SupplierRiskEvaluator
+
+    warn = model.model_copy(deep=True)
+    warn.calibration.level_bias_action = "warn"
+    state = SupplierRiskEvaluator(_level_shifted_source(warn), warn).run(calibrate=True)
+    assert state["calibration_report"].level_bias_detected and state["calibration_applied"]

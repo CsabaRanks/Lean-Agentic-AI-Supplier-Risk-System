@@ -19,8 +19,8 @@ Status: outline with bullet points. Sources: `research/` files, linked per secti
   - λ selected by cross-validation
   - optional label-vs-score scatter
   - E4 (misspecification, noise) is done: Section 7.7, Table 6, Figure 7
-- **[TBD] Section 7.7:** the level-bias diagnostic in the calibration report is proposed, not
-  implemented
+- Section 7.7: the level-offset diagnostic is implemented and evaluated on E4. Residual and
+  knock-out diagnostics remain future work.
 - **[TBD-INPUT] Figure 3:** static rendering for the typeset version (currently Mermaid).
 - **Section 9, Table 7:** source versioning for external indicators is not implemented.
 - **References:** verify wording against full texts (read at abstract level).

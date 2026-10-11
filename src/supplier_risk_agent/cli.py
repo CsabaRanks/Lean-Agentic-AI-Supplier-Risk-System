@@ -72,6 +72,10 @@ def _print_calibration(rep: CalibrationReport) -> None:
           f"{rep.class_agreement_before:.0%} -> {rep.class_agreement_after:.0%}  |  applied: {rep.applied}")
     if rep.stored_as:
         print(f"  stored as: {rep.stored_as}")
+    if rep.level_offset is not None:
+        print(f"  mean label - score: {rep.level_offset:+.1f} points (t = {rep.level_offset_t:+.1f})")
+    for warning in rep.warnings:
+        print(f"  WARNING: {warning}")
     print(f"  {'factor':<22} {'old':>7} {'new':>7}  delta")
     for key, old in rep.old_weights.items():
         new = rep.new_weights[key]
@@ -94,6 +98,8 @@ def _interactive_review(request: dict, ask=None) -> ReviewDecision:
               f"(in-sample {proposed['mse_before']} -> {proposed['mse_after']})")
         for key, old in proposed["old_weights"].items():
             print(f"      {key:<22} {old:6.1%} -> {proposed['new_weights'][key]:6.1%}")
+        for warning in proposed.get("warnings", []):
+            print(f"  WARNING: {warning}")
         approve = ask("Approve proposed weights? [y/N] ").strip().lower() in {"y", "yes", "j", "ja"}
 
     overrides: dict[str, ClassOverride] = {}

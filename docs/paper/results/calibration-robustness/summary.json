@@ -20,6 +20,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 0.7,
       "harm_rate_cv": 0,
+      "level_offset_mean": 1.2206,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.7865,
       "class_agreement_calibrated_mean": 0.8825
     },
@@ -34,6 +37,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 1,
       "harm_rate_cv": 0,
+      "level_offset_mean": 1.4423,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.7865,
       "class_agreement_calibrated_mean": 0.9062
     },
@@ -48,6 +54,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 1,
       "harm_rate_cv": 0,
+      "level_offset_mean": 1.4375,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.7865,
       "class_agreement_calibrated_mean": 0.9255
     },
@@ -62,6 +71,9 @@
       "share_better_than_default": 0.6667,
       "acceptance_rate_cv": 0.2667,
       "harm_rate_cv": 0.1,
+      "level_offset_mean": 0.5227,
+      "level_flag_rate": 0.0333,
+      "harm_rate_level_check": 0.1,
       "class_agreement_default": 0.6335,
       "class_agreement_calibrated_mean": 0.6333
     },
@@ -76,6 +88,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 0.4,
       "harm_rate_cv": 0,
+      "level_offset_mean": 0.9267,
+      "level_flag_rate": 0.0333,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.6335,
       "class_agreement_calibrated_mean": 0.6525
     },
@@ -90,6 +105,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 0.7333,
       "harm_rate_cv": 0,
+      "level_offset_mean": 1.1094,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.6335,
       "class_agreement_calibrated_mean": 0.6663
     },
@@ -104,6 +122,9 @@
       "share_better_than_default": 0.5,
       "acceptance_rate_cv": 0.3333,
       "harm_rate_cv": 0.1,
+      "level_offset_mean": 4.6997,
+      "level_flag_rate": 0.3667,
+      "harm_rate_level_check": 0.0333,
       "class_agreement_default": 0.6595,
       "class_agreement_calibrated_mean": 0.644
     },
@@ -118,6 +139,9 @@
       "share_better_than_default": 0.7667,
       "acceptance_rate_cv": 0.6333,
       "harm_rate_cv": 0.1333,
+      "level_offset_mean": 4.7236,
+      "level_flag_rate": 0.3667,
+      "harm_rate_level_check": 0.0667,
       "class_agreement_default": 0.6595,
       "class_agreement_calibrated_mean": 0.6861
     },
@@ -132,6 +156,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 0.8,
       "harm_rate_cv": 0,
+      "level_offset_mean": 4.6823,
+      "level_flag_rate": 0.3,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.6595,
       "class_agreement_calibrated_mean": 0.7221
     },
@@ -146,6 +173,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 0.6333,
       "harm_rate_cv": 0,
+      "level_offset_mean": 19.8247,
+      "level_flag_rate": 1,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.1215,
       "class_agreement_calibrated_mean": 0.2814
     },
@@ -160,6 +190,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 0.9333,
       "harm_rate_cv": 0,
+      "level_offset_mean": 20.0882,
+      "level_flag_rate": 1,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.1215,
       "class_agreement_calibrated_mean": 0.2681
     },
@@ -174,6 +207,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 1,
       "harm_rate_cv": 0,
+      "level_offset_mean": 19.8177,
+      "level_flag_rate": 1,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.1215,
       "class_agreement_calibrated_mean": 0.2489
     },
@@ -188,6 +224,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 0.9,
       "harm_rate_cv": 0,
+      "level_offset_mean": 11.2206,
+      "level_flag_rate": 1,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.437,
       "class_agreement_calibrated_mean": 0.5899
     },
@@ -202,6 +241,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 1,
       "harm_rate_cv": 0,
+      "level_offset_mean": 11.4475,
+      "level_flag_rate": 1,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.437,
       "class_agreement_calibrated_mean": 0.5976
     },
@@ -216,6 +258,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 1,
       "harm_rate_cv": 0,
+      "level_offset_mean": 11.4141,
+      "level_flag_rate": 1,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.437,
       "class_agreement_calibrated_mean": 0.6025
     },
@@ -230,6 +275,9 @@
       "share_better_than_default": 0.1667,
       "acceptance_rate_cv": 0.5,
       "harm_rate_cv": 0.4333,
+      "level_offset_mean": -0.2273,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0.4333,
       "class_agreement_default": 0.9025,
       "class_agreement_calibrated_mean": 0.8763
     },
@@ -244,6 +292,9 @@
       "share_better_than_default": 0.5333,
       "acceptance_rate_cv": 0.3667,
       "harm_rate_cv": 0.2333,
+      "level_offset_mean": 0.0673,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0.2333,
       "class_agreement_default": 0.9025,
       "class_agreement_calibrated_mean": 0.9053
     },
@@ -258,6 +309,9 @@
       "share_better_than_default": 0.9,
       "acceptance_rate_cv": 0.5,
       "harm_rate_cv": 0,
+      "level_offset_mean": -0.2552,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.9025,
       "class_agreement_calibrated_mean": 0.9285
     },
@@ -272,6 +326,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 1,
       "harm_rate_cv": 0,
+      "level_offset_mean": 1.0956,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.7865,
       "class_agreement_calibrated_mean": 0.9
     },
@@ -286,6 +343,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 1,
       "harm_rate_cv": 0,
+      "level_offset_mean": 1.0986,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.7865,
       "class_agreement_calibrated_mean": 0.919
     },
@@ -300,6 +360,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 1,
       "harm_rate_cv": 0,
+      "level_offset_mean": 1.1797,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.7865,
       "class_agreement_calibrated_mean": 0.9324
     },
@@ -314,6 +377,9 @@
       "share_better_than_default": 0.8333,
       "acceptance_rate_cv": 0.4333,
       "harm_rate_cv": 0.0667,
+      "level_offset_mean": 1.1893,
+      "level_flag_rate": 0.0667,
+      "harm_rate_level_check": 0.0667,
       "class_agreement_default": 0.7865,
       "class_agreement_calibrated_mean": 0.823
     },
@@ -328,6 +394,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 0.6667,
       "harm_rate_cv": 0,
+      "level_offset_mean": 1.1454,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.7865,
       "class_agreement_calibrated_mean": 0.8664
     },
@@ -342,6 +411,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 0.9333,
       "harm_rate_cv": 0,
+      "level_offset_mean": 1.0417,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.7865,
       "class_agreement_calibrated_mean": 0.8941
     },
@@ -356,6 +428,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 0.7667,
       "harm_rate_cv": 0,
+      "level_offset_mean": 0.8664,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.7865,
       "class_agreement_calibrated_mean": 0.8707
     },
@@ -370,6 +445,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 0.9667,
       "harm_rate_cv": 0,
+      "level_offset_mean": 1.3382,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.7865,
       "class_agreement_calibrated_mean": 0.8978
     },
@@ -384,6 +462,9 @@
       "share_better_than_default": 1,
       "acceptance_rate_cv": 1,
       "harm_rate_cv": 0,
+      "level_offset_mean": 1.2839,
+      "level_flag_rate": 0,
+      "harm_rate_level_check": 0,
       "class_agreement_default": 0.7865,
       "class_agreement_calibrated_mean": 0.9158
     }

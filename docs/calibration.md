@@ -158,8 +158,14 @@ Calibration [global] — 32 labelled supplier(s): accepted: MSE 37.8 -> 13.3 (64
     them as escalation rules.
   - **Systematic strictness or leniency.** If labels are on average higher or lower than scores,
     calibration distorts the weights. In E4 it pushed insolvency and compliance weights to the
-    minimum. Check the mean label–score difference before approving; adjust class thresholds
-    instead.
+    minimum.
+
+    **Built-in check.** The report states the mean label–score difference (`level_offset`, with
+    its t-statistic). It flags a difference of at least `level_bias_threshold` points (default 5)
+    that is also at least `level_bias_min_t` standard errors (default 2) from zero.
+    - With `level_bias_action: review` (default), flagged weights are never auto-applied. They go
+      to human review with a warning to check the class thresholds instead.
+    - With `warn`, the warning is only reported.
   - **Disagreeing experts.** If category managers weigh criteria differently, their labels are
     not one policy. Measure agreement with two labels for a subset of suppliers first.
 - **Treat weights like a model release.** Review the proposal, approve it, and commit the new

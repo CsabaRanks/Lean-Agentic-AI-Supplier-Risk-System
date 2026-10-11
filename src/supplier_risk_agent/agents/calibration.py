@@ -68,7 +68,8 @@ class CalibrationAgent:
 
         update: dict = {"calibration_performed": True, "calibration_applied": False}
         review_reasons: list[str] = []
-        if report.accepted and self.settings.auto_apply:
+        level_blocks = report.level_bias_detected and self.settings.level_bias_action == "review"
+        if report.accepted and self.settings.auto_apply and not level_blocks:
             report.applied = True
             new_weights, report = persist_weights(
                 self.store, new_weights, report, self.model, approved_by="auto_apply", status="auto_applied"
@@ -77,7 +78,13 @@ class CalibrationAgent:
             update |= {"active_weights": active, "calibration_applied": True}
         elif report.accepted:
             update["requires_human_review"] = True
-            review_reasons.append(f"calibrated weights for scope '{scope}' proposed — approval required")
+            if level_blocks:
+                review_reasons.append(
+                    f"calibrated weights for scope '{scope}' not auto-applied: level offset of "
+                    f"{report.level_offset:+.1f} points between labels and scores — review class thresholds"
+                )
+            else:
+                review_reasons.append(f"calibrated weights for scope '{scope}' proposed — approval required")
 
         update |= {
             "calibration_report": report,
@@ -102,6 +109,9 @@ class CalibrationAgent:
                         "cv_mse": [report.cv_mse_before, report.cv_mse_after],
                         "class_agreement": [report.class_agreement_before, report.class_agreement_after],
                         "stored_as": report.stored_as,
+                        "level_offset": report.level_offset,
+                        "level_bias_detected": report.level_bias_detected,
+                        "warnings": report.warnings,
                         "message": report.message,
                     },
                 )

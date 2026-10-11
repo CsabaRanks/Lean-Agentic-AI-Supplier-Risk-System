@@ -128,6 +128,15 @@ class CalibrationSettings(BaseModel):
     )
     cv_folds: int = Field(default=5, ge=2, description="Folds for cross-validated acceptance")
     cv_repeats: int = Field(default=3, ge=1, description="Repeats with reshuffled folds (deterministic)")
+    level_bias_threshold: float = Field(
+        default=5.0, ge=0,
+        description="Flag a level offset if labels differ from scores by at least this many points on average",
+    )
+    level_bias_min_t: float = Field(default=2.0, ge=0, description="...and the offset is at least this many standard errors")
+    level_bias_action: Literal["review", "warn"] = Field(
+        default="review",
+        description="'review': never auto-apply weights calibrated on level-biased labels; 'warn': report only",
+    )
     auto_apply: bool = Field(default=True, description="Re-score with accepted weights; else only propose them")
 
 

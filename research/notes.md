@@ -2,6 +2,22 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Level-offset diagnostic
+
+**D24: The calibration report flags a level offset.** The flag fires when the mean of
+(label − score) under the active weights is ≥ 5 points and ≥ 2 standard errors from zero.
+- **Default action `review`:** such weights are never auto-applied and go to human review with a
+  hint to check the class thresholds.
+- **Threshold derivation:** on E4 runs the flag catches 100 % of level-shift and worst-factor
+  runs and 30–37 % of knock-out runs. It produces ≤ 7 % false flags for linear experts (0 % from
+  32 labels). The reference portfolio (+2.2) is not flagged.
+- **Side effect:** harm under the knock-out policy is halved (10 → 3 % at 16 labels,
+  13 → 7 % at 32).
+- **Not addressed:** disagreeing experts.
+
+**Bug found on the way:** a numpy float in the report broke checkpoint serialisation. Values are
+now cast to Python floats. The graph-level test with the level-shifted portfolio covers it.
+
 ## 2026-10 — Robustness to misspecified expert policies (E4)
 
 **D23: E4 run** (`scripts/robustness_calibration.py`, Figure 7, paper Section 7.7). Eight constructed
@@ -16,7 +32,7 @@ expert policies; production settings; 16/32/64 labels; 30 seeds.
 | Disagreeing experts, little to gain | Worst case for the acceptance rule: 43 % harm at 16 labels, 23 % at 32. Measure inter-rater agreement first; require the CV improvement to exceed its standard error. |
 
 **Open follow-ups (code):**
-- level-bias and residual diagnostics in the calibration report
+- ~~level-bias diagnostic~~ (done, D24); residual / knock-out diagnostics
 - significance-based acceptance
 - λ by CV
 
