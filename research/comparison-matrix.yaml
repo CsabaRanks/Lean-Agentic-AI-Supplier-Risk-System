@@ -19,13 +19,13 @@
 #   rationale:   short justification; sources are listed under approaches.<key>.evidence
 
 meta:
-  title: Supplier risk management and performance evaluation approaches profiled on 16 success factors
-  model_version: "0.3"
+  title: Supplier risk management and performance evaluation approaches profiled on 15 success factors
+  model_version: "0.4"
   evidence_date: "2026-10"
   scale: {min: 1, max: 5}
   caption: >-
-    Four approaches to supplier risk management and performance evaluation profiled on 16 success factors
-    (model v0.3).
+    Four approaches to supplier risk management and performance evaluation profiled on 15 success factors
+    (model v0.4).
     Illustrative assessment based on public information and code review (October 2026);
     rationale and confidence for every value in research/comparison-matrix.md.
     Proprietary SaaS plotted as the mean of Prewave and Sphera, with the spread marked where they differ.
@@ -175,32 +175,6 @@ factors:
           versioning. Not 5: validated on synthetic labels only, no cross-validation yet.
 
   - id: 5
-    key: material_group
-    label: Material-group-specific adaptation
-    short_label: Material-group fit
-    v01: [4]
-    ratings:
-      xls:
-        value: 3
-        confidence: M
-        rationale: A separate sheet per group is easy, but logic diverges between copies.
-      saas:
-        value: 3
-        by_example: {Prewave: 3, Sphera: 3}
-        confidence: L
-        rationale: >-
-          Commodity is part of Prewave's peer score and customised perspectives exist; segmentation per commodity
-          was not documented publicly in detail for either vendor.
-      oss:
-        value: 1
-        confidence: H
-        rationale: None.
-      lean:
-        value: 4
-        confidence: H
-        rationale: Material-group weights in the config, per-group calibration, most-specific weight resolution.
-
-  - id: 6
     key: actions
     label: Action framework
     short_label: Action framework
@@ -227,7 +201,7 @@ factors:
           action with owner and review cycle; filterable, exportable action plan per material group. Below the
           platforms: no tracking of actions to closure, no supplier collaboration.
 
-  - id: 7
+  - id: 6
     key: hitl
     label: Human-in-the-loop & governance
     short_label: Human-in-the-loop
@@ -254,7 +228,7 @@ factors:
           recorded with the reviewer, surviving re-scoring and snapshotted to the history; review also in the UI.
           Below the platforms: no roles / permissions, in-memory pauses only.
 
-  - id: 8
+  - id: 7
     key: signals
     label: External signals & data coverage
     short_label: External signals & coverage
@@ -285,7 +259,7 @@ factors:
           monitoring platform. The architecture allows further providers, and the agentic design leaves
           long-term upside in signal processing (e.g. an external-signal agent); that potential is not rated.
 
-  - id: 9
+  - id: 8
     key: regulatory
     label: Regulatory evidence (due-diligence documentation)
     short_label: Regulatory evidence
@@ -311,7 +285,7 @@ factors:
         confidence: H
         rationale: Audit trail and an ESG / compliance factor help, but no regulation-specific workflows or reports.
 
-  - id: 10
+  - id: 9
     key: cost
     label: Cost / total cost of ownership
     short_label: Cost / TCO
@@ -341,7 +315,7 @@ factors:
           MIT licence, runs locally; scoring, actions and reports are automated once data is mapped. Not 5:
           ownership, data integration and maintenance still need internal effort.
 
-  - id: 11
+  - id: 10
     key: time_to_value
     label: Time-to-value / ease of adoption
     short_label: Time-to-value
@@ -371,31 +345,43 @@ factors:
           Ready template, sample data, empty CSV template and spreadsheet UI: a first portfolio assessment in
           hours. Not 5: Python installation and mapping real data take effort.
 
-  - id: 12
+  - id: 11
     key: customisability
     label: Customisability & data sovereignty
     short_label: Customisability & data sovereignty
-    v01: [10]
+    v01: [4, 10]
     ratings:
       xls:
         value: 4
         confidence: M
-        rationale: Fully modifiable and kept in-house, but not maintainable as shared software.
+        rationale: >-
+          Fully modifiable and kept in-house; separate sheets allow material-group-specific criteria and weights.
+          Not 5: logic diverges between copies and is not maintainable as shared software.
       saas:
         value: 2
         by_example: {Prewave: 2, Sphera: 2}
         confidence: M
-        rationale: Configurable within the product; method and code are not; data hosted by the vendor.
+        rationale: >-
+          Configurable within the product; method and code are not independently changeable; data hosted by the
+          vendor. Prewave includes commodity in its peer score and offers customised perspectives, but detailed
+          per-commodity configuration is not publicly documented for either vendor. Such product configuration
+          does not establish customer control of the method, implementation or data.
       oss:
         value: 3
         confidence: H
-        rationale: Code visible, but 2 repos have no licence and 1 is GPL, which restricts reuse.
+        rationale: >-
+          Code visible, but 2 repos have no licence and 1 is GPL, which restricts reuse. None provides material-group
+          adaptation out of the box; adding it requires code changes. Visible code alone does not give unrestricted,
+          ready-to-use control of the method.
       lean:
         value: 5
         confidence: H
-        rationale: MIT licence, config-driven, data and model stay in-house.
+        rationale: >-
+          MIT licence, config-driven, data and model stay in-house. Material-group weights and most-specific weight
+          resolution provide a concrete, implemented case of customer-controlled adaptation; per-group fitting is
+          assessed under expert calibration. No vendor is needed to modify the method or implementation.
 
-  - id: 13
+  - id: 12
     key: scalability
     label: Scalability
     short_label: Scalability
@@ -419,7 +405,7 @@ factors:
         confidence: L
         rationale: Deterministic batch scoring is cheap, but untested at scale; in-memory checkpoints; no automated feeds.
 
-  - id: 14
+  - id: 13
     key: extensibility
     label: Agentic orchestration & extensibility
     short_label: Agentic orchestration & extensibility
@@ -452,7 +438,7 @@ factors:
           calibration, recommendation, human review as graph interrupt); documented extension points (data
           sources, data providers, rating sources, views, agents). Not 5: rule-based supervisor, no LLM agents yet.
 
-  - id: 15
+  - id: 14
     key: operations
     label: Operational maturity & support
     short_label: Operational maturity
@@ -476,7 +462,7 @@ factors:
         confidence: H
         rationale: Tests and CI exist, but no production deployment, security hardening or support organisation.
 
-  - id: 16
+  - id: 15
     key: dual_view
     label: Integration of risk management and performance evaluation
     short_label: Risk & performance integration
@@ -523,7 +509,7 @@ narrative:
       LLM-judged; unclear or copyleft licences; no tests.
     - >-
       **Lean Agentic:** strongest where the method itself matters (transparency, reproducibility, calibration,
-      material-group weights, customisability), on agentic orchestration and on integrating risk management with
+      customisability including material-group weights), on agentic orchestration and on integrating risk management with
       performance evaluation; close to the platforms on actions and human review; partial on external signals
       (provider interface for open data and exports, live APIs still placeholders); weak today on regulatory
       evidence and operational maturity.
@@ -535,11 +521,11 @@ narrative:
       **Author bias.** Factors and ratings come from the authors of the Lean Agentic approach. Mitigations:
       factors where SaaS is stronger are included (v0.2), Lean Agentic is rated as implemented, every rating
       carries rationale and confidence. v0.3 adds a factor (risk and performance integration) on which the
-      proposed approach is strong, and re-rates five factors after practitioner feedback; both are disclosed. Recommended: independent re-rating by 3-5 practitioners, reporting the spread.
+      proposed approach is strong, and re-rates five factors after practitioner feedback; both are disclosed. v0.4 folds material-group adaptation into customisability to remove a subset overlap; retained ratings and confidence are unchanged. Recommended: independent re-rating by 3-5 practitioners, reporting the spread.
     - "**The Excel profile is a stereotype.** Real spreadsheet practices vary widely."
     - >-
       **SaaS rated on public information only.** Hands-on evaluation could move several ratings, especially
-      traceability, material-group fit, action framework, human-in-the-loop and time-to-value.
+      traceability, customisability (including material-group fit), action framework, human-in-the-loop and time-to-value.
     - >-
       **No factor measures predictive validity**, i.e. whether a score anticipates real disruptions
       (see research/success-factors.md).

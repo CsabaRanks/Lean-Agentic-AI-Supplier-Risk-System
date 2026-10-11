@@ -1,10 +1,11 @@
 # Success factors for supplier risk management and performance evaluation
 
-**Status: model v0.3 adopted (October 2026).** The factors remain a working model, a reasoned
+**Status: model v0.4 adopted (October 2026).** The factors remain a working model, a reasoned
 hypothesis for comparing approaches, not a validated or final framework. v0.2 came out of a critical
 review of the initial working model v0.1, which is kept further down for traceability. v0.3 adds one
-factor and sharpens another after practitioner feedback (see "Changes from v0.2 to v0.3").
-Ratings against v0.3 live in [comparison-matrix.yaml](comparison-matrix.yaml), the single source of
+factor and sharpens others after practitioner feedback. v0.4 removes a subset overlap by
+folding material-group adaptation into customisability (see the version history below).
+Ratings against v0.4 live in [comparison-matrix.yaml](comparison-matrix.yaml), the single source of
 truth. The generated [comparison-matrix.md](comparison-matrix.md) and the radar chart are built from it.
 
 **Conventions**
@@ -20,7 +21,7 @@ truth. The generated [comparison-matrix.md](comparison-matrix.md) and the radar 
 
 ---
 
-## Current model v0.3: 16 factors
+## Current model v0.4: 15 factors
 
 | # | Factor | Definition (short) | Assessable by | v0.1 |
 |---|---|---|---|---|
@@ -28,20 +29,63 @@ truth. The generated [comparison-matrix.md](comparison-matrix.md) and the radar 
 | 2 | Traceability & reproducibility | Every result can be reconstructed afterwards (inputs, weights, decisions, authors) and recomputed from documented inputs | Per-result record; change history; recomputation possible; automated tests; no LLM-generated numbers | 2 + 8 |
 | 3 | Methodological transparency | How results are calculated is documented and checkable *before* use | Published formula, weights, data sources and rules | 13 |
 | 4 | Expert calibration / ability to learn | Parameters are systematically fitted to expert judgement, with documented approval | Calibration procedure; fit metric; logged old/new parameters; approval step | 3 |
-| 5 | Material-group-specific adaptation | Criteria, weights or thresholds can differ by commodity | Per-group weights; per-group calibration; effort per group | 4 |
-| 6 | Action framework | Results map to defined actions, review cycles and owners | Actions per class and per driver; review cycles; tracking to closure | 6 |
-| 7 | Human-in-the-loop & governance | Defined review and approval points; decisions recorded; roles | Review/approval steps; recorded overrides; approval of model changes; roles and permissions | 7 |
-| 8 | External signals & data coverage | Use of current external data and breadth of supplier coverage | Sources and update frequency; languages and regions; Tier-N visibility | 11 |
-| 9 | Regulatory evidence | Support for due-diligence documentation duties | Regulation-specific workflows and reports; evidence export | new |
-| 10 | Cost / total cost of ownership | Total cost of use, including recurring internal effort, and access barriers | Licence model and prices; implementation effort; recurring manual effort per cycle; minimum contract size | 9 |
-| 11 | Time-to-value / ease of adoption | Time and effort until the first usable result | Time to first portfolio assessment; integrations and training needed | 14 |
-| 12 | Customisability & data sovereignty | The organisation can change method and implementation itself and keeps control of data and model | Configurable without the vendor; code and licence; data location | 10 |
-| 13 | Scalability | Works at acceptable effort as suppliers, users, groups or update frequency grow | Suppliers handled in practice; marginal effort; automated updates | 12 |
-| 14 | Agentic orchestration & extensibility | Work is orchestrated as an explicit workflow of specialised agents, and new capabilities can be added without rebuilding the core | Specialised agents over a shared, inspectable state; bounded loops; review pauses in the workflow; extension points; APIs | 15 |
-| 15 | Operational maturity & support | Production readiness: support, hosting, security, service levels | Support organisation; SLAs; security and permission model; release process | new |
-| 16 | Integration of risk management and performance evaluation | Supplier risk (forward-looking exposure) and supplier performance (delivery, quality, price, responsiveness) are evaluated on one consistent basis, each with its own logic | Shared criteria and data; separate weights, classes and actions per view; both results side by side per supplier | new (v0.3) |
+| 5 | Action framework | Results map to defined actions, review cycles and owners | Actions per class and per driver; review cycles; tracking to closure | 6 |
+| 6 | Human-in-the-loop & governance | Defined review and approval points; decisions recorded; roles | Review/approval steps; recorded overrides; approval of model changes; roles and permissions | 7 |
+| 7 | External signals & data coverage | Use of current external data and breadth of supplier coverage | Sources and update frequency; languages and regions; Tier-N visibility | 11 |
+| 8 | Regulatory evidence | Support for due-diligence documentation duties | Regulation-specific workflows and reports; evidence export | new |
+| 9 | Cost / total cost of ownership | Total cost of use, including recurring internal effort, and access barriers | Licence model and prices; implementation effort; recurring manual effort per cycle; minimum contract size | 9 |
+| 10 | Time-to-value / ease of adoption | Time and effort until the first usable result | Time to first portfolio assessment; integrations and training needed | 14 |
+| 11 | Customisability & data sovereignty | The organisation can change method and implementation itself, including material-group-specific configuration, and keeps control of data and model | Configurable without the vendor; per-group criteria, weights or thresholds; code and licence; data location | 4 + 10 |
+| 12 | Scalability | Works at acceptable effort as suppliers, users, groups or update frequency grow | Suppliers handled in practice; marginal effort; automated updates | 12 |
+| 13 | Agentic orchestration & extensibility | Work is orchestrated as an explicit workflow of specialised agents, and new capabilities can be added without rebuilding the core | Specialised agents over a shared, inspectable state; bounded loops; review pauses in the workflow; extension points; APIs | 15 |
+| 14 | Operational maturity & support | Production readiness: support, hosting, security, service levels | Support organisation; SLAs; security and permission model; release process | new |
+| 15 | Integration of risk management and performance evaluation | Supplier risk (forward-looking exposure) and supplier performance (delivery, quality, price, responsiveness) are evaluated on one consistent basis, each with its own logic | Shared criteria and data; separate weights, classes and actions per view; both results side by side per supplier | new (v0.3) |
+
+## Changes from v0.3 to v0.4, and why
+
+**Decision:** remove *Material-group-specific adaptation* (v0.3 factor 5) as a separate
+axis and retain it as concrete evidence under *Customisability & data sovereignty*
+(v0.3 factor 12, now **11**). Adapting criteria, weights or thresholds by commodity is
+one use case of changing the method; scoring both separately double-counts that capability.
+*Integration of risk management and performance evaluation* is retained unchanged as **15**.
+The other factors keep their order: old 1–4 stay 1–4; old 6–16 become 5–15.
+
+The overlap review uses **current v0.4 numbers**, unless explicitly marked otherwise:
+
+| Overlap | Decision and boundary |
+|---|---|
+| Material-group adaptation (old 5) / customisability (11) | Merge the specific use case into the general capability. Per-group configuration is evidence of customer control, not an additional axis. |
+| Criteria & weights (1) / customisability (11) | Keep separate: existence of a structured model versus the customer's ability and rights to change it. A fixed vendor model can be structured without being customer-controlled. |
+| Calibration (4) / customisability (11) | Keep separate: estimating parameters from labels versus configuring a method. Per-group fitting belongs to calibration; per-group configuration belongs to customisability. |
+| Transparency (3) / traceability (2) | Keep separate: understanding the general method before use versus reconstructing one historical result. Published formulas alone provide no run history. |
+| Actions (5) / governance (6) / operational maturity (14) | Keep separate: what intervention follows a result, who may approve a decision, and whether the service can be operated reliably. Workflow approvals belong to governance; infrastructure security and support to operations. |
+| Cost (9) / time-to-value (10) / scalability (12) | Keep separate: lifecycle expenditure, elapsed time to first usable output, and capacity or marginal effort as volume grows. Related costs are not separate evidence of adoption speed or capacity. |
+| Customisability (11) / orchestration & extensibility (13) | Keep separate: control over existing method, implementation and data versus composing workflows and adding capabilities through extension points. Open code or a permissive licence alone does not demonstrate orchestration. |
+| Regulatory evidence (8) / traceability (2) | Keep separate: regulation-specific documentation versus generic run reconstruction. An audit log alone does not establish a regulatory workflow. |
+| Risk/performance integration (15) / criteria & weights (1) | Keep separate: shared data with two distinct evaluation views versus a structured model, which can serve just one view. |
+
+**Rating treatment.** No arithmetic averaging of the old axes is used. The retained construct
+is customer control of method, implementation and data; its existing ratings remain defensible:
+Excel **4/M**, SaaS **2/M** (Prewave **2**, Sphera **2**), open repos **3/H**, Lean Agentic **5/H**.
+The YAML rationales now explicitly include per-group configuration and its limits. For open repos,
+source visibility supports modification, but missing ready-made group adaptation and licence
+constraints limit the rating; the rating does not claim that this feature already exists.
+All other retained scores, confidence marks and per-example values are unchanged. The removed
+axis's scores (Excel 3/M, SaaS 3/L, open repos 1/H, Lean Agentic 4/H) are retired, not redistributed.
+Platform strengths remain external coverage, regulatory evidence, scalability and operations
+(now 7, 8, 12, 14); their scores do not change.
+
+**Why more orthogonal.** Removing the explicit subset reduces double-counting, while the boundaries
+above separate model structure, historical evidence, understanding, learning, decisions, data,
+cost, adoption, control, capacity, workflow architecture, service readiness and joint evaluation.
+This is **conceptual separation, not demonstrated statistical independence**. With only four
+approach profiles, a 4 × 15 rating matrix has rank at most four (at most three after centring),
+so fifteen empirically linearly independent dimensions cannot be established from these ratings.
+The factors remain an unweighted working model; independent practitioner validation is still needed.
 
 ## Changes from v0.1 to v0.2, and why
+
+Historical numbering in this section refers to v0.2.
 
 | Change | v0.1 → v0.2 | Rationale |
 |---|---|---|
@@ -59,6 +103,8 @@ Net effect: still 15 axes. The model is more balanced, and the radar now shows w
 genuinely stronger (factors 8, 9, 13, 15). That makes the comparison more credible.
 
 ## Changes from v0.2 to v0.3, and why
+
+Historical numbering in this section refers to v0.3.
 
 | Change | v0.2 → v0.3 | Rationale |
 |---|---|---|
@@ -323,4 +369,5 @@ v0.2 keeps 15 axes but is more balanced. In v0.2, the established SaaS profile i
 strongest on factors 8, 9, 13 and 15, and the proposed approach is weak there today. This
 balance is what makes the comparison credible.
 
-**Decision (October 2026): v0.2 adopted.** See "Current model v0.2" at the top.
+**Historical decision (October 2026): v0.2 adopted, subsequently superseded.**
+See "Current model v0.4" at the top.

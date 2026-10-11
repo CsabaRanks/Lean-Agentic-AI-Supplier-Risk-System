@@ -78,7 +78,7 @@ formed, and do not cover performance evaluation. Open-source agent projects show
 such systems could be built, but mostly without a defensible scoring method. Across all
 of them, the weights that turn criteria into a score are set once and never checked
 against the judgement of the people who know the suppliers.
-This paper makes three contributions. It proposes sixteen success factors, including
+This paper makes three contributions. It proposes fifteen success factors, including
 the integration of risk management and performance evaluation, corrected in documented
 reviews. It profiles four approaches on them without aggregating them: spreadsheet
 practice, two commercial platforms, five open-source repositories and the approach
@@ -155,7 +155,7 @@ and to make that practice \emph{transparent} (method and weights documented),
 \emph{reproducible} (every number recomputable), \emph{governed} (human approval where
 judgement is required) and \emph{able to learn} (weights aligned with expert judgement)
 --- at the cost profile of open-source software. The argument proceeds in two steps: a
-benchmark of four approaches on sixteen success factors (Figure~\ref{fig:profile}), read
+benchmark of four approaches on fifteen success factors (Figure~\ref{fig:profile}), read
 factor by factor without weighting, total or ranking; and an open-source demonstrator,
 so that each claimed property can be inspected in code, tests and documentation rather
 than asserted. The demonstrator runs on synthetic data. This has a cost, discussed in
@@ -166,7 +166,7 @@ known hidden weighting, it can be checked whether calibration recovers it.
   \centering
   \includegraphics[width=0.74\textwidth]{figures/fig01_benchmark_profile.png}
   \caption{Four approaches to supplier risk management and performance evaluation profiled
-  on sixteen success factors (model v0.3), on a five-level scale; half points mark a
+  on fifteen success factors (model v0.4), on a five-level scale; half points mark a
   profile between two levels. Proprietary SaaS is plotted as the mean of
   Prewave and Sphera; shaded bars mark where the two differ. Rationale and confidence for
   every value: Table~\ref{tab:matrix} and \code{research/comparison-matrix.md}.
@@ -178,7 +178,7 @@ known hidden weighting, it can be checked whether calibration recovers it.
 
 \paragraph{Contributions.}
 \begin{enumerate}
-  \item \textbf{Sixteen success factors} for supplier risk management and performance
+  \item \textbf{Fifteen success factors} for supplier risk management and performance
   evaluation, including their integration, each with a definition and the evidence by
   which it can be assessed, together with the documented reviews that produced the
   current version (Section~\ref{sec:factors}).
@@ -296,7 +296,7 @@ adopts that division strictly.
 \label{sec:factors}
 
 An approach is easier to assess when the properties that matter are named before any
-approach is rated. Table~\ref{tab:factors} proposes sixteen such \emph{success
+approach is rated. Table~\ref{tab:factors} proposes fifteen such \emph{success
 factors}, each with the observable evidence that would let someone else check a rating.
 They form a \textbf{flat list}: not arranged in a hierarchy, not weighted and not
 combined into a total. An approach is read as a \textbf{profile}; one that is strong on
@@ -305,7 +305,7 @@ adequate, and a single figure would treat the two alike.
 
 \begin{table*}[t]
   \caption{Success factors for supplier risk management and performance evaluation (model
-  v0.3). The factors are
+  v0.4). The factors are
   read separately; no weighting, total or ranking is derived from them.}
   \label{tab:factors}
   \small
@@ -317,18 +317,17 @@ adequate, and a single figure would treat the two alike.
     2 & Traceability \& reproducibility & Every result can be reconstructed and recomputed from documented inputs & Per-result record; change history; recomputation; tests \\
     3 & Methodological transparency & The method is documented and checkable \emph{before} use & Published formula, weights, sources, rules \\
     4 & Expert calibration & Parameters are systematically fitted to expert judgement, with approval & Procedure; fit metric; logged old and new parameters; approval \\
-    5 & Material-group adaptation & Weights or thresholds can differ by commodity & Per-group weights and calibration \\
-    6 & Action framework & Results map to defined actions, review cycles and owners & Actions per class and driver; tracking to closure \\
-    7 & Human-in-the-loop \& governance & Defined review and approval points, recorded decisions, roles & Approval steps; recorded overrides; roles \\
-    8 & External signals \& coverage & Current external data and breadth of supplier coverage & Sources, update frequency, languages, tier-N \\
-    9 & Regulatory evidence & Support for due-diligence documentation duties & Regulation-specific workflows and reports \\
-    10 & Cost / TCO & Total cost of use, including recurring internal effort, and access barriers & Licence model, prices, implementation effort, manual effort per cycle \\
-    11 & Time-to-value & Time and effort to the first usable result & Time to first portfolio assessment \\
-    12 & Customisability \& data sovereignty & The organisation can change method and implementation and controls its data & Configurable without vendor; licence; data location \\
-    13 & Scalability & Works as suppliers, users, groups and update frequency grow & Suppliers handled; marginal effort; automation \\
-    14 & Agentic orchestration \& extensibility & Work is orchestrated as an explicit workflow of specialised agents; new capabilities can be added without rebuilding the core & Specialised agents over a shared, inspectable state; review pauses in the workflow; extension points; APIs \\
-    15 & Operational maturity \& support & Production readiness & Support, service levels, security, release process \\
-    16 & Risk \& performance integration & Supplier risk and supplier performance are evaluated on one consistent basis, each with its own logic & Shared criteria and data; separate weights, classes and actions per view; both results per supplier \\
+    5 & Action framework & Results map to defined actions, review cycles and owners & Actions per class and driver; tracking to closure \\
+    6 & Human-in-the-loop \& governance & Defined review and approval points, recorded decisions, roles & Approval steps; recorded overrides; roles \\
+    7 & External signals \& coverage & Current external data and breadth of supplier coverage & Sources, update frequency, languages, tier-N \\
+    8 & Regulatory evidence & Support for due-diligence documentation duties & Regulation-specific workflows and reports \\
+    9 & Cost / TCO & Total cost of use, including recurring internal effort, and access barriers & Licence model, prices, implementation effort, manual effort per cycle \\
+    10 & Time-to-value & Time and effort to the first usable result & Time to first portfolio assessment \\
+    11 & Customisability \& data sovereignty & The organisation can change method and implementation, including material-group configuration, and controls its data & Configurable without vendor; per-group criteria, weights or thresholds; licence; data location \\
+    12 & Scalability & Works as suppliers, users, groups and update frequency grow & Suppliers handled; marginal effort; automation \\
+    13 & Agentic orchestration \& extensibility & Work is orchestrated as an explicit workflow of specialised agents; new capabilities can be added without rebuilding the core & Specialised agents over a shared, inspectable state; review pauses in the workflow; extension points; APIs \\
+    14 & Operational maturity \& support & Production readiness & Support, service levels, security, release process \\
+    15 & Risk \& performance integration & Supplier risk and supplier performance are evaluated on one consistent basis, each with its own logic & Shared criteria and data; separate weights, classes and actions per view; both results per supplier \\
     \bottomrule
   \end{tabular}
 \end{table*}
@@ -348,7 +347,8 @@ afterwards). \emph{Validity}: no factor asks whether a score \emph{predicts}
 disruptions. No reviewed approach reports predictive validity publicly, so the factor
 cannot be rated today; it is left off the radar and treated as an open question.
 
-A second review (v0.3) followed practitioner feedback. It added factor 16,
+A second review (v0.3) followed practitioner feedback (numbers in this paragraph refer
+to v0.3). It added factor 16,
 \emph{integration of risk management and performance evaluation}, because the common
 split between a risk platform and spreadsheet-based evaluation was not captured by any
 factor. It sharpened factor 14 to \emph{agentic orchestration and extensibility}, because
@@ -359,6 +359,27 @@ ownership, including recurring manual effort. Factor 16 is one on which the prop
 approach is strong, and factor 14 moves partly back towards an architecture property
 that v0.2 had reframed; both are disclosed as such. The four factors on which the
 commercial examples are clearly ahead (8, 9, 13 and 15) are unchanged.
+
+A third review (v0.4) reduces the model to fifteen factors. Material-group adaptation
+(old 5) becomes evidence under customisability and data sovereignty (old 12, now 11):
+per-commodity configuration is a specific case of changing the method. Its separate axis
+double-counted that capability. Integration remains unchanged (old 16, now 15); old 1--4
+retain their numbers and old 6--16 become 5--15. All retained scores, confidence marks and
+per-vendor values stay unchanged. The customisability rationales now include group
+configuration and its limits; the removed scores are retired, not averaged. The retained
+customer-control ratings are Excel 4/M, SaaS 2/M, open repos 3/H and Lean Agentic 5/H.
+For open repos, visible code supports modification, but neither supplies group adaptation
+nor removes licence constraints. Platform strengths retain their scores (now 7, 8, 12, 14).
+
+The remaining boundaries separate structure from control, configuration from fitted
+calibration, method transparency from historical reconstruction, actions from approval,
+lifecycle cost from adoption time and capacity, customer control from workflow extension,
+and generic audit records from regulatory documentation. Governance concerns decision
+rights; operations concerns reliable service, infrastructure security and support. Joint
+risk/performance evaluation remains distinct from a structured single-view model. This is
+conceptual separation, not proven statistical independence: a $4\times15$ rating matrix
+has rank at most four, or three after centring. Independent validation is still needed;
+the full overlap review is in \code{research/success-factors.md}.
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Benchmark: four approaches profiled}
@@ -387,8 +408,8 @@ public information; the five repositories by source-code review; and the demonst
     \midrule
     Excel / manual & Transparency; customisability & Calibration; external signals; agentic orchestration; risk \& performance integration \\
     SaaS (Prewave, Sphera) & External signals; scalability; operational maturity; regulatory evidence; action framework; human-in-the-loop & Cost; customisability; calibration; risk \& performance integration \\
-    Open-source repos & Cost; agentic orchestration & Calibration; material-group fit; regulatory evidence; operational maturity \\
-    Lean Agentic & Transparency; customisability; risk \& performance integration; calibration; agentic orchestration; traceability; material-group fit; cost; time-to-value & Regulatory evidence; operational maturity \\
+    Open-source repos & Cost; agentic orchestration & Calibration; regulatory evidence; operational maturity \\
+    Lean Agentic & Transparency; customisability; risk \& performance integration; calibration; agentic orchestration; traceability; cost; time-to-value & Regulatory evidence; operational maturity \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -411,8 +432,8 @@ not exposed as an inspectable multi-agent workflow.
 with agent architectures as their main asset, and rudimentary on almost every
 methodological factor.
 \textbf{The Lean Agentic demonstrator is strongest where the method itself matters}:
-transparency, traceability, expert calibration, material-group adaptation and
-customisability --- and on the two factors that set it apart from pure risk platforms,
+transparency, traceability, expert calibration and customisability (including
+material-group configuration) --- and on the two factors that set it apart from pure risk platforms,
 the integration of risk management and performance evaluation and agentic orchestration
 (both 4, against 2 and 2.5 for the platforms). It is close to the platforms on actions
 and human review (3.5 against 4): the action framework and the graph-based review pause
@@ -1241,8 +1262,8 @@ that small groups borrow strength from the global fit.
 \paragraph{Evidence.} A field pilot in one or two material groups, with labels collected
 blind to the model score and a pre-registered comparison of cross-validated error with
 and without calibration. An independent re-rating of the benchmark by three to five
-practitioners, shown as bands in Figure~\ref{fig:profile}, in particular of the v0.3
-changes and of factor 16; ideally including hands-on evaluation of the platforms. Predictive validation, linking
+practitioners, shown as bands in Figure~\ref{fig:profile}, in particular of the v0.3 additions and v0.4
+consolidation, including integration (now factor 15); ideally including hands-on evaluation of the platforms. Predictive validation, linking
 scores to observed incidents over time --- the only route to the question this paper
 leaves open.
 
@@ -1276,7 +1297,7 @@ the team does not fully own; open-source agent projects offer architecture but r
 method. Across all three, the weights that turn criteria into a score are usually set
 once and never tested against the judgement of the people who know the suppliers.
 
-This paper proposed sixteen success factors and used them to profile four approaches
+This paper proposed fifteen success factors and used them to profile four approaches
 without ranking them. The comparison locates a gap rather than a winner: no approach
 combines data coverage with ownership of the method, and the established ones leave risk
 management and performance evaluation in separate systems. Lean Agentic AI addresses the

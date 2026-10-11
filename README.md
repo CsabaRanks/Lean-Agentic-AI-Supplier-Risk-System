@@ -26,7 +26,7 @@ runs locally.
 
 ## Where this approach sits
 
-![Radar chart profiling Excel, proprietary SaaS, open-source repos and this Lean Agentic approach on 16 success factors](docs/images/spider-diagram.png)
+![Radar chart profiling Excel, proprietary SaaS, open-source repos and this Lean Agentic approach on 15 success factors](docs/images/spider-diagram.png)
 
 The chart compares four approaches to supplier risk management and performance evaluation:
 

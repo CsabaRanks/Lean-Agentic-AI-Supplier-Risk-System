@@ -22,7 +22,7 @@ def test_matrix_is_valid_and_markdown_up_to_date():
 
 def test_matrix_covers_all_factors_and_approaches():
     data = generate_spider.load()
-    assert len(data["factors"]) == 16
+    assert len(data["factors"]) == 15
     assert [a["key"] for a in data["approaches"]] == ["xls", "saas", "oss", "lean"]
 
 

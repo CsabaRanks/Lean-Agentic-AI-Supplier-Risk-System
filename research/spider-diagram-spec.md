@@ -2,8 +2,8 @@
 
 The radar chart is the project's signature figure. It appears in the README in the section
 "Where this approach sits", after the problem statement. It is also Figure 1 of the paper. It
-places the Lean Agentic approach relative to three other approaches across the 16 success factors
-of model v0.3.
+places the Lean Agentic approach relative to three other approaches across the 15 success factors
+of model v0.4.
 
 > **The values are illustrative and must stay defensible.**
 > - Every value has a rationale, evidence and a confidence mark in the single source of truth,
@@ -32,15 +32,15 @@ research/comparison-matrix.yaml        ← edit ratings here only
   It also fails if the Markdown is stale. The test suite runs this check, and so does CI.
 - Rendering needs matplotlib (`pip install -e ".[research]"`). The check does not.
 
-## Axes (model v0.3, in this order)
+## Axes (model v0.4, in this order)
 
 The order puts related factors next to each other so that the shapes are readable:
-- method (1–5)
-- governance and actions (6–7)
-- data and compliance (8–9)
-- economics and adoption (10–12)
-- operations (13–15)
-- integration of risk and performance (16)
+- method (1–4)
+- governance and actions (5–6)
+- data and compliance (7–8)
+- economics and adoption (9–11)
+- operations (12–14)
+- integration of risk and performance (15)
 
 This is an ordering for the eye only. It is not a hierarchy, and it carries no weights.
 
@@ -50,18 +50,17 @@ This is an ordering for the eye only. It is not a hierarchy, and it carries no w
 | 2 | Traceability & reproducibility | Traceability & reproducibility |
 | 3 | Method transparency | Methodological transparency |
 | 4 | Expert calibration | Expert calibration / ability to learn |
-| 5 | Material-group fit | Material-group-specific adaptation |
-| 6 | Action framework | Action framework |
-| 7 | Human-in-the-loop | Human-in-the-loop & governance |
-| 8 | External signals & coverage | External signals & data coverage |
-| 9 | Regulatory evidence | Regulatory evidence (due-diligence documentation) |
-| 10 | Cost / TCO | Cost / total cost of ownership |
-| 11 | Time-to-value | Time-to-value / ease of adoption |
-| 12 | Customisability & data sovereignty | Customisability & data sovereignty |
-| 13 | Scalability | Scalability |
-| 14 | Agentic orchestration & extensibility | Agentic orchestration & extensibility |
-| 15 | Operational maturity | Operational maturity & support |
-| 16 | Risk & performance integration | Integration of risk management and performance evaluation |
+| 5 | Action framework | Action framework |
+| 6 | Human-in-the-loop | Human-in-the-loop & governance |
+| 7 | External signals & coverage | External signals & data coverage |
+| 8 | Regulatory evidence | Regulatory evidence (due-diligence documentation) |
+| 9 | Cost / TCO | Cost / total cost of ownership |
+| 10 | Time-to-value | Time-to-value / ease of adoption |
+| 11 | Customisability & data sovereignty | Customisability & data sovereignty |
+| 12 | Scalability | Scalability |
+| 13 | Agentic orchestration & extensibility | Agentic orchestration & extensibility |
+| 14 | Operational maturity | Operational maturity & support |
+| 15 | Risk & performance integration | Integration of risk management and performance evaluation |
 
 Values: see the generated [comparison-matrix.md](comparison-matrix.md).
 
@@ -78,15 +77,15 @@ Values: see the generated [comparison-matrix.md](comparison-matrix.md).
 - Lean Agentic is drawn last, on top, with a heavier line.
 - **No filled areas.** An area would suggest a total.
 - **Prewave and Sphera are rated separately.** The SaaS line plots their mean. Where they differ,
-  a shaded bar on the spoke shows the spread (factors 2, 3, 9 and 14).
+  a shaded bar on the spoke shows the spread (factors 2, 3, 8 and 13).
 - Legend and a footnote ("illustrative · evidence date · no weighting, total or ranking") are part
   of the image, so it stays honest when shared on its own.
 - Deterministic output: fixed SVG hash salt, no timestamps in the metadata.
 
 ## Expected shape (sanity check after every change)
 
-- **Lean Agentic** spans the method side: transparency, calibration, material-group fit,
-  customisability, agentic orchestration and risk & performance integration.
+- **Lean Agentic** spans the method side: transparency, calibration,
+  customisability (including material-group configuration), agentic orchestration and risk & performance integration.
 - **SaaS** spans external signals, regulatory evidence, scalability and operational maturity.
 - **Excel** is strong only on transparency and customisability.
 - **Open repos** are low except for cost and agentic orchestration.
@@ -96,7 +95,7 @@ Values: see the generated [comparison-matrix.md](comparison-matrix.md).
 ## Paper caption (draft)
 
 > *Figure 1. Four approaches to supplier risk management and performance evaluation profiled on
-> 16 success factors (model v0.3). Illustrative assessment based on public information and code review (October 2026).
+> 15 success factors (model v0.4). Illustrative assessment based on public information and code review (October 2026).
 > Proprietary SaaS is plotted as the mean of Prewave and Sphera; shaded bars show where the two
 > differ. Rationale and confidence for every value are given in Table 2 / the comparison matrix.
 > No weighting is applied and no total or ranking is derived.*
