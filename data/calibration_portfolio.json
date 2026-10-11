@@ -1,0 +1,826 @@
+[
+  {
+    "supplier_id": "CAL-001",
+    "name": "Synthetic Supplier 001",
+    "material_group": "metal_parts",
+    "country": "Region A",
+    "annual_spend": 124000.0,
+    "expert_ratings": {
+      "availability": 3,
+      "switching_complexity": 2,
+      "business_impact": 2
+    },
+    "indicators": {
+      "credit_score": 37,
+      "distress_signals": 1,
+      "country_risk_index": 74,
+      "qualified_sources": 1,
+      "transport_mode": "air",
+      "intercontinental": true,
+      "esg_score": 26,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 55.0
+  },
+  {
+    "supplier_id": "CAL-002",
+    "name": "Synthetic Supplier 002",
+    "material_group": "electronics",
+    "country": "Region B",
+    "annual_spend": 2162000.0,
+    "expert_ratings": {
+      "availability": 5,
+      "switching_complexity": 4,
+      "business_impact": 2
+    },
+    "indicators": {
+      "credit_score": 77,
+      "distress_signals": 0,
+      "country_risk_index": 5,
+      "qualified_sources": 1,
+      "transport_mode": "air",
+      "intercontinental": false,
+      "esg_score": 34,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 45.0
+  },
+  {
+    "supplier_id": "CAL-003",
+    "name": "Synthetic Supplier 003",
+    "material_group": "plastics",
+    "country": "Region C",
+    "annual_spend": 352000.0,
+    "expert_ratings": {
+      "availability": 4,
+      "switching_complexity": 1,
+      "business_impact": 3
+    },
+    "indicators": {
+      "credit_score": 64,
+      "distress_signals": 0,
+      "country_risk_index": 10,
+      "qualified_sources": 4,
+      "transport_mode": "air",
+      "intercontinental": false,
+      "esg_score": 63,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 25.0
+  },
+  {
+    "supplier_id": "CAL-004",
+    "name": "Synthetic Supplier 004",
+    "material_group": "metal_parts",
+    "country": "Region C",
+    "annual_spend": 1753000.0,
+    "expert_ratings": {
+      "availability": 1,
+      "switching_complexity": 1,
+      "business_impact": 2
+    },
+    "indicators": {
+      "credit_score": 57,
+      "distress_signals": 3,
+      "country_risk_index": 34,
+      "qualified_sources": 1,
+      "transport_mode": "air",
+      "intercontinental": true,
+      "esg_score": 61,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 45.0
+  },
+  {
+    "supplier_id": "CAL-005",
+    "name": "Synthetic Supplier 005",
+    "material_group": "electronics",
+    "country": "Region C",
+    "annual_spend": 668000.0,
+    "expert_ratings": {
+      "availability": 3,
+      "switching_complexity": 1,
+      "business_impact": 5
+    },
+    "indicators": {
+      "credit_score": 41,
+      "distress_signals": 0,
+      "country_risk_index": 36,
+      "qualified_sources": 1,
+      "transport_mode": "air",
+      "intercontinental": false,
+      "esg_score": 86,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 55.0
+  },
+  {
+    "supplier_id": "CAL-006",
+    "name": "Synthetic Supplier 006",
+    "material_group": "plastics",
+    "country": "Region A",
+    "annual_spend": 726000.0,
+    "expert_ratings": {
+      "availability": 1,
+      "switching_complexity": 3,
+      "business_impact": 4
+    },
+    "indicators": {
+      "credit_score": 54,
+      "distress_signals": 0,
+      "country_risk_index": 77,
+      "qualified_sources": 4,
+      "transport_mode": "sea",
+      "intercontinental": true,
+      "esg_score": 78,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 45.0
+  },
+  {
+    "supplier_id": "CAL-007",
+    "name": "Synthetic Supplier 007",
+    "material_group": "metal_parts",
+    "country": "Region D",
+    "annual_spend": 471000.0,
+    "expert_ratings": {
+      "availability": 2,
+      "switching_complexity": 2,
+      "business_impact": 5
+    },
+    "indicators": {
+      "credit_score": 88,
+      "distress_signals": 0,
+      "country_risk_index": 79,
+      "qualified_sources": 2,
+      "transport_mode": "air",
+      "intercontinental": false,
+      "esg_score": 32,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 50.0
+  },
+  {
+    "supplier_id": "CAL-008",
+    "name": "Synthetic Supplier 008",
+    "material_group": "electronics",
+    "country": "Region A",
+    "annual_spend": 501000.0,
+    "expert_ratings": {
+      "availability": 2,
+      "switching_complexity": 4,
+      "business_impact": 5
+    },
+    "indicators": {
+      "credit_score": 28,
+      "distress_signals": 0,
+      "country_risk_index": 81,
+      "qualified_sources": 2,
+      "transport_mode": "sea",
+      "intercontinental": false,
+      "esg_score": 16,
+      "compliance_status": "minor_findings"
+    },
+    "expert_risk_score": 70.0
+  },
+  {
+    "supplier_id": "CAL-009",
+    "name": "Synthetic Supplier 009",
+    "material_group": "plastics",
+    "country": "Region A",
+    "annual_spend": 2061000.0,
+    "expert_ratings": {
+      "availability": 5,
+      "switching_complexity": 3,
+      "business_impact": 3
+    },
+    "indicators": {
+      "credit_score": 34,
+      "distress_signals": 0,
+      "country_risk_index": 25,
+      "qualified_sources": 2,
+      "transport_mode": "road",
+      "intercontinental": false,
+      "esg_score": 48,
+      "compliance_status": "major_findings"
+    },
+    "expert_risk_score": 55.0
+  },
+  {
+    "supplier_id": "CAL-010",
+    "name": "Synthetic Supplier 010",
+    "material_group": "metal_parts",
+    "country": "Region A",
+    "annual_spend": 2618000.0,
+    "expert_ratings": {
+      "availability": 3,
+      "switching_complexity": 5,
+      "business_impact": 5
+    },
+    "indicators": {
+      "credit_score": 45,
+      "distress_signals": 0,
+      "country_risk_index": 25,
+      "qualified_sources": 3,
+      "transport_mode": "road",
+      "intercontinental": false,
+      "esg_score": 77,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 45.0
+  },
+  {
+    "supplier_id": "CAL-011",
+    "name": "Synthetic Supplier 011",
+    "material_group": "electronics",
+    "country": "Region C",
+    "annual_spend": 2642000.0,
+    "expert_ratings": {
+      "availability": 3,
+      "switching_complexity": 2,
+      "business_impact": 1
+    },
+    "indicators": {
+      "credit_score": 50,
+      "distress_signals": 1,
+      "country_risk_index": 15,
+      "qualified_sources": 1,
+      "transport_mode": "air",
+      "intercontinental": false,
+      "esg_score": 83,
+      "compliance_status": "minor_findings"
+    },
+    "expert_risk_score": 40.0
+  },
+  {
+    "supplier_id": "CAL-012",
+    "name": "Synthetic Supplier 012",
+    "material_group": "plastics",
+    "country": "Region E",
+    "annual_spend": 537000.0,
+    "expert_ratings": {
+      "availability": 5,
+      "switching_complexity": 5,
+      "business_impact": 4
+    },
+    "indicators": {
+      "credit_score": 47,
+      "distress_signals": 2,
+      "country_risk_index": 30,
+      "qualified_sources": 4,
+      "transport_mode": "sea",
+      "intercontinental": false,
+      "esg_score": 62,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 60.0
+  },
+  {
+    "supplier_id": "CAL-013",
+    "name": "Synthetic Supplier 013",
+    "material_group": "metal_parts",
+    "country": "Region E",
+    "annual_spend": 1382000.0,
+    "expert_ratings": {
+      "availability": 2,
+      "switching_complexity": 2,
+      "business_impact": 1
+    },
+    "indicators": {
+      "credit_score": 63,
+      "distress_signals": 0,
+      "country_risk_index": 75,
+      "qualified_sources": 1,
+      "transport_mode": "rail",
+      "intercontinental": true,
+      "esg_score": 22,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 50.0
+  },
+  {
+    "supplier_id": "CAL-014",
+    "name": "Synthetic Supplier 014",
+    "material_group": "electronics",
+    "country": "Region A",
+    "annual_spend": 1567000.0,
+    "expert_ratings": {
+      "availability": 3,
+      "switching_complexity": 4,
+      "business_impact": 2
+    },
+    "indicators": {
+      "credit_score": 89,
+      "distress_signals": 0,
+      "country_risk_index": 78,
+      "qualified_sources": 3,
+      "transport_mode": "air",
+      "intercontinental": true,
+      "esg_score": 75,
+      "compliance_status": "open_findings"
+    },
+    "expert_risk_score": 30.0
+  },
+  {
+    "supplier_id": "CAL-015",
+    "name": "Synthetic Supplier 015",
+    "material_group": "plastics",
+    "country": "Region B",
+    "annual_spend": 328000.0,
+    "expert_ratings": {
+      "availability": 4,
+      "switching_complexity": 3,
+      "business_impact": 4
+    },
+    "indicators": {
+      "credit_score": 72,
+      "distress_signals": 0,
+      "country_risk_index": 11,
+      "qualified_sources": 4,
+      "transport_mode": "road",
+      "intercontinental": true,
+      "esg_score": 58,
+      "compliance_status": "open_findings"
+    },
+    "expert_risk_score": 40.0
+  },
+  {
+    "supplier_id": "CAL-016",
+    "name": "Synthetic Supplier 016",
+    "material_group": "metal_parts",
+    "country": "Region E",
+    "annual_spend": 1373000.0,
+    "expert_ratings": {
+      "availability": 4,
+      "switching_complexity": 2,
+      "business_impact": 3
+    },
+    "indicators": {
+      "credit_score": 79,
+      "distress_signals": 0,
+      "country_risk_index": 14,
+      "qualified_sources": 2,
+      "transport_mode": "road",
+      "intercontinental": true,
+      "esg_score": 84,
+      "compliance_status": "open_findings"
+    },
+    "expert_risk_score": 35.0
+  },
+  {
+    "supplier_id": "CAL-017",
+    "name": "Synthetic Supplier 017",
+    "material_group": "electronics",
+    "country": "Region A",
+    "annual_spend": 2783000.0,
+    "expert_ratings": {
+      "availability": 2,
+      "switching_complexity": 2,
+      "business_impact": 4
+    },
+    "indicators": {
+      "credit_score": 82,
+      "distress_signals": 0,
+      "country_risk_index": 56,
+      "qualified_sources": 1,
+      "transport_mode": "rail",
+      "intercontinental": false,
+      "esg_score": 64,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 45.0
+  },
+  {
+    "supplier_id": "CAL-018",
+    "name": "Synthetic Supplier 018",
+    "material_group": "plastics",
+    "country": "Region D",
+    "annual_spend": 2105000.0,
+    "expert_ratings": {
+      "availability": 5,
+      "switching_complexity": 4,
+      "business_impact": 2
+    },
+    "indicators": {
+      "credit_score": 44,
+      "distress_signals": 0,
+      "country_risk_index": 12,
+      "qualified_sources": 3,
+      "transport_mode": "road",
+      "intercontinental": false,
+      "esg_score": 22,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 30.0
+  },
+  {
+    "supplier_id": "CAL-019",
+    "name": "Synthetic Supplier 019",
+    "material_group": "metal_parts",
+    "country": "Region D",
+    "annual_spend": 1533000.0,
+    "expert_ratings": {
+      "availability": 5,
+      "switching_complexity": 2,
+      "business_impact": 1
+    },
+    "indicators": {
+      "credit_score": 85,
+      "distress_signals": 0,
+      "country_risk_index": 28,
+      "qualified_sources": 1,
+      "transport_mode": "road",
+      "intercontinental": false,
+      "esg_score": 45,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 40.0
+  },
+  {
+    "supplier_id": "CAL-020",
+    "name": "Synthetic Supplier 020",
+    "material_group": "electronics",
+    "country": "Region E",
+    "annual_spend": 1804000.0,
+    "expert_ratings": {
+      "availability": 5,
+      "switching_complexity": 1,
+      "business_impact": 4
+    },
+    "indicators": {
+      "credit_score": 94,
+      "distress_signals": 0,
+      "country_risk_index": 45,
+      "qualified_sources": 2,
+      "transport_mode": "rail",
+      "intercontinental": false,
+      "esg_score": 55,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 40.0
+  },
+  {
+    "supplier_id": "CAL-021",
+    "name": "Synthetic Supplier 021",
+    "material_group": "plastics",
+    "country": "Region D",
+    "annual_spend": 436000.0,
+    "expert_ratings": {
+      "availability": 3,
+      "switching_complexity": 4,
+      "business_impact": 3
+    },
+    "indicators": {
+      "credit_score": 29,
+      "distress_signals": 0,
+      "country_risk_index": 84,
+      "qualified_sources": 3,
+      "transport_mode": "road",
+      "intercontinental": true,
+      "esg_score": 42,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 55.0
+  },
+  {
+    "supplier_id": "CAL-022",
+    "name": "Synthetic Supplier 022",
+    "material_group": "metal_parts",
+    "country": "Region A",
+    "annual_spend": 2644000.0,
+    "expert_ratings": {
+      "availability": 3,
+      "switching_complexity": 3,
+      "business_impact": 2
+    },
+    "indicators": {
+      "credit_score": 76,
+      "distress_signals": 1,
+      "country_risk_index": 43,
+      "qualified_sources": 3,
+      "transport_mode": "road",
+      "intercontinental": false,
+      "esg_score": 85,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 30.0
+  },
+  {
+    "supplier_id": "CAL-023",
+    "name": "Synthetic Supplier 023",
+    "material_group": "electronics",
+    "country": "Region A",
+    "annual_spend": 2820000.0,
+    "expert_ratings": {
+      "availability": 2,
+      "switching_complexity": 3,
+      "business_impact": 1
+    },
+    "indicators": {
+      "credit_score": 33,
+      "distress_signals": 1,
+      "country_risk_index": 24,
+      "qualified_sources": 2,
+      "transport_mode": "sea",
+      "intercontinental": false,
+      "esg_score": 58,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 35.0
+  },
+  {
+    "supplier_id": "CAL-024",
+    "name": "Synthetic Supplier 024",
+    "material_group": "plastics",
+    "country": "Region D",
+    "annual_spend": 791000.0,
+    "expert_ratings": {
+      "availability": 1,
+      "switching_complexity": 1,
+      "business_impact": 4
+    },
+    "indicators": {
+      "credit_score": 55,
+      "distress_signals": 0,
+      "country_risk_index": 47,
+      "qualified_sources": 1,
+      "transport_mode": "sea",
+      "intercontinental": true,
+      "esg_score": 71,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 45.0
+  },
+  {
+    "supplier_id": "CAL-025",
+    "name": "Synthetic Supplier 025",
+    "material_group": "metal_parts",
+    "country": "Region D",
+    "annual_spend": 1705000.0,
+    "expert_ratings": {
+      "availability": 1,
+      "switching_complexity": 1,
+      "business_impact": 2
+    },
+    "indicators": {
+      "credit_score": 89,
+      "distress_signals": 0,
+      "country_risk_index": 52,
+      "qualified_sources": 3,
+      "transport_mode": "rail",
+      "intercontinental": false,
+      "esg_score": 20,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 20.0
+  },
+  {
+    "supplier_id": "CAL-026",
+    "name": "Synthetic Supplier 026",
+    "material_group": "electronics",
+    "country": "Region A",
+    "annual_spend": 2702000.0,
+    "expert_ratings": {
+      "availability": 2,
+      "switching_complexity": 2,
+      "business_impact": 1
+    },
+    "indicators": {
+      "credit_score": 65,
+      "distress_signals": 1,
+      "country_risk_index": 57,
+      "qualified_sources": 3,
+      "transport_mode": "rail",
+      "intercontinental": false,
+      "esg_score": 45,
+      "compliance_status": "open_findings"
+    },
+    "expert_risk_score": 20.0
+  },
+  {
+    "supplier_id": "CAL-027",
+    "name": "Synthetic Supplier 027",
+    "material_group": "plastics",
+    "country": "Region B",
+    "annual_spend": 2650000.0,
+    "expert_ratings": {
+      "availability": 1,
+      "switching_complexity": 2,
+      "business_impact": 3
+    },
+    "indicators": {
+      "credit_score": 72,
+      "distress_signals": 1,
+      "country_risk_index": 36,
+      "qualified_sources": 2,
+      "transport_mode": "rail",
+      "intercontinental": false,
+      "esg_score": 28,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 40.0
+  },
+  {
+    "supplier_id": "CAL-028",
+    "name": "Synthetic Supplier 028",
+    "material_group": "metal_parts",
+    "country": "Region B",
+    "annual_spend": 2459000.0,
+    "expert_ratings": {
+      "availability": 4,
+      "switching_complexity": 3,
+      "business_impact": 3
+    },
+    "indicators": {
+      "credit_score": 49,
+      "distress_signals": 0,
+      "country_risk_index": 89,
+      "qualified_sources": 1,
+      "transport_mode": "air",
+      "intercontinental": false,
+      "esg_score": 23,
+      "compliance_status": "major_findings"
+    },
+    "expert_risk_score": 70.0
+  },
+  {
+    "supplier_id": "CAL-029",
+    "name": "Synthetic Supplier 029",
+    "material_group": "electronics",
+    "country": "Region C",
+    "annual_spend": 1086000.0,
+    "expert_ratings": {
+      "availability": 5,
+      "switching_complexity": 4,
+      "business_impact": 5
+    },
+    "indicators": {
+      "credit_score": 62,
+      "distress_signals": 2,
+      "country_risk_index": 19,
+      "qualified_sources": 2,
+      "transport_mode": "rail",
+      "intercontinental": false,
+      "esg_score": 48,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 55.0
+  },
+  {
+    "supplier_id": "CAL-030",
+    "name": "Synthetic Supplier 030",
+    "material_group": "plastics",
+    "country": "Region C",
+    "annual_spend": 1337000.0,
+    "expert_ratings": {
+      "availability": 5,
+      "switching_complexity": 1,
+      "business_impact": 4
+    },
+    "indicators": {
+      "credit_score": 93,
+      "distress_signals": 0,
+      "country_risk_index": 10,
+      "qualified_sources": 4,
+      "transport_mode": "air",
+      "intercontinental": true,
+      "esg_score": 83,
+      "compliance_status": "minor_findings"
+    },
+    "expert_risk_score": 30.0
+  },
+  {
+    "supplier_id": "CAL-031",
+    "name": "Synthetic Supplier 031",
+    "material_group": "metal_parts",
+    "country": "Region B",
+    "annual_spend": 1124000.0,
+    "expert_ratings": {
+      "availability": 1,
+      "switching_complexity": 3,
+      "business_impact": 5
+    },
+    "indicators": {
+      "credit_score": 60,
+      "distress_signals": 0,
+      "country_risk_index": 20,
+      "qualified_sources": 4,
+      "transport_mode": "sea",
+      "intercontinental": false,
+      "esg_score": 67,
+      "compliance_status": "compliant"
+    },
+    "expert_risk_score": 40.0
+  },
+  {
+    "supplier_id": "CAL-032",
+    "name": "Synthetic Supplier 032",
+    "material_group": "electronics",
+    "country": "Region B",
+    "annual_spend": 1290000.0,
+    "expert_ratings": {
+      "availability": 4,
+      "switching_complexity": 2,
+      "business_impact": 5
+    },
+    "indicators": {
+      "credit_score": 92,
+      "distress_signals": 0,
+      "country_risk_index": 75,
+      "qualified_sources": 1,
+      "transport_mode": "sea",
+      "intercontinental": true,
+      "esg_score": 70,
+      "compliance_status": "minor_findings"
+    },
+    "expert_risk_score": 60.0
+  },
+  {
+    "supplier_id": "CAL-033",
+    "name": "Synthetic Supplier 033",
+    "material_group": "plastics",
+    "country": "Region E",
+    "annual_spend": 1981000.0,
+    "expert_ratings": {
+      "availability": 4,
+      "switching_complexity": 4,
+      "business_impact": 4
+    },
+    "indicators": {
+      "credit_score": 47,
+      "distress_signals": 0,
+      "country_risk_index": 26,
+      "qualified_sources": 4,
+      "transport_mode": "road",
+      "intercontinental": true,
+      "esg_score": 57,
+      "compliance_status": "compliant"
+    }
+  },
+  {
+    "supplier_id": "CAL-034",
+    "name": "Synthetic Supplier 034",
+    "material_group": "metal_parts",
+    "country": "Region C",
+    "annual_spend": 713000.0,
+    "expert_ratings": {
+      "availability": 2,
+      "switching_complexity": 2,
+      "business_impact": 1
+    },
+    "indicators": {
+      "credit_score": 25,
+      "distress_signals": 0,
+      "country_risk_index": 65,
+      "qualified_sources": 3,
+      "transport_mode": "road",
+      "intercontinental": false,
+      "esg_score": 88,
+      "compliance_status": "compliant"
+    }
+  },
+  {
+    "supplier_id": "CAL-035",
+    "name": "Synthetic Supplier 035",
+    "material_group": "electronics",
+    "country": "Region D",
+    "annual_spend": 1508000.0,
+    "expert_ratings": {
+      "availability": 2,
+      "switching_complexity": 2,
+      "business_impact": 1
+    },
+    "indicators": {
+      "credit_score": 33,
+      "distress_signals": 1,
+      "country_risk_index": 33,
+      "qualified_sources": 1,
+      "transport_mode": "air",
+      "intercontinental": true,
+      "esg_score": 46,
+      "compliance_status": "open_findings"
+    }
+  },
+  {
+    "supplier_id": "CAL-036",
+    "name": "Synthetic Supplier 036",
+    "material_group": "plastics",
+    "country": "Region D",
+    "annual_spend": 2019000.0,
+    "expert_ratings": {
+      "availability": 5,
+      "switching_complexity": 5,
+      "business_impact": 3
+    },
+    "indicators": {
+      "credit_score": 76,
+      "distress_signals": 0,
+      "country_risk_index": 69,
+      "qualified_sources": 2,
+      "transport_mode": "air",
+      "intercontinental": false,
+      "esg_score": 75,
+      "compliance_status": "compliant"
+    }
+  }
+]

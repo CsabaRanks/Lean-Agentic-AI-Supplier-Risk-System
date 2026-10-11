@@ -1,0 +1,193 @@
+# ---------------------------------------------------------------------------
+# Default risk model — an EXAMPLE TEMPLATE, not a recommendation.
+#
+# Every criterion, weight, threshold and action below is illustrative.
+# Copy this file, adapt it to your own category strategy and calibrate it
+# against your supplier base before using results for real decisions.
+#
+# Conventions
+#   * Every factor is rated on an ordinal scale 1..5 (1 = low risk, 5 = high risk).
+#   * The weights below are DEFAULT weights. Factor weights are relative within
+#     their dimension; dimension weights are relative across the model. They are
+#     turned into one WeightSet of effective factor weights (summing to 1), which
+#     can be overridden per material group or replaced by calibrated weights.
+#   * The weighted rating is min-max normalised to 0..100:
+#         score = (rating - 1) / (5 - 1) * 100
+#     so a supplier rated "1" everywhere scores 0 and "5" everywhere scores 100.
+# ---------------------------------------------------------------------------
+
+name: generic-supplier-risk-template
+version: "0.1.0"
+
+rating_scale:
+  min: 1
+  max: 5
+
+dimensions:
+  - key: severity
+    label: Severity Index
+    description: >
+      How badly a disruption at this supplier would hurt. Composite of how
+      replaceable the supplier is and how critical the supplied scope is.
+    weight: 0.35
+    factors:
+      - key: availability
+        label: Availability of alternatives
+        description: Number and accessibility of alternative sourcing options (few options = high risk).
+        weight: 0.30
+        source: expert_assessment
+      - key: switching_complexity
+        label: Change complexity
+        description: Effort to switch supplier (qualification, tooling, regulatory or customer approvals).
+        weight: 0.30
+        source: expert_assessment
+      - key: business_impact
+        label: Business consequence
+        description: Impact on own operations and customers if the supplier fails.
+        weight: 0.40
+        source: expert_assessment
+
+  - key: financial
+    label: Financial Stability
+    description: Likelihood of financial distress or insolvency.
+    weight: 0.20
+    factors:
+      - key: credit_risk
+        label: Credit risk
+        description: Derived from an external credit score (0-100, higher = healthier).
+        weight: 0.70
+        source: credit_score
+      - key: insolvency_signals
+        label: Insolvency / distress signals
+        description: Count of recent negative financial signals (late payments, warnings, filings).
+        weight: 0.30
+        source: distress_signals
+
+  - key: supply_chain
+    label: Supply Chain Risk
+    description: Structural vulnerability of the supply route.
+    weight: 0.25
+    factors:
+      - key: country_risk
+        label: Country / geopolitical risk
+        description: Derived from a country risk index (0-100, higher = riskier), e.g. based on public governance indicators.
+        weight: 0.40
+        source: country_risk_index
+      - key: sourcing_strategy
+        label: Sourcing strategy
+        description: Single vs. dual vs. multi sourcing for the supplied scope.
+        weight: 0.35
+        source: qualified_sources
+      - key: transport_dependency
+        label: Transport dependency
+        description: Exposure of the main transport mode and route length.
+        weight: 0.25
+        source: transport_mode
+
+  - key: esg_compliance
+    label: ESG & Compliance
+    description: Environmental, social, governance and regulatory compliance exposure.
+    weight: 0.20
+    factors:
+      - key: esg_rating
+        label: ESG rating
+        description: Derived from an external ESG score (0-100, higher = better).
+        weight: 0.60
+        source: esg_score
+      - key: compliance_status
+        label: Compliance status
+        description: Code-of-conduct acceptance, self-assessment questionnaire and audit findings.
+        weight: 0.40
+        source: compliance_status
+
+# Optional default weights per material group (not one-size-fits-all).
+# Values are EFFECTIVE factor weights (share of the overall score). Factors not
+# listed keep their global default; the result is re-normalised to sum to 1.
+material_group_weights: {}
+#  electronics:
+#    country_risk: 0.15
+#    transport_dependency: 0.10
+#  packaging:
+#    business_impact: 0.08
+
+# Lower bound (inclusive) of the normalised score for each class, ascending.
+risk_classes:
+  - key: low
+    label: Low
+    min_score: 0
+  - key: medium
+    label: Medium
+    min_score: 30
+  - key: high
+    label: High
+    min_score: 50
+  - key: critical
+    label: Critical
+    min_score: 70
+
+# Hard rules that can only raise the class, never lower it. They make sure a
+# single severe finding is not averaged away by good scores elsewhere.
+escalation_rules:
+  - factor: compliance_status
+    min_rating: 5
+    floor_class: high
+    reason: Severe compliance finding — weighted average must not hide it.
+  - factor: insolvency_signals
+    min_rating: 5
+    floor_class: critical
+    reason: Acute insolvency signals.
+
+# Below this share of available (weighted) factor data the result is flagged
+# for human review instead of being treated as final.
+min_data_completeness: 0.75
+
+# Generic action framework per risk class.
+actions:
+  low:
+    review_cycle: annual
+    actions:
+      - Keep in standard annual supplier evaluation.
+  medium:
+    review_cycle: semi-annual
+    actions:
+      - Monitor key indicators between reviews.
+      - Discuss identified weak points in the next supplier meeting.
+  high:
+    review_cycle: quarterly
+    actions:
+      - Agree a documented risk mitigation plan with the supplier.
+      - Assess alternative sources or a dual-sourcing strategy.
+      - Review safety stock for affected items.
+  critical:
+    review_cycle: monthly
+    actions:
+      - Escalate to category and supply chain management.
+      - Start immediate mitigation (alternative source qualification, buffer stock).
+      - Define contingency plan and owner with a due date.
+
+# Targeted recommendations when a single dimension is elevated, independent
+# of the overall class.
+dimension_triggers:
+  - dimension: financial
+    min_score: 60
+    action: Increase financial monitoring frequency and review payment terms and exposure.
+  - dimension: supply_chain
+    min_score: 60
+    action: Evaluate regional or second-source alternatives and transport fallbacks.
+  - dimension: esg_compliance
+    min_score: 60
+    action: Request corrective action plan and schedule an ESG / compliance audit.
+  - dimension: severity
+    min_score: 60
+    action: Reduce dependency (alternative qualification, design-to-multi-source).
+
+# Calibration of weights against subjective expert labels (0..100 risk score
+# given by category managers). Disabled by default; enable here or per run.
+calibration:
+  enabled: false
+  method: constrained_least_squares
+  min_labels: 8            # labelled suppliers with complete data required
+  regularization: 0.05     # ridge pull towards the prior weights (avoids overfitting)
+  min_factor_weight: 0.02  # every criterion keeps a minimum influence
+  min_improvement: 0.05    # accept only if MSE drops by at least 5 %
+  auto_apply: true         # re-score with accepted weights (false = propose only)

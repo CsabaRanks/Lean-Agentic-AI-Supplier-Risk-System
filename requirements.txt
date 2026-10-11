@@ -1,0 +1,5 @@
+langgraph>=0.2
+pydantic>=2.6
+pyyaml>=6.0
+numpy>=1.26
+scipy>=1.11
