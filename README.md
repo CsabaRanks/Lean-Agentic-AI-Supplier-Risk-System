@@ -24,6 +24,41 @@ Supplier risk evaluation usually falls into one of two camps:
 a real system and an architecture ready for automation and AI. It is open source and
 runs locally.
 
+## Where this approach sits
+
+![Radar chart profiling Excel, proprietary SaaS, open-source repos and this Lean Agentic approach on 15 success factors](docs/images/spider-diagram.png)
+
+The chart compares four approaches to supplier risk evaluation:
+
+- spreadsheet practice
+- proprietary SCRM platforms (Prewave and Sphera as examples)
+- open-source agent repos
+- this project
+
+It shows each approach's **relative position**, factor by factor:
+
+- **Platforms** lead on external signals, data coverage, scale, regulatory evidence and
+  operational maturity.
+- **This project** leads where the *method* matters:
+  - **expert calibration**
+  - **configurable, material-group-specific weights**
+  - reproducibility
+  - methodological transparency
+
+  Calibration and configurable weights are deliberate differentiators, described below.
+- **External signals** are deliberately not covered (yet). This project is designed to
+  *complement* a signal source, not to replace one.
+
+> Values are **illustrative and justified, not measured**.
+>
+> - **Basis:** public information and code review (October 2026).
+> - **Rationale and confidence:** see [research/comparison-matrix.md](research/comparison-matrix.md).
+> - **Generation:** the chart is generated from
+>   [research/comparison-matrix.yaml](research/comparison-matrix.yaml) by `scripts/generate_spider.py`.
+> - **No aggregation:** no weighting, total or ranking is derived.
+> - **Factor model and positioning:** [research/success-factors.md](research/success-factors.md),
+>   [research/lean-agentic-positioning.md](research/lean-agentic-positioning.md).
+
 ## What it does
 
 - **Structured scoring.** Multi-dimensional, weighted scoring with 1–5 factor ratings and min-max normalisation to 0–100.
@@ -195,9 +230,10 @@ if request:
 │   ├── config/        # default_risk_model.yaml (example template)
 │   └── cli.py
 ├── data/              # fictional sample data; weights/ = versioned weight store
-├── docs/              # architecture, scoring model, calibration
+├── docs/              # architecture, scoring model, calibration, paper outline, images
 ├── examples/          # runnable scripts
-├── research/          # reviewed open-source projects, comparison, decision log
+├── research/          # success factors, comparison matrix (YAML = source), positioning, decision log
+├── scripts/           # generate_spider.py: matrix Markdown + radar chart from the YAML
 ├── tests/
 └── .github/workflows/ # CI: ruff + pytest
 ```

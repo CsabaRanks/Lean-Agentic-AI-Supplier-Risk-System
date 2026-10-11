@@ -26,6 +26,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.5"]
+research = ["matplotlib>=3.8"]  # regenerate docs/images/spider-diagram.png
 
 [project.scripts]
 supplier-risk = "supplier_risk_agent.cli:main"

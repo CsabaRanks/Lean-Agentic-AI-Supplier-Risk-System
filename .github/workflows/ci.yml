@@ -24,7 +24,7 @@ jobs:
       - name: Install
         run: pip install -e ".[dev]"
       - name: Lint
-        run: ruff check src tests examples
+        run: ruff check src tests examples scripts
       - name: Test
         env:
           LANGGRAPH_STRICT_MSGPACK: "true"

@@ -2,6 +2,77 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Factor model v0.2, single source of truth, radar chart
+
+**D16: Factor model v0.2 adopted.** Key changes from v0.1:
+- open source → *customisability & data sovereignty*
+- multi-agent → *extensibility* (means reframed as outcomes to avoid a circular comparison)
+- merged *criteria + objective/subjective* and *audit trail + determinism*
+- external signals broadened to *data coverage*
+- added *regulatory evidence* and *operational maturity*, where platforms are stronger, to
+  counter home-field bias
+- predictive validity deliberately not an axis
+
+Full table with rationale: `success-factors.md` → "Changes from v0.1 to v0.2".
+
+**D17: `comparison-matrix.yaml` is the single source of truth.** `scripts/generate_spider.py`
+generates `comparison-matrix.md` and `docs/images/spider-diagram.png/.svg`. A test fails if the
+Markdown is stale or the YAML is inconsistent.
+
+**D18: Prewave and Sphera are named and rated separately.** The SaaS line is their mean. The spread
+is drawn on the spoke, because the vendors differ markedly in methodological disclosure.
+
+**D19: The radar chart is in the README** in the section "Where this approach sits", between the
+problem statement and the features, as planned (see below).
+
+## 2026-10 — Research & benchmark track (paper preparation)
+
+New files:
+- `success-factors.md`: working model v0.1 plus critical review and proposed v0.2
+- `comparison-matrix.md`: four approaches × factors, with rationale and confidence
+- `saas-references.md`: public information on SaaS examples, with sources
+- `lean-agentic-positioning.md`
+- `spider-diagram-spec.md`
+- `docs/paper/paper-outline.md`
+
+**D13: Profiles, not scores.** Approaches are compared factor by factor. No weights, no total,
+no ranking, following the convention of the companion paper. This also keeps the comparison
+from becoming a weighted ranking of competitors.
+
+**D14: Rate LEAN as implemented, not as planned.** Roadmap items may appear only as a separate,
+clearly marked dashed profile.
+
+**D15: The SaaS profile is based on public information only, dated October 2026.** Where vendors
+differ (e.g. methodological transparency), the matrix gives a range and the chart plots the
+midpoint, with a note.
+
+### README placement of the spider diagram (planned)
+
+Position: **directly after "The problem" and before "What it does"** (key features). The reader
+first sees the gap, then where this approach sits in it, then the features that produce that
+position.
+
+Planned README block:
+
+```markdown
+## Where this approach sits
+
+<radar chart: Mermaid radar-beta, or PNG fallback docs/paper/figures/fig01_approach_profile.png>
+
+*Illustrative assessment (public information and code review, Oct 2026). Rationale and
+confidence for every value: research/comparison-matrix.md. No weighting, total or ranking.*
+
+**Reading it:** platforms lead on data coverage and scale. This project leads where the
+*method* matters: expert calibration, reproducibility, transparency and material-group
+weights. It deliberately does not compete on external signal coverage (yet).
+```
+
+Then a one-line bridge to the calibration differentiator section, so that the spike on the
+"expert calibration" axis is explained immediately below the chart.
+
+Preconditions: factor model version decided; vendor naming decided; Mermaid radar support on
+GitHub verified (otherwise PNG); values generated from one machine-readable source.
+
 ## 2026-10 — Weight store and human-in-the-loop
 
 **D9 — Versioned weight files instead of overwriting the model YAML.**
@@ -61,6 +132,8 @@ MVP calibrates globally or per run scope; the structure allows per-group weights
 refactoring.
 
 ## Open questions
+
+- Independent re-rating of the comparison matrix by practitioners: who, and how many?
 
 - Persistent checkpointer (SQLite) so reviews can be decided in a later session?
 - Additionally support ordinal expert labels (low/medium/high/critical)?

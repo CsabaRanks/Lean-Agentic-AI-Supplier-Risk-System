@@ -1,0 +1,481 @@
+# Single source of truth for the approach comparison.
+#
+# Everything derived from these ratings is generated from this file:
+#   research/comparison-matrix.md    (tables + rationale)
+#   docs/images/spider-diagram.png   (radar chart, README + paper Fig. 1)
+#
+#   python scripts/generate_spider.py            # regenerate both
+#   python scripts/generate_spider.py --check    # fail if the Markdown is out of date (used in tests)
+#
+# Edit ratings HERE only. Ratings are a reasoned, illustrative assessment, not a measurement.
+#
+# Rating format per approach:
+#   value:       1..5 (1 weak / absent, 2 rudimentary, 3 adequate, 4 strong, 5 very strong)
+#   by_example:  optional per-example values when the rated examples differ (SaaS: Prewave, Sphera);
+#                the plotted value is then their mean and the chart shows the spread
+#   confidence:  H = verified from code / primary documentation, M = plausible / partly documented,
+#                L = assumption / little public evidence
+#   rationale:   short justification; sources are listed under approaches.<key>.evidence
+
+meta:
+  title: Supplier risk evaluation approaches profiled on 15 success factors
+  model_version: "0.2"
+  evidence_date: "2026-10"
+  scale: {min: 1, max: 5}
+  caption: >-
+    Four approaches to supplier risk evaluation profiled on 15 success factors (model v0.2).
+    Illustrative assessment based on public information and code review (October 2026);
+    rationale and confidence for every value in research/comparison-matrix.md.
+    Proprietary SaaS plotted as the mean of Prewave and Sphera, with the spread marked where they differ.
+    No weighting is applied and no total or ranking is derived.
+
+approaches:
+  - key: xls
+    label: Excel / manual process
+    short: Excel
+    rated: A typical spreadsheet scorecard maintained by procurement (criteria sheet, weights, annual update).
+    evidence: Practitioner experience; assumption-based.
+  - key: saas
+    label: Proprietary SaaS (Prewave, Sphera)
+    short: SaaS
+    rated: Prewave and Sphera Supply Chain Risk Management as examples of commercial SCRM platforms.
+    evidence: >-
+      Public information only (vendor websites, help centre, press releases, vendor-commissioned studies),
+      see research/saas-references.md. No hands-on test.
+    examples: [Prewave, Sphera]
+  - key: oss
+    label: Open-source GitHub repos
+    short: Open repos
+    rated: The five reviewed open-source blueprints.
+    evidence: Source code review, see research/github-references.md and research/comparison.md.
+  - key: lean
+    label: Lean Agentic (this repo)
+    short: Lean Agentic
+    rated: This repository as implemented (v0.1.0, October 2026), not the roadmap.
+    evidence: Code, tests and documentation in this repository.
+
+factors:
+  - id: 1
+    key: criteria_weights
+    label: Structured criteria & weights (objective + subjective)
+    short_label: Criteria & weights
+    v01: [1, 5]
+    ratings:
+      xls:
+        value: 3
+        confidence: M
+        rationale: >-
+          Scorecards with criteria and weights are common and can mix data and judgement, but definitions,
+          scales and provenance are often informal and drift between versions.
+      saas:
+        value: 4
+        by_example: {Prewave: 4, Sphera: 4}
+        confidence: M
+        rationale: >-
+          Prewave publishes a structured score combining peer, alert, assessment and external data;
+          Sphera describes indicator scorecards combining monitoring and questionnaires.
+      oss:
+        value: 2
+        confidence: H
+        rationale: >-
+          Only 2 of 5 repos have deterministic weighted scoring, both with hard-coded weights; mostly one input type.
+      lean:
+        value: 4
+        confidence: H
+        rationale: >-
+          Multi-dimensional criteria, 1-5 scales, weights in a validated config; expert ratings and
+          indicator-derived ratings with provenance and documented overrides. Not 5: template is illustrative,
+          not empirically validated; objective indicators are entered, not fetched.
+
+  - id: 2
+    key: traceability
+    label: Traceability & reproducibility
+    short_label: Traceability & reproducibility
+    v01: [2, 8]
+    ratings:
+      xls:
+        value: 2
+        confidence: M
+        rationale: >-
+          Formulas are deterministic, but there is no per-result record and copy-paste / versioning errors are common.
+      saas:
+        value: 2.5
+        by_example: {Prewave: 3, Sphera: 2}
+        confidence: L
+        rationale: >-
+          Audit-ready due-diligence documentation is claimed (Prewave); audit-trail controls not found publicly (Sphera).
+          Continuously updated, partly NLP-based scores cannot be recomputed by the customer from documented inputs,
+          a design consequence of real-time monitoring rather than a flaw.
+      oss:
+        value: 2
+        confidence: H
+        rationale: History lists / tracing in some repos; 2 of 5 repos use LLM-judged scores.
+      lean:
+        value: 4
+        confidence: H
+        rationale: >-
+          Pure scoring functions with automated tests; append-only audit trail per run; versioned weight files with
+          approver; model version on every result. Not 5: runs are not persisted centrally yet.
+
+  - id: 3
+    key: transparency
+    label: Methodological transparency
+    short_label: Method transparency
+    v01: [13]
+    ratings:
+      xls:
+        value: 4
+        confidence: M
+        rationale: Formulas are visible to everyone, provided they are documented.
+      saas:
+        value: 2.5
+        by_example: {Prewave: 3, Sphera: 2}
+        confidence: M
+        rationale: >-
+          Prewave publishes its score composition and component weights, but not source weighting / NLP classification;
+          for Sphera no scoring methodology was found publicly.
+      oss:
+        value: 3
+        confidence: H
+        rationale: Code is visible, but LLM-judged parts are opaque.
+      lean:
+        value: 5
+        confidence: H
+        rationale: Formulas, weights, rules and calibration maths are documented and tested.
+
+  - id: 4
+    key: calibration
+    label: Expert calibration / ability to learn
+    short_label: Expert calibration
+    v01: [3]
+    ratings:
+      xls:
+        value: 1
+        confidence: M
+        rationale: Weights are adjusted by discussion, if at all.
+      saas:
+        value: 2
+        by_example: {Prewave: 2, Sphera: 2}
+        confidence: L
+        rationale: >-
+          Weights are adjustable by configuration (Prewave, partly via customer success); a documented fit against the
+          customer's own expert labels was not found publicly for either vendor.
+      oss:
+        value: 1
+        confidence: H
+        rationale: None of the 5 repos.
+      lean:
+        value: 4
+        confidence: H
+        rationale: >-
+          Constrained least-squares calibration against expert labels with MSE and class agreement, approval step and
+          versioning. Not 5: validated on synthetic labels only, no cross-validation yet.
+
+  - id: 5
+    key: material_group
+    label: Material-group-specific adaptation
+    short_label: Material-group fit
+    v01: [4]
+    ratings:
+      xls:
+        value: 3
+        confidence: M
+        rationale: A separate sheet per group is easy, but logic diverges between copies.
+      saas:
+        value: 3
+        by_example: {Prewave: 3, Sphera: 3}
+        confidence: L
+        rationale: >-
+          Commodity is part of Prewave's peer score and customised perspectives exist; segmentation per commodity
+          was not documented publicly in detail for either vendor.
+      oss:
+        value: 1
+        confidence: H
+        rationale: None.
+      lean:
+        value: 4
+        confidence: H
+        rationale: Material-group weights in the config, per-group calibration, most-specific weight resolution.
+
+  - id: 6
+    key: actions
+    label: Action framework
+    short_label: Action framework
+    v01: [6]
+    ratings:
+      xls:
+        value: 2
+        confidence: M
+        rationale: Actions are usually free text.
+      saas:
+        value: 4
+        by_example: {Prewave: 4, Sphera: 4}
+        confidence: M
+        rationale: Response playbooks, action planners and tracked closure are described on product pages.
+      oss:
+        value: 2
+        confidence: H
+        rationale: Narrative recommendations.
+      lean:
+        value: 3
+        confidence: H
+        rationale: Rule-based actions per class and per elevated dimension, review cycles; no action tracking / closure.
+
+  - id: 7
+    key: hitl
+    label: Human-in-the-loop & governance
+    short_label: Human-in-the-loop
+    v01: [7]
+    ratings:
+      xls:
+        value: 2
+        confidence: M
+        rationale: Fully manual, but without structured review or approval points.
+      saas:
+        value: 4
+        by_example: {Prewave: 4, Sphera: 4}
+        confidence: M
+        rationale: Incident management, ownership and approval workflows are described.
+      oss:
+        value: 2
+        confidence: H
+        rationale: One repo has a human-review exit.
+      lean:
+        value: 3
+        confidence: H
+        rationale: >-
+          Graph interrupt with weight approval and class overrides, recorded and surviving re-scoring;
+          no roles / permissions, in-memory pauses only.
+
+  - id: 8
+    key: signals
+    label: External signals & data coverage
+    short_label: External signals & coverage
+    v01: [11]
+    ratings:
+      xls:
+        value: 1
+        confidence: H
+        rationale: Manual research only.
+      saas:
+        value: 5
+        by_example: {Prewave: 5, Sphera: 5}
+        confidence: M
+        rationale: >-
+          Core strength: continuous multi-source monitoring, many languages, Tier-N mapping (feature verified;
+          volumes are vendor claims).
+      oss:
+        value: 2
+        confidence: H
+        rationale: Internal databases, retrieval, mocks.
+      lean:
+        value: 1
+        confidence: H
+        rationale: Not implemented; indicators are provided as data. On the roadmap.
+
+  - id: 9
+    key: regulatory
+    label: Regulatory evidence (due-diligence documentation)
+    short_label: Regulatory evidence
+    v01: []
+    ratings:
+      xls:
+        value: 2
+        confidence: M
+        rationale: Documentation is possible but manual and unstructured.
+      saas:
+        value: 4.5
+        by_example: {Prewave: 5, Sphera: 4}
+        confidence: M
+        rationale: >-
+          Prewave: dedicated modules for several due-diligence regulations (e.g. LkSG, CSDDD, EUDR).
+          Sphera: LkSG bundle documented (2023); CSDDD-specific support not found publicly.
+      oss:
+        value: 1
+        confidence: H
+        rationale: Not addressed.
+      lean:
+        value: 2
+        confidence: H
+        rationale: Audit trail and an ESG / compliance factor help, but no regulation-specific workflows or reports.
+
+  - id: 10
+    key: cost
+    label: Cost / accessibility
+    short_label: Cost
+    v01: [9]
+    ratings:
+      xls:
+        value: 5
+        confidence: M
+        rationale: No additional licence; hidden labour cost.
+      saas:
+        value: 2
+        by_example: {Prewave: 2, Sphera: 2}
+        confidence: M
+        rationale: Pricing not public; quote-based enterprise subscriptions by supplier count and modules.
+      oss:
+        value: 5
+        confidence: H
+        rationale: Free (licence restrictions are rated under customisability).
+      lean:
+        value: 4
+        confidence: M
+        rationale: MIT licence, runs locally; implementation and data integration still need internal effort.
+
+  - id: 11
+    key: time_to_value
+    label: Time-to-value / ease of adoption
+    short_label: Time-to-value
+    v01: [14]
+    ratings:
+      xls:
+        value: 4
+        confidence: M
+        rationale: Immediate start.
+      saas:
+        value: 3
+        by_example: {Prewave: 3, Sphera: 3}
+        confidence: L
+        rationale: >-
+          Fast onboarding is claimed by vendors, but enterprise procurement and integration cycles apply;
+          no public implementation timelines.
+      oss:
+        value: 2
+        confidence: H
+        rationale: Demo-grade; one repo does not run as committed.
+      lean:
+        value: 3
+        confidence: M
+        rationale: First results in minutes on sample data; mapping real data takes effort.
+
+  - id: 12
+    key: customisability
+    label: Customisability & data sovereignty
+    short_label: Customisability & data sovereignty
+    v01: [10]
+    ratings:
+      xls:
+        value: 4
+        confidence: M
+        rationale: Fully modifiable and kept in-house, but not maintainable as shared software.
+      saas:
+        value: 2
+        by_example: {Prewave: 2, Sphera: 2}
+        confidence: M
+        rationale: Configurable within the product; method and code are not; data hosted by the vendor.
+      oss:
+        value: 3
+        confidence: H
+        rationale: Code visible, but 2 repos have no licence and 1 is GPL, which restricts reuse.
+      lean:
+        value: 5
+        confidence: H
+        rationale: MIT licence, config-driven, data and model stay in-house.
+
+  - id: 13
+    key: scalability
+    label: Scalability
+    short_label: Scalability
+    v01: [12]
+    ratings:
+      xls:
+        value: 2
+        confidence: M
+        rationale: Degrades beyond a few hundred suppliers.
+      saas:
+        value: 5
+        by_example: {Prewave: 5, Sphera: 5}
+        confidence: M
+        rationale: Large enterprise deployments; vendor claims of more than a million suppliers assessed (Prewave).
+      oss:
+        value: 2
+        confidence: H
+        rationale: Demonstrators.
+      lean:
+        value: 3
+        confidence: L
+        rationale: Deterministic batch scoring is cheap, but untested at scale; in-memory checkpoints; no automated feeds.
+
+  - id: 14
+    key: extensibility
+    label: Extensibility & automation potential
+    short_label: Extensibility
+    v01: [15]
+    ratings:
+      xls:
+        value: 1
+        confidence: H
+        rationale: None beyond macros.
+      saas:
+        value: 2.5
+        by_example: {Prewave: 3, Sphera: 2}
+        confidence: M
+        rationale: >-
+          Prewave: REST APIs, ERP write-back and connectors for AI agents; Sphera: workflow embedding stated,
+          public API documentation not found. Both closed.
+      oss:
+        value: 4
+        confidence: H
+        rationale: Agent architectures are their main asset.
+      lean:
+        value: 4
+        confidence: H
+        rationale: Supervisor graph with documented extension points (data sources, rating sources, agents); few agents yet.
+
+  - id: 15
+    key: operations
+    label: Operational maturity & support
+    short_label: Operational maturity
+    v01: []
+    ratings:
+      xls:
+        value: 3
+        confidence: M
+        rationale: Office tooling is supported by IT; no model-specific operations needed.
+      saas:
+        value: 5
+        by_example: {Prewave: 5, Sphera: 5}
+        confidence: M
+        rationale: Vendor support, hosting and service levels.
+      oss:
+        value: 1
+        confidence: H
+        rationale: No maintenance commitment.
+      lean:
+        value: 2
+        confidence: H
+        rationale: Tests and CI exist, but no production deployment, security hardening or support organisation.
+
+narrative:
+  reading_profiles:
+    - >-
+      **Excel:** cheap, transparent and quick to start; weak audit trail, no learning, no external signals,
+      no extensibility.
+    - >-
+      **Proprietary SaaS:** strongest on data coverage, scale, workflows, regulatory evidence and operational
+      maturity; weaker on cost, self-determined customisation, recomputability by the user and, depending on the
+      vendor, methodological transparency (Prewave publishes its score composition, Sphera does not).
+    - >-
+      **Open repos:** strong architecture ideas and free, but demonstrators: scoring often absent, hard-coded or
+      LLM-judged; unclear or copyleft licences; no tests.
+    - >-
+      **Lean Agentic:** strongest where the method itself matters (transparency, reproducibility, calibration,
+      material-group weights, customisability); deliberately weak today on external signals, regulatory evidence
+      and operational maturity.
+    - >-
+      The profiles are **complementary rather than ranked**. A realistic target architecture combines them:
+      a SaaS subscription or open data as signal source feeding a transparent, calibrated in-house model.
+  known_weaknesses:
+    - >-
+      **Author bias.** Factors and ratings come from the authors of the Lean Agentic approach. Mitigations:
+      factors where SaaS is stronger are included (v0.2), Lean Agentic is rated as implemented, every rating
+      carries rationale and confidence. Recommended: independent re-rating by 3-5 practitioners, reporting the spread.
+    - "**The Excel profile is a stereotype.** Real spreadsheet practices vary widely."
+    - >-
+      **SaaS rated on public information only.** Hands-on evaluation could move several ratings, especially
+      traceability, material-group fit, action framework, human-in-the-loop and time-to-value.
+    - >-
+      **No factor measures predictive validity**, i.e. whether a score anticipates real disruptions
+      (see research/success-factors.md).
+    - "**Date dependency.** Products change; all SaaS ratings refer to public information as of October 2026."

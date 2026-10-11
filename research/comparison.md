@@ -1,7 +1,11 @@
 # Comparison of reference projects
 
 How the reviewed projects (see [github-references.md](github-references.md)) compare, and which
-ideas this repository adopts — and why.
+ideas this repository adopts, and why.
+
+> For the broader benchmark (Excel practice, proprietary SaaS, open-source repos and this
+> approach, rated on success factors), see [comparison-matrix.md](comparison-matrix.md) and
+> [success-factors.md](success-factors.md).
 
 ## Overview
 
