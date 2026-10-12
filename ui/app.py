@@ -25,6 +25,7 @@ from pathlib import Path
 import altair as alt
 import pandas as pd
 import streamlit as st
+from pydantic import ValidationError
 
 from supplier_risk_agent import SupplierRiskEvaluator, load_risk_model
 from supplier_risk_agent.graph import ai_review_payload
@@ -34,7 +35,14 @@ from supplier_risk_agent.models.ai_review import AIReviewResult
 from supplier_risk_agent.models.config import available_views
 from supplier_risk_agent.providers import WorldBankWgiProvider
 from supplier_risk_agent.tools import HistoryStore, InMemorySource, JsonFileSource, WeightStore
-from supplier_risk_agent.tools.ai_review import payload_hash, payload_json
+from supplier_risk_agent.tools.ai_review import payload_hash, payload_json, review_is_current
+from supplier_risk_agent.tools.corrections import (
+    CorrectionRequest,
+    FieldChange,
+    correctable_fields,
+    parse_cell,
+    preview_correction,
+)
 from supplier_risk_agent.tools.reporting import ALL_GROUPS, action_plan, group_summary, top_risks
 from supplier_risk_agent.tools.tabular import (
     all_view_columns,
@@ -235,9 +243,9 @@ st.caption(
 for error in st.session_state.get("input_errors", []):
     st.error(f"Input: {error}")
 
-tab_portfolio, tab_dash, tab_actions, tab_history, tab_run, tab_cal, tab_review, tab_ai = st.tabs(
+tab_portfolio, tab_dash, tab_actions, tab_history, tab_run, tab_cal, tab_review, tab_explain = st.tabs(
     ["📋 Portfolio", "📊 Dashboard", "🛠 Actions", "🕓 History", "▶️ Scoring run", "🎯 Calibration",
-     "✅ Review & approval", "🤖 AI review (optional)"]
+     "✅ Review & approval", "🔎 Explain & correct"]
 )
 
 
@@ -684,30 +692,33 @@ with tab_review:
                 st.warning(error)
 
 
-# --- tab: optional LLM review -------------------------------------------------------------
+# --- tab: explain & correct ----------------------------------------------------------------
 
 
-def show_ai_review(result: AIReviewResult) -> None:
+def show_ai_review(result: AIReviewResult, outdated_note: str | None) -> None:
+    if outdated_note:
+        st.error(f"Outdated: this AI explanation was generated before {outdated_note}. The numbers above are "
+                 "current; generate a new explanation to match them.", icon="⚠️")
     st.warning(result.disclaimer, icon="🤖")
-    cols = st.columns(len(result.scores))
-    for col, (view, s) in zip(cols, result.scores.items()):
-        col.metric(f"{ui_model(view).view_label}: {s['score_label']} (deterministic)",
-                   f"{s['score']} · {s['class']}", help=f"Data completeness {s['data_completeness']:.0%}")
     r = result.review
     st.markdown("**Management summary**")
     st.write(r.management_summary)
+    st.caption("Based on: " + ", ".join(f"`{x}`" for x in r.summary_refs))
     st.markdown("**Main drivers**")
-    st.dataframe(pd.DataFrame([d.model_dump() for d in r.risk_drivers]), hide_index=True, width="stretch",
-                 column_config={"criterion": "Criterion", "view": "View", "explanation": "Why it matters"})
+    st.dataframe(pd.DataFrame([{**d.model_dump(), "trace_refs": ", ".join(d.trace_refs)} for d in r.risk_drivers]),
+                 hide_index=True, width="stretch",
+                 column_config={"criterion": "Criterion", "view": "View", "explanation": "Why it matters",
+                                "trace_refs": "Trace entries"})
     if r.view_differences:
         st.markdown("**Risk vs. performance**")
         for d in r.view_differences:
-            st.markdown(f"- **{d.topic}** — {d.explanation} `{', '.join(d.criteria)}`")
+            st.markdown(f"- **{d.topic}** — {d.explanation} `{', '.join(d.trace_refs)}`")
     st.markdown("**Suggested actions** — proposals for human review, not decisions")
-    st.dataframe(pd.DataFrame([{**a.model_dump(), "criteria": ", ".join(a.criteria)} for a in r.suggested_actions]),
+    st.dataframe(pd.DataFrame([{**a.model_dump(), "criteria": ", ".join(a.criteria),
+                                "trace_refs": ", ".join(a.trace_refs)} for a in r.suggested_actions]),
                  hide_index=True, width="stretch",
                  column_config={"priority": "Priority", "action": "Action", "rationale": "Rationale",
-                                "criteria": "Criteria"})
+                                "criteria": "Criteria", "trace_refs": "Trace entries"})
     if r.open_questions or result.data_gaps:
         st.markdown("**Open questions**")
         for q in r.open_questions:
@@ -718,22 +729,35 @@ def show_ai_review(result: AIReviewResult) -> None:
     st.caption(f"{result.provider} / {result.model} · {result.created_at} · input SHA-256 {result.payload_sha256[:12]}…")
 
 
-with tab_ai:
-    st.caption("An optional language model interprets the deterministic results of one supplier across both "
-               "views: summary, main drivers, differences between the views, action proposals and open "
-               "questions. It does not change scores, classes or weights, and nothing is sent until you "
-               "press the button.")
-    try:
-        llm_settings = LLMSettings.from_env()
-        unavailable = llm_settings.unavailable_reason
-    except LLMReviewError as exc:
-        llm_settings, unavailable = None, str(exc)
-    if unavailable:
-        st.info(f"AI review not available: {unavailable} All other tabs work without it.")
-    else:
-        st.caption(f"Provider: **{llm_settings.describe()}** · timeout {llm_settings.timeout_seconds:g} s per "
-                   f"attempt · up to {llm_settings.max_retries} retries")
+def inputs_text(inputs: list[dict]) -> str:
+    return "; ".join(f"{i['input']} = {'—' if i['value'] is None else i['value']} [{i['source']}]" for i in inputs)
 
+
+def show_trace(t: dict) -> None:
+    s = t["score"]
+    st.markdown(f"**{ui_model(t['view']).view_label}** · {s['label']} **{s['value']}** · class "
+                f"**{class_label(t['class']['final']) if t['view'] == model().view else t['class']['final']}** · "
+                f"data {t['data_completeness']:.0%} · model `{t['model']}` · weights `{t['weights']}`")
+    st.caption(s["note"] + f". Sum of contributions: {s['sum_of_contributions']} = internal score "
+               f"{s['internal_value']}.")
+    frame = pd.DataFrame([{
+        "id": c["id"], "criterion": c["label"], "rating": c["rating"], "origin": c["rating_origin"],
+        "inputs (source)": inputs_text(c["inputs"]), "rule": c["rule"], "weight": c["nominal_weight"],
+        "effective weight": c["effective_weight"], "points": c["contribution_points"],
+    } for c in sorted(t["criteria"], key=lambda c: -(c["contribution_points"] or 0))])
+    st.dataframe(frame, hide_index=True, width="stretch", column_config={
+        "weight": st.column_config.NumberColumn("Weight", format="%.3f"),
+        "effective weight": st.column_config.NumberColumn("Effective weight", format="%.3f"),
+        "points": st.column_config.NumberColumn("Points", format="%.2f")})
+    rules = [r for r in t["non_additive"] if r["fired"] or r.get("rating") is None and "rule" in r["id"]]
+    st.markdown("Rules that do not add points: " + ("; ".join(
+        f"`{r['id']}` {r['effect']}" for r in rules) if rules else "none triggered."))
+
+
+with tab_explain:
+    st.caption("Why does this supplier get its rating, and is the input right? The calculation below comes "
+               "straight from the scoring engine and needs no API key. Corrections are previewed in both "
+               "views and applied only after you confirm them.")
     current = assessments()
     if not current:
         st.info("No results yet.")
@@ -749,24 +773,50 @@ with tab_ai:
                                                for v in ("risk", "performance")))
         except (KeyError, LookupError) as exc:
             payload = None
-            st.warning(f"Both views are needed for an AI review: {exc}")
+            st.warning(f"Both views are needed: {exc}")
+
         if payload is not None:
+            # 1 · deterministic explanation --------------------------------------------------------
+            st.subheader("1 · How the score is calculated")
+            cols = st.columns(2)
+            for col, (view, t) in zip(cols, payload["views"].items()):
+                col.metric(f"{ui_model(view).view_label}: {t['score']['label']}",
+                           f"{t['score']['value']} · {t['class']['final']}",
+                           help=f"class from score: {t['class']['from_score']}; data {t['data_completeness']:.0%}")
+            show_trace(payload["views"][model().view])
+            st.caption("Switch the view at the top to see the other view's trace.")
+
+            # 2 · AI explanation -----------------------------------------------------------------------
+            st.subheader("2 · AI explanation (optional)")
+            try:
+                llm_settings = LLMSettings.from_env()
+                unavailable = llm_settings.unavailable_reason
+            except LLMReviewError as exc:
+                llm_settings, unavailable = None, str(exc)
+            if unavailable:
+                st.info(f"AI explanation not available: {unavailable} The calculation above is complete without it.")
+            else:
+                st.caption(f"Provider: **{llm_settings.describe()}** · timeout {llm_settings.timeout_seconds:g} s "
+                           f"per attempt · up to {llm_settings.max_retries} retries")
             digest = payload_hash(payload)
             with st.expander("Data sent to the provider (exactly this JSON)"):
-                st.caption("Not sent: supplier name, country, annual spend, the raw indicator record and expert "
-                           "labels. Use synthetic or approved data only.")
+                st.caption("The scoring trace of both views. Not sent: supplier name, country, annual spend and "
+                           "expert labels. Use synthetic or approved data only.")
                 st.code(payload_json(payload), language="json")
-            cache = st.session_state.setdefault("ai_review_results", {})  # input hash -> AIReviewResult
+            explanations = st.session_state.setdefault("ai_explanations", {})  # supplier -> AIReviewResult
+            outdated_notes = st.session_state.setdefault("ai_outdated", {})  # supplier -> note
             failures = st.session_state.setdefault("ai_review_failures", {})
-            cached = cache.get(digest)
-            c1, c2 = st.columns([1, 1])
+            existing = explanations.get(sid)
+            current_ok = existing is not None and review_is_current(existing, payload)
+            c1, c2 = st.columns(2)
             clicked = c1.button("Generate AI Review", type="primary", width="stretch",
-                                disabled=bool(unavailable) or cached is not None,
+                                disabled=bool(unavailable) or current_ok,
                                 help="One paid API call. The result is kept for this exact input; reruns of the "
                                      "app do not call the provider again.")
-            if cached is not None:
-                c2.button("Discard review", width="stretch", on_click=lambda d=digest: cache.pop(d, None))
-            if clicked and digest not in cache:  # explicit trigger only; guarded against double clicks
+            if existing is not None:
+                c2.button("Discard explanation", width="stretch",
+                          on_click=lambda s=sid: (explanations.pop(s, None), outdated_notes.pop(s, None)))
+            if clicked and not current_ok:  # explicit trigger only; guarded against double clicks
                 risk_run = runs["risk"]
                 with st.spinner(f"Waiting for {llm_settings.describe()} …"):
                     new_state = risk_run["evaluator"].ai_review(risk_run["state"]["run_id"], payload)
@@ -776,9 +826,123 @@ with tab_ai:
                     failures[digest] = error
                 else:
                     failures.pop(digest, None)
-                    cache[digest] = new_state["ai_reviews"][sid]
-                st.rerun()  # redraw with the stored result (the button above was drawn before the call)
-            if digest in failures and cached is None:
-                st.error(f"AI review failed: {failures[digest]}")
-            if cached is not None:
-                show_ai_review(cached)
+                    explanations[sid] = new_state["ai_reviews"][sid]
+                    outdated_notes.pop(sid, None)
+                st.rerun()
+            if digest in failures and not current_ok:
+                st.error(f"AI explanation failed: {failures[digest]}")
+            if existing is not None:
+                show_ai_review(existing, None if current_ok else outdated_notes.get(sid, "the data changed"))
+
+            # 3 · controlled correction ---------------------------------------------------------------------
+            st.subheader("3 · Correct data or ratings")
+            st.caption("**Data correction**: fix a wrong or missing input (or an expert-assessed rating). "
+                       "**Expert override**: replace a rating derived by rule with your own 1–5 rating. "
+                       "Weights, thresholds and rules are not changed here; they go through calibration and approval.")
+            fields = correctable_fields([ui_model("risk"), ui_model("performance")])
+            row = next(r for r in st.session_state.rows if str(r.get("supplier_id")) == sid)
+            with st.expander("Current values of all correctable fields"):
+                st.dataframe(pd.DataFrame([{
+                    "field": f, "kind": spec["kind"].replace("_", " "), "used by": ", ".join(spec["criteria"]),
+                    "expects": spec["expects"], "current": None if row.get(f) is None else str(row.get(f)),
+                } for f, spec in fields.items()]), hide_index=True, width="stretch")
+            with st.form(f"correction_form_{sid}"):
+                f1, f2 = st.columns([2, 1])
+                c_field = f1.selectbox(
+                    "Field", list(fields), key=f"correction_field_{sid}",
+                    format_func=lambda f: f"{f} · {fields[f]['kind'].replace('_', ' ')} · current: "
+                                          f"{'—' if row.get(f) is None else row.get(f)}")
+                c_value = f2.text_input("New value ('none' clears it)", key=f"correction_value_{sid}")
+                reason = st.text_area("Reason for the change (required)", key=f"correction_reason_{sid}")
+                entered_by = st.text_input("Your name (optional, not verified)", key=f"correction_name_{sid}")
+                preview_clicked = st.form_submit_button("Preview correction")
+            if preview_clicked:
+                try:
+                    request = CorrectionRequest(
+                        supplier_id=sid, reason=reason, entered_by=entered_by.strip() or None,
+                        changes=[FieldChange(field=c_field, kind=fields[c_field]["kind"], new_value=parse_cell(c_value))])
+                    active = {v: (runs[v]["state"] or {}).get("active_weights") or {} for v in ("risk", "performance")}
+                    new_rows, comparison = preview_correction(st.session_state.rows, request,
+                                                              [ui_model("risk"), ui_model("performance")],
+                                                              active, providers())
+                    st.session_state.pending_correction = {"sid": sid, "request": request, "new_rows": new_rows,
+                                                           "comparison": comparison}
+                except (ValidationError, ValueError) as exc:
+                    st.session_state.pop("pending_correction", None)
+                    st.error(f"Correction not possible: {exc}")
+            pending = st.session_state.get("pending_correction")
+            if pending and pending["sid"] == sid:
+                st.markdown("**Preview — nothing is applied yet**")
+                comparison = pending["comparison"]
+                st.dataframe(pd.DataFrame([{
+                    "view": ui_model(v).view_label, "score": f"{c['score'][0]} → {c['score'][1]}",
+                    "class": f"{c['class'][0]} → {c['class'][1]}",
+                    "data": f"{c['data_completeness'][0]:.0%} → {c['data_completeness'][1]:.0%}",
+                    "needs review": f"{c['needs_review'][0]} → {c['needs_review'][1]}",
+                    "rules now triggered": ", ".join(c["rules_now_triggered"]) or "—",
+                    "rules no longer triggered": ", ".join(c["rules_no_longer_triggered"]) or "—",
+                } for v, c in comparison.items()]), hide_index=True, width="stretch")
+                changed = [{"view": v, "criterion": x["criterion"], "rating": f"{x['rating'][0]} → {x['rating'][1]}",
+                            "origin": f"{x['origin'][0]} → {x['origin'][1]}",
+                            "points": f"{x['contribution_points'][0]} → {x['contribution_points'][1]}"}
+                           for v, c in comparison.items() for x in c["changed_criteria"]]
+                if changed:
+                    st.dataframe(pd.DataFrame(changed), hide_index=True, width="stretch")
+                else:
+                    st.caption("No criterion rating changes.")
+                a1, a2 = st.columns(2)
+                if a1.button("✅ Confirm and apply", type="primary", width="stretch"):
+                    request = pending["request"]
+                    entry = history().record_correction(request, comparison)
+                    st.session_state.rows = pending["new_rows"]
+                    st.session_state.editor_version = st.session_state.get("editor_version", 0) + 1
+                    st.session_state.runs = {}
+                    run(calibrate=False, material_group=None)
+                    if sid in explanations:
+                        outdated_notes[sid] = f"the correction of {entry['recorded_at']} ({request.reason})"
+                    st.session_state.pop("pending_correction", None)
+                    st.toast("Correction applied and recorded")
+                    st.rerun()
+                if a2.button("Discard preview", width="stretch"):
+                    st.session_state.pop("pending_correction", None)
+                    st.rerun()
+            log = history().corrections(sid)
+            if log:
+                with st.expander(f"Correction history ({len(log)})"):
+                    st.dataframe(pd.DataFrame([{
+                        "time": e["recorded_at"], "changes": "; ".join(
+                            f"{c['field']} ({c['kind'].replace('_', ' ')}): {c['old_value']} → {c['new_value']}"
+                            for c in e["changes"]),
+                        "reason": e["reason"], "entered by (not verified)": e["entered_by"],
+                        "risk": f"{e['views']['risk']['score'][0]} → {e['views']['risk']['score'][1]}",
+                        "performance": f"{e['views']['performance']['score'][0]} → "
+                                       f"{e['views']['performance']['score'][1]}",
+                    } for e in log]), hide_index=True, width="stretch")
+
+            # 4 · dispute --------------------------------------------------------------------------------------
+            st.subheader("4 · Dispute assessment")
+            st.caption("Records that you disagree with a criterion. It changes no score and does not train weights; "
+                       "it is a note for the next review.")
+            with st.form(f"dispute_form_{sid}"):
+                d1, d2 = st.columns(2)
+                d_view = d1.selectbox("View", ["risk", "performance"], format_func=lambda v: ui_model(v).view_label)
+                criteria = sorted({c["key"] for t in payload["views"].values() for c in t["criteria"]})
+                d_criterion = d2.selectbox("Criterion", criteria)
+                d_reason = st.text_area("Why is the assessment wrong? (required)")
+                d_name = st.text_input("Your name (optional, not verified)", key=f"dispute_name_{sid}")
+                if st.form_submit_button("Record objection"):
+                    entry_view = payload["views"].get(d_view, {})
+                    rated = next((c for c in entry_view.get("criteria", []) if c["key"] == d_criterion), None)
+                    try:
+                        history().record_objection(sid, d_view, d_criterion, d_reason, d_name.strip() or None,
+                                                   context={"rating": rated["rating"] if rated else None,
+                                                            "score": entry_view.get("score", {}).get("value")})
+                        st.success("Objection recorded. Scores are unchanged.")
+                    except ValueError as exc:
+                        st.error(str(exc))
+            objections = history().objections(sid)
+            if objections:
+                with st.expander(f"Objections ({len(objections)})"):
+                    st.dataframe(pd.DataFrame([{k: o[k] for k in ("recorded_at", "view", "criterion", "reason",
+                                                                  "entered_by", "status")} for o in objections]),
+                                 hide_index=True, width="stretch")

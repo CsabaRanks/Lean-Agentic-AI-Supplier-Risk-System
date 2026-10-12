@@ -31,19 +31,22 @@ def draft(**changes) -> AIReviewDraft:
     """A valid answer for SUP-003 (all criterion keys exist in the sample payload)."""
     base = {
         "management_summary": "Critical supply risk despite strong delivery performance.",
+        "summary_refs": ["risk:score", "performance:score"],
         "risk_drivers": [
-            {"criterion": "sourcing_strategy", "view": "risk", "explanation": "Single source, rated 5."},
-            {"criterion": "country_risk", "view": "risk", "explanation": "Rated 4."},
+            {"criterion": "sourcing_strategy", "view": "risk", "explanation": "Single source, rated 5.",
+             "trace_refs": ["risk:sourcing_strategy"]},
+            {"criterion": "country_risk", "view": "risk", "explanation": "Rated 4.", "trace_refs": ["risk:country_risk"]},
         ],
         "view_differences": [
             {"topic": "Good supplier, fragile supply", "explanation": "Delivery is rated well; dependency is not.",
-             "criteria": ["on_time_delivery", "sourcing_strategy"]},
+             "criteria": ["on_time_delivery", "sourcing_strategy"],
+             "trace_refs": ["performance:dim:delivery", "risk:dim:supply_chain"]},
         ],
         "suggested_actions": [
             {"priority": "low", "action": "Review payment terms.", "rationale": "Credit rated 4.",
-             "criteria": ["credit_risk"]},
+             "criteria": ["credit_risk"], "trace_refs": ["risk:credit_risk"]},
             {"priority": "high", "action": "Qualify a second source.", "rationale": "Single source.",
-             "criteria": ["sourcing_strategy"]},
+             "criteria": ["sourcing_strategy"], "trace_refs": ["risk:sourcing_strategy"]},
         ],
         "open_questions": [],
     }
@@ -86,10 +89,11 @@ def test_payload_contains_both_views_and_only_structured_results(runs):
     assert payload["supplier"] == {"id": "SUP-003", "material_group": "chemicals"}
     assert list(payload["views"]) == ["risk", "performance"]
     risk = payload["views"]["risk"]
-    assert risk["score"] == 84.0 and risk["class"] == "critical"
+    assert risk["score"]["value"] == 84.0 and risk["class"]["final"] == "critical"
     assert {c["key"] for c in risk["criteria"]} == set(load_risk_model(view="risk").factor_keys())
-    assert all({"rating", "weight", "basis"} <= set(c) for c in risk["criteria"])
-    assert payload["views"]["performance"]["score_orientation"] == "higher_is_better"
+    assert all({"id", "rating", "nominal_weight", "contribution_points", "inputs", "rule"} <= set(c)
+               for c in risk["criteria"])
+    assert payload["views"]["performance"]["score"]["orientation"] == "higher_is_better"
 
     text = payload_json(payload)
     for withheld in ("Cobalt", "annual_spend", "country\"", "expert_risk_score"):
@@ -100,8 +104,8 @@ def test_payload_marks_missing_data_and_fired_rules(runs):
     gaps = payload_for(runs, "SUP-006")
     assert "risk: credit_risk" in data_gaps(gaps)
     assert gaps["views"]["risk"]["flagged_for_human_review"]
-    rules = payload_for(runs, "SUP-005")["views"]["risk"]["escalation_rules_fired"]
-    assert rules and rules[0]["criterion"] == "insolvency_signals"
+    rules = [r for r in payload_for(runs, "SUP-005")["views"]["risk"]["non_additive"] if r["fired"]]
+    assert [r["id"] for r in rules] == ["risk:rule:insolvency_signals"]
 
 
 def test_payload_is_deterministic(runs):
@@ -125,13 +129,18 @@ def test_valid_answer_passes(runs):
     ({"management_summary": "  "}, "summary is empty"),
     ({"management_summary": "x" * 2000}, "longer than"),
     ({"risk_drivers": []}, "risk drivers"),
-    ({"risk_drivers": [{"criterion": "brand_reputation", "view": "risk", "explanation": "x"}]},
+    ({"risk_drivers": [{"criterion": "brand_reputation", "view": "risk", "explanation": "x", "trace_refs": ["risk:score"]}]},
      "unknown criterion 'brand_reputation'"),
-    ({"risk_drivers": [{"criterion": "on_time_delivery", "view": "risk", "explanation": "x"}]},
+    ({"risk_drivers": [{"criterion": "on_time_delivery", "view": "risk", "explanation": "x", "trace_refs": ["risk:score"]}]},
      "unknown criterion 'on_time_delivery' in view 'risk'"),
     ({"suggested_actions": []}, "suggested actions"),
     ({"view_differences": []}, "differences between the views"),
     ({"open_questions": [{"question": "Who owns it?", "criteria": ["ownership"]}]}, "unknown criterion 'ownership'"),
+    ({"summary_refs": []}, "summary cites no trace entry"),
+    ({"risk_drivers": [{"criterion": "country_risk", "view": "risk", "explanation": "x", "trace_refs": []}]},
+     "a risk driver cites no trace entry"),
+    ({"risk_drivers": [{"criterion": "country_risk", "view": "risk", "explanation": "x",
+                        "trace_refs": ["risk:market_news"]}]}, "unknown trace entry 'risk:market_news'"),
 ])
 def test_invalid_answers_are_rejected(runs, changes, expected):
     problems = validate_review(draft(**changes), payload_for(runs))
@@ -140,7 +149,8 @@ def test_invalid_answers_are_rejected(runs, changes, expected):
 
 def test_missing_data_requires_open_questions(runs):
     payload = payload_for(runs, "SUP-006")
-    answer = draft(risk_drivers=[{"criterion": "business_impact", "view": "risk", "explanation": "Rated 4."}])
+    answer = draft(risk_drivers=[{"criterion": "business_impact", "view": "risk", "explanation": "Rated 4.",
+                                  "trace_refs": ["risk:business_impact"]}])
     assert any("missing data" in p for p in validate_review(answer, payload))
     answer = draft(risk_drivers=answer.model_dump()["risk_drivers"],
                    open_questions=[{"question": "What is the credit rating?", "criteria": ["credit_risk"]}])
@@ -201,7 +211,7 @@ def test_stale_preview_is_not_sent(runs):
 
 @pytest.mark.parametrize("reviewer, expected", [
     (FakeReviewer(error=LLMReviewError("The provider did not answer within 90 s")), "did not answer"),
-    (FakeReviewer(answer=draft(risk_drivers=[{"criterion": "x", "view": "risk", "explanation": "y"}])),
+    (FakeReviewer(answer=draft(risk_drivers=[{"criterion": "x", "view": "risk", "explanation": "y", "trace_refs": ["risk:score"]}])),
      "failed validation"),
 ])
 def test_failures_are_reported_and_keep_the_run_usable(reviewer, expected):

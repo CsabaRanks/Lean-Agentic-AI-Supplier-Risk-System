@@ -10,6 +10,15 @@ Snapshots are taken explicitly: CLI ``--history-dir``, the UI's "Save snapshot"
 button, or automatically after a review decision in the UI. Recording every
 recalculation while data is still being edited would only add noise.
 
+Corrections and objections are kept next to the snapshots, also append-only:
+
+* ``corrections.jsonl``: confirmed corrections with old and new values, kind
+  (data correction or expert override), reason, time, the name typed by the
+  user (not a verified identity), model and weight versions, and the
+  before/after result of every view;
+* ``objections.jsonl``: "dispute assessment" entries (criterion and reason).
+  An objection changes no score and does not train weights.
+
 History files may contain real supplier data. Keep them out of public
 repositories (``data/history/`` is git-ignored).
 """
@@ -65,6 +74,59 @@ class HistoryStore:
                     "dimensions": {d.dimension: model.to_display(d.score) for d in a.dimension_scores},
                 }) + "\n")
         return len(assessments)
+
+    def _append(self, name: str, entry: dict[str, Any]) -> dict[str, Any]:
+        self.directory.mkdir(parents=True, exist_ok=True)
+        with (self.directory / name).open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, ensure_ascii=False, default=str) + "\n")
+        return entry
+
+    def _read(self, name: str, supplier_id: str | None = None) -> list[dict]:
+        path = self.directory / name
+        if not path.exists():
+            return []
+        rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        return [r for r in rows if supplier_id is None or r["supplier_id"] == supplier_id]
+
+    def record_correction(self, request, comparison: dict[str, dict[str, Any]],
+                          recorded_at: str | None = None) -> dict[str, Any]:
+        """Append a confirmed correction (``tools.corrections``) with its before/after comparison."""
+        return self._append("corrections.jsonl", {
+            "recorded_at": recorded_at or datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "supplier_id": request.supplier_id,
+            "status": "applied",
+            "changes": [c.model_dump() for c in request.changes],
+            "reason": request.reason,
+            "entered_by": request.entered_by,
+            "identity_verified": False,
+            "views": {view: {k: v[k] for k in ("model", "weights", "score", "class", "changed_criteria",
+                                               "rules_now_triggered", "rules_no_longer_triggered")}
+                      for view, v in comparison.items()},
+        })
+
+    def corrections(self, supplier_id: str | None = None) -> list[dict]:
+        return self._read("corrections.jsonl", supplier_id)
+
+    def record_objection(self, supplier_id: str, view: str, criterion: str, reason: str,
+                         entered_by: str | None = None, context: dict[str, Any] | None = None,
+                         recorded_at: str | None = None) -> dict[str, Any]:
+        """Append a "dispute assessment" entry. It changes nothing else."""
+        if not reason or not reason.strip():
+            raise ValueError("a reason for the objection is required")
+        return self._append("objections.jsonl", {
+            "recorded_at": recorded_at or datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "supplier_id": supplier_id,
+            "view": view,
+            "criterion": criterion,
+            "reason": reason.strip(),
+            "entered_by": entered_by or None,
+            "identity_verified": False,
+            "status": "open",
+            "context": context or {},
+        })
+
+    def objections(self, supplier_id: str | None = None) -> list[dict]:
+        return self._read("objections.jsonl", supplier_id)
 
     def load(self, view: str, supplier_id: str | None = None, material_group: str | None = None) -> list[dict]:
         path = self._file(view)

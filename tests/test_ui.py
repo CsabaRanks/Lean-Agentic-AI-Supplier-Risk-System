@@ -1,5 +1,6 @@
 """End-to-end tests of the spreadsheet UI (skipped if streamlit is not installed)."""
 
+import json
 import tempfile
 from pathlib import Path
 
@@ -137,7 +138,7 @@ def test_ai_review_unavailable_without_api_key(monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     at = app()
     assert ai_button(at).disabled
-    assert any("AI review not available" in i.value for i in at.info)
+    assert any("AI explanation not available" in i.value for i in at.info)
     assert any('"views"' in c.value for c in at.code)  # the payload preview is shown anyway
 
 
@@ -158,3 +159,79 @@ def test_ai_review_button_calls_provider_once(monkeypatch):
 
     at.run()  # plain rerun, e.g. after any widget interaction
     assert len(reviewer.calls) == 1
+
+
+# --- explain & correct ------------------------------------------------------------------------
+
+
+def select_supplier(at: AppTest, sid: str) -> AppTest:
+    box = at.selectbox(key="ai_supplier")
+    return box.select(sid).run()
+
+
+def propose(at: AppTest, sid: str, field: str, value: str, reason: str) -> AppTest:
+    at.selectbox(key=f"correction_field_{sid}").select(field)
+    at.text_input(key=f"correction_value_{sid}").input(value)
+    at.text_area(key=f"correction_reason_{sid}").input(reason)
+    at.text_input(key=f"correction_name_{sid}").input("tester")
+    return click(at, "Preview correction")
+
+
+def risk_score(at: AppTest, sid: str) -> float:
+    return state(at)["results"][sid].overall_score
+
+
+def test_trace_is_shown_without_api_key():
+    at = select_supplier(app(), "SUP-005")
+    assert any("Sum of contributions: 19.5 = internal score 19.5" in c.value for c in at.caption)
+    assert any("risk:rule:insolvency_signals" in m.value and "raised the class" in m.value for m in at.markdown)
+
+
+def test_preview_does_not_apply_and_confirm_applies_and_records():
+    at = select_supplier(app(), "SUP-003")
+    at = propose(at, "SUP-003", "qualified_sources", "2", "Second source qualified (synthetic)")
+    assert any("Preview — nothing is applied yet" in m.value for m in at.markdown)
+    assert risk_score(at, "SUP-003") == 84.0  # preview only
+    row = next(r for r in at.session_state.rows if r["supplier_id"] == "SUP-003")
+    assert row["qualified_sources"] == 1
+
+    click(at, "Confirm and apply")
+    assert risk_score(at, "SUP-003") == pytest.approx(79.63, abs=0.01)
+    history = Path(at.session_state["history_dir"]) / "corrections.jsonl"
+    entry = json.loads(history.read_text().splitlines()[-1])
+    assert entry["changes"][0]["old_value"] == 1 and entry["changes"][0]["new_value"] == 2
+    assert entry["entered_by"] == "tester" and entry["identity_verified"] is False
+
+
+def test_correction_without_reason_is_refused():
+    at = select_supplier(app(), "SUP-003")
+    at = propose(at, "SUP-003", "qualified_sources", "2", "")
+    assert any("reason" in e.value for e in at.error)
+    assert "pending_correction" not in at.session_state
+
+
+def test_ai_explanation_is_marked_outdated_after_a_correction(monkeypatch):
+    from test_ai_review import FakeReviewer
+
+    reviewer = FakeReviewer()
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    monkeypatch.setattr("supplier_risk_agent.agents.ai_review.reviewer_from_env", lambda: reviewer)
+    at = select_supplier(app(), "SUP-003")
+    ai_button(at).click().run()
+    assert len(reviewer.calls) == 1 and not at.error
+
+    at = propose(at, "SUP-003", "qualified_sources", "2", "Second source qualified (synthetic)")
+    click(at, "Confirm and apply")
+    assert any(e.value.startswith("Outdated:") for e in at.error)
+    assert not ai_button(at).disabled and len(reviewer.calls) == 1  # no automatic new call
+
+
+def test_objection_is_recorded_without_changing_the_score():
+    at = select_supplier(app(), "SUP-003")
+    form_areas = [t for t in at.text_area if t.label.startswith("Why is the assessment wrong")]
+    form_areas[0].input("Country index looks outdated (synthetic)")
+    click(at, "Record objection")
+    assert any("Objection recorded" in s.value for s in at.success)
+    assert risk_score(at, "SUP-003") == 84.0
+    lines = (Path(at.session_state["history_dir"]) / "objections.jsonl").read_text().splitlines()
+    assert json.loads(lines[-1])["status"] == "open"

@@ -12,7 +12,7 @@ from ..llm import ReviewModel
 from ..models.config import RiskModelConfig, load_risk_model
 from ..models.domain import ReviewDecision, RiskAssessment
 from ..models.state import SupplierRiskState
-from ..tools.ai_review import build_review_payload, view_section
+from ..tools.ai_review import build_review_payload, section_from_state
 from ..tools.data_sources import JsonFileSource, SupplierDataSource
 from ..tools.weight_store import WeightStore
 from .builder import build_graph
@@ -131,9 +131,6 @@ def ai_review_payload(supplier_id: str, *runs: tuple[SupplierRiskEvaluator, Supp
     """
     sections, group = [], None
     for evaluator, state in runs:
-        result = state.get("results", {}).get(supplier_id)
-        if result is None:
-            raise LookupError(f"supplier '{supplier_id}' has no result in the {evaluator.model.view} view")
-        sections.append(view_section(result, evaluator.model))
-        group = group or result.material_group
+        sections.append(section_from_state(state, supplier_id, evaluator.model))
+        group = group or state["results"][supplier_id].material_group
     return build_review_payload(sections, supplier_id, group)

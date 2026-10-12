@@ -17,22 +17,28 @@ ViewKey = Literal["risk", "performance"]
 Priority = Literal["high", "medium", "low"]
 
 DISCLAIMER = (
-    "AI-generated interpretation of the deterministic results above. Scores, classes and weights are "
+    "AI-generated explanation of the deterministic scoring trace. Scores, classes and weights are "
     "computed by the rule-based engine, not by the language model. Suggested actions are proposals for "
     "human review, not decisions."
 )
+
+
+def _trace_refs():
+    return Field(description="Ids of the trace entries this statement relies on, e.g. 'risk:credit_risk'")
 
 
 class RiskDriver(BaseModel):
     criterion: str = Field(description="Exact criterion key from the input payload")
     view: ViewKey
     explanation: str
+    trace_refs: list[str] = _trace_refs()
 
 
 class ViewDifference(BaseModel):
     topic: str
     explanation: str
     criteria: list[str] = Field(description="Criterion keys from the input payload")
+    trace_refs: list[str] = _trace_refs()
 
 
 class SuggestedAction(BaseModel):
@@ -40,6 +46,7 @@ class SuggestedAction(BaseModel):
     action: str
     rationale: str
     criteria: list[str] = Field(description="Criterion keys from the input payload")
+    trace_refs: list[str] = _trace_refs()
 
 
 class OpenQuestion(BaseModel):
@@ -51,6 +58,7 @@ class AIReviewDraft(BaseModel):
     """Structured answer requested from the language model."""
 
     management_summary: str
+    summary_refs: list[str] = _trace_refs()
     risk_drivers: list[RiskDriver]
     view_differences: list[ViewDifference]
     suggested_actions: list[SuggestedAction]

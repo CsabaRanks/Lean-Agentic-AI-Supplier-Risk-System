@@ -34,8 +34,8 @@ from ..tools.ai_review import (
     payload_json,
     prioritised,
     score_summary,
+    section_from_state,
     validate_review,
-    view_section,
 )
 
 AGENT_NAME = "ai_review"
@@ -49,11 +49,12 @@ class AIReviewAgent:
     def _check_request(self, state: SupplierRiskState, request: dict) -> str:
         payload = request.get("payload") or {}
         sid = (payload.get("supplier") or {}).get("id")
-        result = state.get("results", {}).get(sid)
-        if result is None:
-            raise LLMReviewError(f"Supplier '{sid}' is not part of this run.")
+        try:
+            expected = section_from_state(state, sid, self.model)
+        except LookupError as exc:
+            raise LLMReviewError(f"Supplier '{sid}' is not part of this run.") from exc
         sent = (payload.get("views") or {}).get(self.model.view)
-        if sent != view_section(result, self.model):
+        if sent != expected:
             raise LLMReviewError("The previewed data no longer matches the current results. Recalculate and retry.")
         return sid
 
