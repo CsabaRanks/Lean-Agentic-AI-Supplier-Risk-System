@@ -116,7 +116,7 @@ def markdown(by_cell: list[dict], overall: list[dict], cfg: dict) -> str:
         "# E5 · Uncertainty threshold for cross-validated acceptance: summary",
         "",
         (f"Synthetic data only. Policies {', '.join(cfg['policies'])}; n ∈ {cfg['sizes']}; "
-         f"{cfg['seeds']} seeds per cell; λ = 0.05; min_improvement 5 %. Errors vs. noise-free truth."),
+         f"{cfg['seeds']} seeds per cell; λ = 0.05 × 32 / n (scaled default); min_improvement 5 %. Errors vs. noise-free truth."),
         "",
         "## Overall (mean over all policy × n cells)",
         "",

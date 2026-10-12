@@ -27,18 +27,21 @@ def _print_portfolio(results: list[RiskAssessment], model: RiskModelConfig) -> N
     print(f"View: {model.view_label} — {model.view_question}\n")
     print(f"{'ID':<9} {'Supplier':<28} {'Score':>6}  {'Class':<9} {'Data':>5}  {'Weights':<20} Review")
     print("-" * 94)
+    raised = False
     for r in results:
         shown = model.to_display(r.overall_score)
         score = f"{shown:6.1f}" if shown is not None else "   n/a"
         cls = r.risk_class or "n/a"
         if r.calculated_class and r.risk_class != r.calculated_class:
             cls += "*"
+            raised = True
         print(
             f"{r.supplier_id:<9} {r.supplier_name[:28]:<28} {score}  {cls:<9} "
             f"{r.data_completeness:5.0%}  {r.weights_scope + '/' + r.weights_origin:<20} "
             f"{'yes' if r.requires_human_review else ''}"
         )
-    print("\n* class raised by an escalation rule")
+    if raised:
+        print("\n* class raised by an escalation rule")
 
 
 def _print_detail(r: RiskAssessment, model: RiskModelConfig) -> None:

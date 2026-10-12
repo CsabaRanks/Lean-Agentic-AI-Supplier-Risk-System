@@ -8,7 +8,8 @@ Output: calibrated weights that minimise the MSE between model score and expert
         label under the constraints  weight >= w_min  and  sum = 1,
         plus a report of old vs. new weights and the MSE before / after.
 
-If the result is accepted (MSE improves by at least ``min_improvement``) and
+If the result is accepted (by default: the cross-validated MSE improves by at
+least ``min_improvement`` and by at least ``cv_min_z`` standard errors) and
 ``auto_apply`` is on, the calibrated weights become the active weights for the
 calibration scope, are persisted to the weight store (if configured) and the
 supervisor routes back to the Scoring Agent (feedback loop). Otherwise the

@@ -9,8 +9,8 @@ All data in this folder is **entirely fictional**.
   not real judgements.
 - `weights/` — versioned weight store (see [weights/README.md](weights/README.md)).
 
-`sample_suppliers.json` contains Names, regions and
-all indicator values are invented to exercise the different paths of the risk model:
+In `sample_suppliers.json`, names, regions and all indicator values are invented to exercise the
+different paths of the risk model:
 
 | ID | Purpose |
 |----|---------|

@@ -3,8 +3,10 @@
 ## Design principles
 
 1. **Deterministic numbers, explainable results.** Every score is computed by pure Python functions
-   (`tools/scoring.py`). Given the same data, model and weights, the result is identical. LLMs are
-   *planned* for data extraction and narrative explanations, but they never compute or change a score.
+   (`tools/scoring.py`). Given the same data, model and weights, the result is identical. **The
+   current implementation calls no language model**: every agent, including the supervisor, is
+   deterministic Python. LLMs are *planned* for data extraction and narrative explanations, but
+   they would never compute or change a score.
 2. **Configuration over code.** Criteria, default weights, class thresholds, escalation rules, actions
    and calibration settings live in one YAML file (`RiskModelConfig`). Swapping the model does not
    touch the agents.

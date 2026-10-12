@@ -10,7 +10,8 @@ Approved or auto-applied weight sets are written here when a run uses
   comparison or rollback (`WeightStore.load(scope, version=1)`).
 - Files whose factors do not match the current risk model are ignored with a warning.
 
-Commit these files like any other model change. That gives you a reviewable history of
-who changed which weights, when and why. Weights calibrated on real supplier data may be
-confidential. In that case, keep the weight store in a private location and do not commit it to a
-public repository.
+In this public repository the generated subfolders (`risk/`, `performance/`) are git-ignored, so
+demo runs do not end up in commits. In a private fork, remove the `data/weights/*/` line from
+`.gitignore` and commit these files like any other model change. That gives you a reviewable history
+of who changed which weights, when and why. Weights calibrated on real supplier data may be
+confidential: keep them out of public repositories.

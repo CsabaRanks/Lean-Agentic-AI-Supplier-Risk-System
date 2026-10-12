@@ -24,7 +24,7 @@ noise_low / noise_high / coarse
 
 All labels: true score + N(0, sigma^2), rounded, clipped to 0..100 (sigma 4, step 5 unless stated).
 Evaluation is against the policy's noise-free true score on an independent test set.
-Calibration uses the production settings (lambda = 0.05, cross-validated acceptance).
+Calibration uses the production settings (lambda = 0.05 x 32 / n, cross-validated acceptance).
 
     python scripts/robustness_calibration.py           # full run
     python scripts/robustness_calibration.py --quick   # smoke test
@@ -152,7 +152,7 @@ def fit(X: np.ndarray, y: np.ndarray, settings: CalibrationSettings) -> tuple[np
 
 
 def run(cfg: dict) -> tuple[list[dict], list[dict]]:
-    settings = MODEL.calibration  # production defaults: lambda 0.05, cross-validated acceptance
+    settings = MODEL.calibration  # production defaults: scaled lambda, cross-validated acceptance
     oracle_settings = settings.model_copy(update={"regularization": 0.0})
     X_test = ratings(cfg["test_n"], 99_999, "TEST")
     rows, summary = [], []
@@ -231,7 +231,7 @@ def markdown(summary: list[dict], cfg: dict) -> str:
         "",
         (f"Synthetic data only. {cfg['seeds']} seeds per cell; independent test set of {cfg['test_n']} suppliers; "
         "errors are MSE (score points²) against the policy's noise-free true score. "
-        "Production settings: λ = 0.05, cross-validated acceptance."),
+        "Production settings: λ = 0.05 × 32 / n (scaled default), cross-validated acceptance."),
         "",
         ("*Linear floor*: best constrained linear weighting fitted on the noise-free test set, i.e. what no "
         "linear model can beat. *Excess removed*: share of the default weights' error above that floor "
