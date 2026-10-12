@@ -1862,8 +1862,9 @@ already run:
   of deterministic agents with a rule-based supervisor. Document extraction and an LLM-based
   supervisor are planned, not implemented.
 - **Experimental, unevaluated review agent.** The optional Supplier Review Agent (Section 6.9) was
-  tested only with mocked model responses on synthetic suppliers; a smoke test against the real
-  API exists but has not been run. These tests check plumbing and validation, not content.
+  tested with mocked model responses on synthetic suppliers, plus one real smoke test and a manual
+  spot check of two synthetic suppliers (one complete, one with many data gaps). These check
+  plumbing, validation and traceability of numbers in two answers, not quality in general.
   Nothing in this paper evaluates the quality, correctness or usefulness of the generated
   reviews, and no claim of domain validity follows from them.
   - **External provider.** When triggered, the payload (structured results, without name,

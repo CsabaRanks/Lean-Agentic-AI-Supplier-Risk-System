@@ -1351,9 +1351,10 @@ both templates.
 \paragraph{Demonstrator.} ``Agentic'' denotes an orchestrated workflow of deterministic
 agents with a rule-based supervisor; document extraction and an LLM-based supervisor are
 planned, not implemented. The optional \emph{Supplier Review Agent} is experimental and
-unevaluated: it was tested only with mocked model responses on synthetic suppliers, and a
-smoke test against the real API exists but has not been run. These tests check plumbing
-and validation, not content; nothing here evaluates the quality, correctness or usefulness
+unevaluated: it was tested with mocked model responses on synthetic suppliers, plus one real
+smoke test and a manual spot check of two synthetic suppliers (one complete, one with many data
+gaps). These check plumbing, validation and the traceability of numbers in two answers, not
+quality in general; nothing here evaluates the quality, correctness or usefulness
 of the reviews, and no claim of domain validity follows. When triggered, it sends the
 structured results (without name, country or spend) to an external provider, Anthropic.
 Its validation checks references to criteria and views and the handling of missing data,

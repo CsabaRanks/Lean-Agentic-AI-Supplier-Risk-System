@@ -116,7 +116,7 @@ final (see [Optional AI review](#optional-ai-review)). Without an API key it is 
 | Weight store, history, audit trail | Versioned weights, snapshots, append-only log | YAML / JSONL files | Implemented |
 | WGI political stability | Country indicator | From your own World Bank CSV download | Implemented; `--wgi-mock` uses **fictional** values |
 | Live provider APIs (WGI online, ESG platform, ERP, credit agency) | External data | Interfaces raise `NotImplementedError` | Placeholder |
-| Supplier Review Agent (optional) | Summary, drivers, risk vs. performance, action proposals, open questions for one supplier | **LLM** (Claude via the Anthropic SDK), structured output, validated against the input; on explicit request only | Implemented; **experimental**, tested with mocked responses |
+| Supplier Review Agent (optional) | Summary, drivers, risk vs. performance, action proposals, open questions for one supplier | **LLM** (Claude via the Anthropic SDK), structured output, validated against the input; on explicit request only | Implemented; **experimental**, tested with mocked responses plus a real smoke test |
 | LLM supervisor, document extraction | Route steps, extract indicators from documents | — | Planned, not implemented |
 
 ### Architecture
@@ -245,8 +245,18 @@ supplier-risk --data data/sample_suppliers.json --ai-review SUP-003     # shows 
 streamlit run ui/app.py                                                 # tab "AI review (optional)"
 ```
 
-The AI review is **experimental**. It is tested with mocked model responses on synthetic suppliers;
-those tests check the plumbing and the validation, not the quality or correctness of the advice.
+![AI review tab: real answer of claude-opus-5-5 for the fictional supplier SUP-003](docs/images/ui-ai-review.png)
+
+*Real answer of `claude-opus-5-5` for the fictional supplier SUP-003 (12 October 2026). Shown as
+an example, not as validated advice.*
+
+The AI review is **experimental**. The automated tests use mocked model responses on synthetic
+suppliers; they check the plumbing and the validation, not the quality of the advice. A real smoke
+test with `claude-opus-5-5` passed on 12 October 2026. In a manual spot check of two synthetic
+suppliers, one with complete data and one with many gaps, all numbers in the text matched the input
+or sums of it, the actions built on the rule-based ones, and every data gap became an open
+question. Two answers are an example, not an evaluation. The first real call was rejected by
+validation (12 drivers, no actions), which led to stating the limits explicitly in the prompt.
 
 ## How this compares to other approaches
 
