@@ -19,7 +19,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 | **Open-source GitHub repos** | The five reviewed open-source blueprints. | Source code review, see research/github-references.md and research/comparison.md. |
 | **Lean Agentic (this repo)** | This repository as implemented (v0.1.0, October 2026), not the roadmap. | Code, tests and documentation in this repository. |
 
-**Scale:** 1 = weak / absent · 2 = rudimentary · 3 = adequate · 4 = strong · 5 = very strong. For proprietary SaaS, values are rated per example; where Prewave (P) and Sphera (S) differ, the cell shows the mean of the known values and both values. **unknown** means that no public evidence was found either way; it is not rated as absent and not plotted as a low value. **≥** marks a documented minimum: the value covers what is publicly documented, further functions are unknown.
+**Scale:** 1 = weak / absent · 2 = rudimentary · 3 = adequate · 4 = strong · 5 = very strong. For proprietary SaaS, values are rated per example; where Prewave (P) and Sphera (S) differ, the cell shows the mean of the known values and both values. **unknown** means that no public evidence was found either way; it is not rated as absent and not plotted as a low value. **≥** marks a documented minimum: the value covers what is publicly documented, further functions are unknown. **\*** marks an uncertain value: kept at its earlier level because the public evidence neither confirms nor contradicts the anchor.
 
 **Confidence:** **H** = verified from code / primary documentation · **M** = plausible, partly documented · **L** = assumption, little public evidence.
 
@@ -32,7 +32,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 | 3 | Methodological transparency | 4 | 2.5 (P 3 · S 2) | 3 | 5 | 13 |
 | 4 | Expert calibration / ability to learn | 1 | 2 | 1 | 4 | 3 |
 | 5 | Action framework | 2 | 4 | 2 | 3.5 | 6 |
-| 6 | Human review & correction | 2 | 3.5 (P ≥4 · S ≥3) | 2 | 4 | 7 |
+| 6 | Human review & correction | 2 | 4 (P ≥4 · S 4*) | 2 | 4 | 7 |
 | 7 | External signals & data coverage | 1 | 5 | 2 | 2.5 | 11 |
 | 8 | Regulatory evidence (due-diligence documentation) | 2 | 4.5 (P 5 · S 4) | 1 | 2 | new |
 | 9 | Cost / total cost of ownership | 3 | 2 | 4 | 4 | 9 |
@@ -108,7 +108,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 - **Open repos** *(H)*: Narrative recommendations.
 - **Lean Agentic** *(H)*: Configurable action framework on three levels (risk class, elevated dimension, factor level), each action with owner and review cycle; filterable, exportable action plan per material group. Below the platforms: no tracking of actions to closure, no supplier collaboration.
 
-### 6. Human review & correction: Excel 2 · SaaS 3.5 · Open repos 2 · Lean Agentic 4
+### 6. Human review & correction: Excel 2 · SaaS 4 · Open repos 2 · Lean Agentic 4
 
 *Scope:* What a person can do with a result: review and approve, challenge it, correct data or override a rating with a reason, see the effect before applying it, and find the decision in a history; roles and permissions. The system's own record of results is factor 2; the workflow architecture is factor 13.
 
@@ -121,7 +121,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 | 5 | Corrections and overrides kept apart with a mandatory reason, before/after recomputation before confirmation, a channel to dispute results, a complete decision history, and roles with verified identities. |
 
 - **Excel** *(M)*: Cells can be changed at any time, but without reasons, approval or a decision history.
-- **SaaS** *(M)*: Prewave documents alert reporting with reason categories (false data, irrelevant, duplicate, ...), manual review by Prewave with defined outcomes, and suppliers answering alerts and filling in self-assessments; incident ownership and approval workflows are described. Sphera documents assessments that feed survey results into risk profiles, playbooks, ownership and measurable closure. For both, overriding a score with a reason, a before/after view and the audit history are unknown (not found publicly), so the values are documented minimums. Evidence: <https://help.prewave.com/en/articles/423361-alert-reporting>, <https://supplier.prewave.com/en/articles/589775-register-with-prewave>, <https://sphera.com/risk-assessment>, <https://sphera.com/solutions/supply-chain-risk-management/>.
+- **SaaS** *(L)*: Against the anchors. Prewave reaches level 4 on documented evidence: alert reporting with reason categories (false data, irrelevant, duplicate, ...) is reviewed manually by Prewave with defined outcomes (deactivated, updated, confirmed), i.e. recorded decisions on corrections with a reason; suppliers can answer alerts and fill in self-assessments; incident ownership and approval workflows are described. Overriding a score with a reason, a before/after view and the audit history are unknown, so 4 is a documented minimum. Sphera documents level 3 (incident management, response playbooks with ownership and tracked closure, assessments that feed survey results into risk profiles); the level-4 element "corrections or overrides with a reason" was not found publicly, but nothing says it is absent. Sphera is therefore kept at its v0.4 value of 4 and marked uncertain instead of being lowered on missing evidence; a hands-on test could move it either way. Evidence: <https://help.prewave.com/en/articles/423361-alert-reporting>, <https://supplier.prewave.com/en/articles/589775-register-with-prewave>, <https://sphera.com/solutions/supply-chain-risk-management/>, <https://sphera.com/risk-assessment>.
 - **Open repos** *(H)*: One repo ends the run with a human-review status and reasons; its override fields exist but are never set (listed as a future improvement). No correction, dispute or decision history in the others. Evidence: <https://github.com/poshalanavateja/Vendor-Bid-Evaluation-Ai>.
 - **Lean Agentic** *(H)*: Review pause in the graph for proposed weights and flagged suppliers (approve, override class with comment, defer); calibrated weights need approval by default. Explain & correct separates data corrections from expert overrides, requires a reason, recomputes both views and shows before/after before confirmation, records old and new values with reason, time, model and weight version, and marks an earlier AI explanation as outdated; disputes are recorded without changing scores or weights. Not 5: no roles or permissions, names are typed in and not verified, and review state is per session. Evidence: `src/supplier_risk_agent/tools/corrections.py`, `src/supplier_risk_agent/tools/history.py`, `src/supplier_risk_agent/agents/human_review.py`, `tests/test_explain_correct.py`, `tests/test_ui.py`.
 

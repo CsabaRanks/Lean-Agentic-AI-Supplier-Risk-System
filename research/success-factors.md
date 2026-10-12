@@ -60,7 +60,9 @@ checked against a written standard.
 - **Anchors** (levels 1–5) are defined for factors 2, 3 and 6 in
   [comparison-matrix.yaml](comparison-matrix.yaml) and rendered in [comparison-matrix.md](comparison-matrix.md).
 - **Unknown is not absent.** A value without public evidence is marked *unknown* and not plotted as low;
-  a value that covers only the documented part is marked as a documented minimum (≥).
+  a value that covers only the documented part is marked as a documented minimum (≥); a value kept at its
+  earlier level because the evidence neither confirms nor contradicts the new anchor is marked uncertain
+  (\*). No value is lowered only because evidence is missing.
 
 Boundaries, so that one capability is rewarded once:
 

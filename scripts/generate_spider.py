@@ -21,7 +21,9 @@ marks it.
 Optional per factor: ``anchors`` (what each level means on that factor) and,
 per rating, ``evidence`` (repository paths, checked to exist, or URLs) and
 ``at_least`` (the value is the documented minimum; further functions are
-unknown). Per example, ``at_least`` takes a list of example names.
+unknown) and ``uncertain`` (the value is kept, but the evidence does not
+cover the anchor fully; shown with "*"). Per example, both take a list of
+example names.
 """
 
 from __future__ import annotations
@@ -126,11 +128,18 @@ def point_note(rating: dict) -> str:
     """Short note next to a plotted point: documented minimum and/or partly unknown examples."""
     examples = rating.get("by_example") or {}
     parts = []
-    if rating.get("at_least"):
+    at_least = rating.get("at_least")
+    if at_least is True or (at_least and not examples):
         parts.append("≥")
+    elif at_least:
+        parts.append(" ".join(f"{name[0]}≥" for name in at_least))
     unknown = [name for name, v in examples.items() if v is None]
     if unknown and rating["value"] is not None:
         parts.append(" ".join(f"{name[0]}?" for name in unknown))
+    uncertain = rating.get("uncertain")
+    if uncertain:
+        names = examples if uncertain is True else uncertain
+        parts.append(" ".join(f"{name[0]}*" for name in names) if examples else "*")
     return " ".join(parts)
 
 
@@ -141,20 +150,33 @@ def fmt(value: float | None) -> str:
 # --- Markdown ----------------------------------------------------------------------
 
 
+def _flagged(rating: dict, key: str, name: str | None = None) -> bool:
+    flag = rating.get(key)
+    return flag is True if name is None else (flag is True or (isinstance(flag, list) and name in flag))
+
+
 def _min_mark(rating: dict, name: str | None = None) -> str:
-    flag = rating.get("at_least")
-    hit = flag is True if name is None else (isinstance(flag, list) and name in flag)
-    return "≥" if hit else ""
+    return "≥" if _flagged(rating, "at_least", name) else ""
+
+
+def _uncertain_mark(rating: dict, name: str | None = None) -> str:
+    return "*" if _flagged(rating, "uncertain", name) else ""
 
 
 def cell(rating: dict) -> str:
     examples = rating.get("by_example")
     if examples and len(set(examples.values())) > 1:
         detail = " · ".join(f"{name[0]} {_min_mark(rating, name) if v is not None else ''}{fmt(v)}"
+                            f"{_uncertain_mark(rating, name) if v is not None else ''}"
                             for name, v in examples.items())
         return f"{fmt(rating['value'])} ({detail})"
-    mark = "≥" if rating.get("at_least") else ""
-    return f"{mark}{fmt(rating['value'])}"
+    if examples:
+        flags = [f"{n[0]} {_min_mark(rating, n)}{fmt(v)}{_uncertain_mark(rating, n)}" for n, v in examples.items()
+                 if _min_mark(rating, n) or _uncertain_mark(rating, n)]
+        if flags:
+            return f"{fmt(rating['value'])} ({' · '.join(flags)})"
+    mark = "≥" if rating.get("at_least") is True else ""
+    return f"{mark}{fmt(rating['value'])}{'*' if rating.get('uncertain') is True else ''}"
 
 
 def render_markdown(data: dict) -> str:
@@ -191,7 +213,8 @@ def render_markdown(data: dict) -> str:
         "the cell shows the mean of the known values and both values. **unknown** means that no public "
         "evidence was found either way; it is not rated as absent and not plotted as a low value. "
         "**≥** marks a documented minimum: the value covers what is publicly documented, further functions "
-        "are unknown."),
+        "are unknown. **\\*** marks an uncertain value: kept at its earlier level because the public evidence "
+        "neither confirms nor contradicts the anchor."),
         "",
         "**Confidence:** " + " · ".join(f"**{k}** = {v}" for k, v in CONFIDENCE.items()) + ".",
         "",
@@ -308,7 +331,7 @@ def render_chart(data: dict, out: Path = IMAGE) -> list[Path]:
             note = point_note(f["ratings"][ap["key"]])
             if note:
                 # place the note towards the centre, away from the outer profile lines
-                ax.annotate(note.replace("≥", r"$\geq$"), (a, v), xytext=(-math.cos(a) * 22 - math.sin(a) * 12, -math.sin(a) * 22 + math.cos(a) * 12), textcoords="offset points",
+                ax.annotate(note.replace("≥", r"$\geq$"), (a, v), xytext=(-math.cos(a) * 20 + math.sin(a) * 20, -math.sin(a) * 20 - math.cos(a) * 20), textcoords="offset points",
                             ha="center", va="center", rotation=0, color=st["color"], fontsize=10, fontweight="bold",
                             zorder=st["z"] + 1, bbox={"boxstyle": "round,pad=0.1", "fc": "white", "ec": "none"})
 
@@ -321,7 +344,7 @@ def render_chart(data: dict, out: Path = IMAGE) -> list[Path]:
     fig.text(0.5, 0.05,
              f"Illustrative assessment, scale {lo}–{hi} · evidence {data['meta']['evidence_date']} · "
              "shaded bars: spread between Prewave and Sphera · ? = unknown (no public evidence), not rated low · "
-             "≥ = documented minimum · S? = Sphera unknown · no weighting, total or ranking",
+             "≥ documented minimum · ? unknown · * uncertain (P = Prewave, S = Sphera) · no weighting, total or ranking",
              ha="center", fontsize=8.5, color="#6b7580")
 
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -391,7 +414,7 @@ def render_paper_chart(data: dict, out: Path = PAPER_IMAGE) -> list[Path]:
             note = point_note(f["ratings"][ap["key"]])
             if note:
                 # theta zero is north and clockwise here: display direction is (sin a, cos a)
-                ax.annotate(note.replace("≥", r"$\geq$"), (a, v), xytext=(-math.sin(a) * 15 + math.cos(a) * 9, -math.cos(a) * 15 - math.sin(a) * 9), textcoords="offset points",
+                ax.annotate(note.replace("≥", r"$\geq$"), (a, v), xytext=(-math.sin(a) * 13 - math.cos(a) * 14, -math.cos(a) * 13 + math.sin(a) * 14), textcoords="offset points",
                             ha="center", va="center", rotation=0, color=st["color"], fontsize=7, fontweight="bold",
                             zorder=st["z"] + 1, bbox={"boxstyle": "round,pad=0.08", "fc": "white", "ec": "none"})
 
@@ -402,7 +425,7 @@ def render_paper_chart(data: dict, out: Path = PAPER_IMAGE) -> list[Path]:
     fig.legend(handles=handles, loc="lower center", ncol=2, frameon=False, fontsize=8.6,
                bbox_to_anchor=(0.5, 0.035), handlelength=2.8, columnspacing=2.2)
     fig.text(0.5, 0.012, "? = unknown (no public evidence), not rated low · ≥ = documented minimum · "
-             "S? = Sphera unknown", ha="center", fontsize=7.6, color=PAPER_INK3)
+             "* = uncertain · P = Prewave, S = Sphera", ha="center", fontsize=7.6, color=PAPER_INK3)
 
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=300, metadata={"Software": None}, bbox_inches="tight", pad_inches=0.12,

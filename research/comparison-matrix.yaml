@@ -278,22 +278,27 @@ factors:
         confidence: M
         rationale: Cells can be changed at any time, but without reasons, approval or a decision history.
       saas:
-        value: 3.5
-        by_example: {Prewave: 4, Sphera: 3}
-        at_least: [Prewave, Sphera]
-        confidence: M
+        value: 4
+        by_example: {Prewave: 4, Sphera: 4}
+        at_least: [Prewave]
+        uncertain: [Sphera]
+        confidence: L
         rationale: >-
-          Prewave documents alert reporting with reason categories (false data, irrelevant, duplicate, ...),
-          manual review by Prewave with defined outcomes, and suppliers answering alerts and filling in
-          self-assessments; incident ownership and approval workflows are described. Sphera documents
-          assessments that feed survey results into risk profiles, playbooks, ownership and measurable
-          closure. For both, overriding a score with a reason, a before/after view and the audit history are
-          unknown (not found publicly), so the values are documented minimums.
+          Against the anchors. Prewave reaches level 4 on documented evidence: alert reporting with reason
+          categories (false data, irrelevant, duplicate, ...) is reviewed manually by Prewave with defined
+          outcomes (deactivated, updated, confirmed), i.e. recorded decisions on corrections with a reason;
+          suppliers can answer alerts and fill in self-assessments; incident ownership and approval workflows are
+          described. Overriding a score with a reason, a before/after view and the audit history are unknown, so
+          4 is a documented minimum. Sphera documents level 3 (incident management, response playbooks with
+          ownership and tracked closure, assessments that feed survey results into risk profiles); the level-4
+          element "corrections or overrides with a reason" was not found publicly, but nothing says it is absent.
+          Sphera is therefore kept at its v0.4 value of 4 and marked uncertain instead of being lowered on missing
+          evidence; a hands-on test could move it either way.
         evidence:
           - https://help.prewave.com/en/articles/423361-alert-reporting
           - https://supplier.prewave.com/en/articles/589775-register-with-prewave
-          - https://sphera.com/risk-assessment
           - https://sphera.com/solutions/supply-chain-risk-management/
+          - https://sphera.com/risk-assessment
       oss:
         value: 2
         confidence: H
