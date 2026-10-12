@@ -554,7 +554,7 @@ The anchor is always the configured default, never a previous calibration, so re
 calibration on the same labels cannot drift; this problem was found by a test. Weights
 are accepted only if the \emph{cross-validated} error falls clearly
 (Sections~\ref{sec:acceptance} and~\ref{sec:e5}) and are then applied or proposed for
-approval, as configured (the bundled risk template proposes by default), and old and new weights, errors and
+approval, as configured (both bundled templates propose by default), and old and new weights, errors and
 class agreement are reported. None of the reviewed repositories, and neither commercial
 example in its public documentation (as of October 2026), offers this.
 \textbf{(3) Agentic orchestration.} The method runs as a graph of specialised agents ---
@@ -777,14 +777,19 @@ class before escalation, fired escalation rules, data completeness, missing crit
 the rule-based actions. Supplier name, country, spend, the raw indicator record and expert
 labels are not sent. The payload is shown before sending, and the node checks that it
 still matches the run's results.
-\emph{Output}: structured text without numeric fields --- a management summary, main
+\emph{Output}: a structured answer without numeric fields --- a management summary, main
 drivers (criterion and view), differences between the views, prioritised action
-proposals and open questions. Scores shown with the review are copied from the
-deterministic results.
+proposals and open questions. The node writes only this review into the run and cannot change
+scores, classes or weights; scores shown with the review are copied from the deterministic
+results.
 \emph{Safeguards}: the whole answer is rejected if it cites a criterion not in the input,
 does not compare the views, or leaves missing data without an open question; actions are
 labelled as proposals for human review; each attempt is recorded in the audit trail with
 a hash of the payload; failures are reported and leave the run usable.
+\emph{Limits of validation}: the free text can still contain numbers, and a misquoted score or
+weight is not detected; whether statements are supported by the payload, whether explanations
+and priorities are sensible, and whether every missing criterion is addressed are not checked.
+The prompt and the withheld supplier name reduce, but do not rule out, invented facts.
 \emph{Provider}: Anthropic's Claude, configured through environment variables; without
 an API key the feature is unavailable and everything else works unchanged. The component
 is experimental and unevaluated (Section~\ref{sec:limitations}).
@@ -800,7 +805,7 @@ is experimental and unevaluated (Section~\ref{sec:limitations}).
     Nodes & Data collection, scoring, calibration, recommendation, human review, supervisor & Supplier Review Agent \\
     Runs & In every run & Only on explicit request \\
     Produces & Ratings, scores, classes, weights, rule-based actions & Summary, drivers, view differences, action proposals, open questions \\
-    Changes numbers & Yes, recomputably & No; numbers are copied \\
+    Changes results & Yes, recomputably & No; scores shown are copied, numbers quoted in its text are not checked \\
     Reproducible & Same input, same output & No; output can vary \\
     Tested & Unit and flow tests & Mocked responses on synthetic suppliers; quality not evaluated \\
     \bottomrule
@@ -1279,7 +1284,7 @@ non-negotiable positions and are not subject to calibration, which optimises agr
 with average judgement, while floors exist precisely for the cases averages hide.
 \textbf{Calibration proposes, people decide}: for weights that drive supplier decisions,
 the recommended setting is to propose rather than auto-apply (\code{auto\_apply: false}),
-the default of the bundled risk template (the performance template still auto-applies),
+the default of both bundled templates (risk and performance),
 with the approver seeing
 the number of labels, the cross-validated and in-sample error, and old and new weights.
 \textbf{Separation of duties}: the people whose labels drive a calibration should not be

@@ -10,8 +10,11 @@ the model needs none of them to interpret the scores, and without a name it
 cannot mix in outside "knowledge" about a real company.
 
 ``validate_review`` checks the model's answer against the payload: every
-referenced criterion must exist in the input, and data gaps must lead to open
-questions. A failed check rejects the whole answer.
+referenced criterion must exist in the input, both views must be compared, and
+data gaps must lead to at least one open question. A failed check rejects the
+whole answer. Not checked: numbers quoted in the free text, whether statements
+are supported by the payload, the quality of explanations and priorities, and
+whether every single data gap is addressed.
 """
 
 from __future__ import annotations

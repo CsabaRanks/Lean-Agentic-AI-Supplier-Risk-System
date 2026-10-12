@@ -148,7 +148,7 @@ def test_missing_data_requires_open_questions(runs):
 
 
 def test_schema_has_no_numeric_fields():
-    """The LLM cannot return scores, classes or weights: the schema has text fields only."""
+    """No structured score, class or weight fields; numbers inside the free text are not checked."""
     schema = json.dumps(AIReviewDraft.model_json_schema())
     assert '"number"' not in schema and '"integer"' not in schema
 

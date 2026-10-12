@@ -27,8 +27,8 @@
 > Draft v0.7 describes the one component that now uses a language model: an optional,
 > explicitly triggered Supplier Review Agent that interprets final results (Section 6.9). Scoring,
 > calibration, recommendations and routing remain deterministic and LLM-free. The review agent is
-> experimental and unevaluated (Section 10). The text also states that the risk template now
-> proposes accepted weights for approval by default. No rating value and no experimental number
+> experimental and unevaluated (Section 10). The text also states that both bundled templates now
+> propose accepted weights for approval by default. No rating value and no experimental number
 > was changed.
 
 ---
@@ -683,7 +683,7 @@ from the methodology each time. The problem was found by a test, and the fix is 
 Calibrated weights are applied only if the *cross-validated* error falls by a minimum relative
 amount, so that a fit which merely reproduces label noise is rejected (Section 7.6). Depending on
 configuration, they are either applied automatically or proposed for approval; the bundled risk
-template proposes by default, the performance template applies. Old and new weights,
+and performance templates both propose by default. Old and new weights,
 the error before and after, and the share of suppliers whose model class matches the class implied
 by the expert label are all reported. Formulation: Section 6.4.
 
@@ -1009,11 +1009,16 @@ the evaluation: it interprets results that the deterministic workflow has alread
   actions. Not sent: supplier name, country, spend, the raw indicator record and expert labels.
   The payload is shown to the user before sending, and the node checks that it still matches the
   run's results.
-- **Output.** Structured text only, with no numeric fields: a management summary, the main drivers
+- **Output.** A structured answer without numeric fields: a management summary, the main drivers
   (criterion and view), differences between the views, prioritised action proposals and open
-  questions. Scores shown next to the review are copied from the deterministic results.
+  questions. The node writes only this review into the run; it cannot change scores, classes or
+  weights. Scores shown next to the review are copied from the deterministic results.
 - **Safeguards.** The whole answer is rejected if it refers to a criterion that is not in the
-  input, does not compare the views, or leaves missing data without an open question. Suggested
+  input, does not compare the views, or leaves missing data without an open question.
+- **Limits of validation.** The free text can still contain numbers, and a misquoted score or
+  weight is not detected. Validation does not check whether statements are supported by the
+  payload, whether explanations and priorities are sensible, or whether every missing criterion is
+  addressed. The prompt and the withheld supplier name reduce, but do not rule out, invented facts. Suggested
   actions are labelled as proposals for human review. Each attempt is recorded in the audit trail
   with a hash of the payload. Failures (timeout, authentication, rate limit, refusal, truncated or
   invalid answer) are reported and leave the run usable.
@@ -1028,7 +1033,7 @@ the evaluation: it interprets results that the deterministic workflow has alread
 | Nodes | Data collection, scoring, calibration, recommendation, human review, supervisor | Supplier Review Agent (`ai_review`) |
 | Runs | In every run | Only on explicit request, once per request |
 | Produces | Ratings, scores, classes, weights, rule-based actions | Summary, drivers, view differences, action proposals, open questions |
-| Can change numbers | Yes, by design and recomputably | No: text fields only; numbers are copied from the results |
+| Changes results | Yes, by design and recomputably | No: writes only its review; the scores shown are copied from the results. Its text can quote numbers, which are not checked |
 | Reproducible | Same input, same output | No; output can vary between requests |
 | Tested | Unit and flow tests (Section 6.8) | Mocked responses on synthetic suppliers only; quality not evaluated |
 
@@ -1748,7 +1753,7 @@ Two principles follow from the method:
    that averages hide.
 2. **Calibration proposes, people decide.** For weights that drive supplier decisions, the
    recommended setting is to propose rather than auto-apply (`auto_apply: false`), which is the
-   default of the bundled risk template (the performance template still auto-applies). Approval then
+   default of both bundled templates (risk and performance). Approval then
    happens at the review pause. The approver sees the following, and the approval is recorded:
    - the number of labels
    - the cross-validated and in-sample error

@@ -1,9 +1,10 @@
 """Output schema of the optional LLM-based Supplier Review Agent.
 
-``AIReviewDraft`` is what the language model must return. It contains text
-only: no scores, classes or weights. Those stay with the deterministic
-scoring engine and are copied into ``AIReviewResult`` from the input
-payload, never from the model's answer.
+``AIReviewDraft`` is what the language model must return. It has no numeric
+fields; scores, classes and weights stay with the deterministic scoring engine
+and are copied into ``AIReviewResult`` from the input payload, never from the
+model's answer. The free-text fields can still mention numbers; these are not
+checked (see ``tools.ai_review.validate_review``).
 """
 
 from __future__ import annotations

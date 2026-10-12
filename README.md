@@ -135,7 +135,7 @@ flowchart TD
     CA -- new weights → re-score once --> SUP
     RA --> SUP
     HR -- decision --> SUP
-    AI -- text only, no numbers --> SUP
+    AI -- review text, results unchanged --> SUP
     SUP --> END([end])
     CA -. accepted .-> WS[(Versioned weight store)]
     HR -. approved .-> WS
@@ -218,12 +218,19 @@ Safeguards:
   CLI). The exact JSON is shown beforehand. It contains criteria, ratings, weights, scores,
   classes, fired rules, data completeness and rule-based actions. Supplier name, country, spend,
   the raw indicator record and expert labels are not sent. Use synthetic or approved data only.
-- **Validated output.** The answer must match a schema with text fields only, so the model cannot
-  return scores or weights. Every referenced criterion must exist in the input, both views must be
-  compared, and missing data must produce open questions. Otherwise the answer is rejected. Scores
-  shown next to the review are copied from the deterministic results.
-- **No invented facts.** The prompt restricts the model to the payload and withholds the supplier's
-  name. Validation can check references, but not every sentence; read the review as a draft.
+- **Results stay deterministic.** The agent writes only its review into the run; it cannot change
+  a score, class or weight. The scores shown next to the review are copied from the deterministic
+  results, not taken from the model's answer.
+- **Validated output, within limits.** The answer must match a fixed schema (summary, drivers,
+  view differences, actions, open questions). Every referenced criterion key must exist in the
+  input, both views must be compared, and missing data must produce at least one open question.
+  Otherwise the whole answer is rejected.
+- **What validation does not check.** The schema has no numeric fields, but the free text can still
+  contain numbers, and a misquoted score or weight is not detected. Validation also does not check
+  whether statements are supported by the payload, whether explanations and priorities are
+  sensible, or whether *every* missing criterion is addressed. The prompt restricts the model to the
+  payload and withholds the supplier's name, which reduces but does not rule out invented facts.
+  Read the review as a draft and check it against the deterministic results.
 - **Proposals, not decisions.** Suggested actions are marked as proposals for human review.
 - **Bounded cost and failure.** Timeout and retry limit are configurable. A result is kept per
   exact input, so app reruns never call the provider again. Errors (no key, timeout, rate limit,

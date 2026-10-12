@@ -98,10 +98,12 @@ The Supplier Review Agent is a follow-up step on an existing run:
    record and expert labels. The UI and the CLI show this JSON before anything is sent.
 2. `SupplierRiskEvaluator.ai_review(run_id, payload)` continues the run's thread with an
    `ai_review_request`. The node checks that the payload still matches the run's results, sends
-   exactly that payload, and validates the answer against `AIReviewDraft` (text fields only; no
-   numbers). It then checks the content: every referenced criterion must exist in the input, both
-   views must be compared, and missing data must lead to open questions. A failing answer is
-   rejected as a whole.
+   exactly that payload, and validates the answer against `AIReviewDraft`. It then checks the
+   content: every referenced criterion key must exist in the input, both views must be compared,
+   and missing data must lead to at least one open question. A failing answer is rejected as a
+   whole. Limits: the schema has no numeric fields, but the free text can quote numbers, and wrong
+   numbers are not detected; unsupported statements, the quality of explanations and priorities, and
+   coverage of every single data gap are not checked either.
 3. The result (`AIReviewResult`) carries the deterministic scores copied from the payload, the
    data gaps determined by the tool, the provider and model, and a hash of the input. Errors
    (no key, timeout, rate limit, invalid answer) are stored in `ai_review_errors`; the run itself
