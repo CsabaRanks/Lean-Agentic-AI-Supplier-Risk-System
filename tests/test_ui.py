@@ -11,6 +11,13 @@ from streamlit.testing.v1 import AppTest
 APP = str(Path(__file__).resolve().parents[1] / "ui" / "app.py")
 
 
+@pytest.fixture(autouse=True)
+def no_local_llm_config(monkeypatch):
+    """UI tests never read the developer's .env and never reach a real provider."""
+    monkeypatch.setattr("supplier_risk_agent.llm.load_env_file", lambda *args, **kwargs: False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+
 def app() -> AppTest:
     at = AppTest.from_file(APP, default_timeout=240)
     # keep snapshots written by the tests (e.g. after an approved review) out of the repository's data/history

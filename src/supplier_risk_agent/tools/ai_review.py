@@ -52,13 +52,17 @@ Rules:
   payload where they fit, and prioritise them (high, medium, low).
 - Be concise and factual. Write in English."""
 
-USER_TEMPLATE = """\
-Review this supplier. Return the management summary, the main risk drivers (with criterion keys and
-view), the relevant differences between the views, prioritised action proposals and open questions
-for missing or unclear information.
+USER_TEMPLATE = f"""\
+Review this supplier and fill every field of the answer format:
+- management_summary: at most {MAX_SUMMARY_CHARS} characters.
+- risk_drivers: the 1 to {MAX_DRIVERS} most important drivers only, each with a criterion key and its view.
+- view_differences: at least one entry if the payload contains both views.
+- suggested_actions: 1 to {MAX_ACTIONS} prioritised proposals (high, medium, low) for a human reviewer.
+- open_questions: one question per missing or unclear piece of information; at least one if any
+  criterion is missing. Use an empty list only if nothing is missing or unclear.
 
 Payload:
-{payload}"""
+{{payload}}"""
 
 
 def _labels(model: RiskModelConfig) -> tuple[dict[str, str], dict[str, str]]:
