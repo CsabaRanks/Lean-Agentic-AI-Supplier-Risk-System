@@ -219,7 +219,8 @@ def test_objection_is_recorded_and_changes_nothing(tmp_path):
     assert store.objections("SUP-003") == [entry]
     after = assess_supplier(rows, "SUP-003", MODELS)
     assert after["risk"][0].overall_score == before["risk"][0].overall_score
-    assert not (tmp_path / "corrections.jsonl").exists() and not list(tmp_path.glob("*/"))  # no weights written
+    assert not (tmp_path / "corrections.jsonl").exists()
+    assert not [p for p in tmp_path.iterdir() if p.is_dir()]  # no weight store or other folders written
     with pytest.raises(ValueError, match="reason"):
         store.record_objection("SUP-003", "risk", "country_risk", " ")
 
