@@ -33,7 +33,7 @@ from ..providers.base import enrich
 from .explain import scoring_trace
 from .indicators import source_inputs
 from .scoring import assess_profile, recommend, resolve_weights
-from .tabular import _parse, rows_to_profiles
+from .tabular import _is_empty, _parse, label_view, rows_to_profiles
 
 ChangeKind = Literal["data_correction", "expert_override"]
 DATA, OVERRIDE = "data_correction", "expert_override"
@@ -97,6 +97,19 @@ def correctable_fields(models: list[RiskModelConfig]) -> dict[str, dict[str, Any
     return fields
 
 
+def field_spec(field: str, fields: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
+    """How a field may be corrected; None if it cannot be corrected here.
+
+    Criterion inputs and overrides follow ``correctable_fields``. Master data and other input columns
+    are data corrections. The supplier id and expert labels (calibration) are not correctable here.
+    """
+    if field in fields:
+        return fields[field]
+    if not field or field == "supplier_id" or label_view(field):
+        return None
+    return {"kind": DATA, "criteria": [], "label": field, "expects": "input value", "known": False}
+
+
 def _check_value(change: FieldChange, spec: dict[str, Any]) -> None:
     if change.new_value is None or spec["expects"] == "input value":
         return
@@ -115,7 +128,9 @@ def apply_changes(rows: list[dict[str, Any]], request: CorrectionRequest,
     if target is None:
         raise ValueError(f"unknown supplier '{request.supplier_id}'")
     for change in request.changes:
-        spec = allowed.get(change.field)
+        spec = field_spec(change.field, allowed)
+        if spec is not None and spec.get("known") is False and change.field not in target:
+            spec = None  # neither a known input nor an existing column of this supplier
         if spec is None:
             raise ValueError(f"'{change.field}' cannot be corrected here (weights and rules go through calibration)")
         if change.kind != spec["kind"]:
@@ -201,3 +216,59 @@ def preview_correction(rows: list[dict[str, Any]], request: CorrectionRequest, m
     before = assess_supplier(rows, request.supplier_id, models, active_weights, providers)
     after = assess_supplier(new_rows, request.supplier_id, models, active_weights, providers)
     return new_rows, compare(before, after, models)
+
+
+def _same(a: Any, b: Any) -> bool:
+    """Cell equality as a user sees it: empty == empty, 41 == 41.0, ' x ' == 'x'."""
+    if _is_empty(a) or _is_empty(b):
+        return _is_empty(a) and _is_empty(b)
+    if isinstance(a, bool) or isinstance(b, bool):
+        return a is b or str(a).lower() == str(b).lower()
+    try:
+        return float(a) == float(b)
+    except (TypeError, ValueError):
+        return str(a).strip() == str(b).strip()
+
+
+def split_table_edits(rows: list[dict[str, Any]], edited: list[dict[str, Any]], assessed: set[str],
+                      models: list[RiskModelConfig]) -> tuple[list[dict[str, Any]], dict[str, list[FieldChange]],
+                                                              list[str]]:
+    """Separate first data entry from changes to suppliers that already have a result.
+
+    Returns (rows to keep, pending changes per assessed supplier, notes). Rows of suppliers without
+    a result (new rows, rows not yet calculated) are taken as edited. For assessed suppliers the
+    current values stay in place and every changed cell becomes a pending ``FieldChange``, to be
+    previewed, justified and confirmed like any correction. Deleting an assessed supplier is not
+    applied.
+    """
+    allowed = correctable_fields(models)
+    before = {str(r.get("supplier_id")): r for r in rows if not _is_empty(r.get("supplier_id"))}
+    kept, pending, notes, seen = [], {}, [], set()
+    for row in edited:
+        sid = None if _is_empty(row.get("supplier_id")) else str(row.get("supplier_id"))
+        if sid is None or sid not in assessed or sid not in before:
+            kept.append(row)
+            if sid:
+                seen.add(sid)
+            continue
+        seen.add(sid)
+        old = before[sid]
+        out = dict(old)
+        for field in dict.fromkeys([*old, *row]):
+            if _same(old.get(field), row.get(field)):
+                continue
+            spec = field_spec(field, allowed)
+            if spec is None:
+                notes.append(f"{sid}: '{field}' cannot be changed here")
+                continue
+            new_value = None if _is_empty(row.get(field)) else row.get(field)
+            if spec["expects"] != "input value" and isinstance(new_value, float) and new_value.is_integer():
+                new_value = int(new_value)
+            pending.setdefault(sid, []).append(
+                FieldChange(field=field, kind=spec["kind"], old_value=old.get(field), new_value=new_value))
+        kept.append(out)
+    for sid, old in before.items():
+        if sid in assessed and sid not in seen:
+            kept.append(dict(old))
+            notes.append(f"{sid}: evaluated suppliers cannot be deleted in the table; the row was kept")
+    return kept, pending, notes

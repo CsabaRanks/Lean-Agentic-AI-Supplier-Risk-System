@@ -21,6 +21,7 @@ from supplier_risk_agent.tools.corrections import (
     assess_supplier,
     correctable_fields,
     preview_correction,
+    split_table_edits,
 )
 from supplier_risk_agent.tools.explain import scoring_trace, trace_ids
 from supplier_risk_agent.tools.tabular import profile_to_row, rows_to_profiles
@@ -249,3 +250,61 @@ def test_ai_explanation_is_outdated_after_a_correction():
     assert not review_is_current(result, new_payload)
     unchanged = evaluators(rows)
     assert review_is_current(result, ai_review_payload("SUP-003", unchanged[:2], unchanged[2:]))
+
+
+# --- edits in the input table --------------------------------------------------------------------
+
+
+ASSESSED = {f"SUP-00{i}" for i in range(1, 7)}
+
+
+def as_editor(rows: list[dict]) -> list[dict]:
+    """What the table editor returns: numbers as floats."""
+    return [{k: float(v) if isinstance(v, int) and not isinstance(v, bool) else v for k, v in r.items()}
+            for r in rows]
+
+
+def test_unchanged_table_is_not_a_change():
+    rows = sample_rows()
+    kept, pending, notes = split_table_edits(rows, as_editor(rows), ASSESSED, MODELS)
+    assert pending == {} and notes == [] and kept == rows
+
+
+def test_first_data_entry_stays_direct():
+    rows = sample_rows()
+    edited = as_editor(rows) + [{"supplier_id": "SUP-007", "name": "New supplier", "credit_score": 70.0}]
+    kept, pending, _ = split_table_edits(rows, edited, ASSESSED, MODELS)
+    assert pending == {} and kept[-1]["supplier_id"] == "SUP-007"
+    # a row that has not been calculated yet can still be edited freely
+    edited[-1] = {**edited[-1], "credit_score": 40.0}
+    kept, pending, _ = split_table_edits(kept, edited, ASSESSED, MODELS)
+    assert pending == {} and kept[-1]["credit_score"] == 40.0
+
+
+def test_changes_to_assessed_suppliers_become_pending_corrections():
+    rows = sample_rows()
+    edited = as_editor(rows)
+    row = next(r for r in edited if r["supplier_id"] == "SUP-003")
+    row.update(credit_score=70.0, credit_risk=2.0, material_group="plastics")
+    kept, pending, _ = split_table_edits(rows, edited, ASSESSED, MODELS)
+
+    assert next(r for r in kept if r["supplier_id"] == "SUP-003") == next(
+        r for r in rows if r["supplier_id"] == "SUP-003")  # nothing applied yet
+    changes = {c.field: c for c in pending["SUP-003"]}
+    assert (changes["credit_score"].kind, changes["credit_score"].old_value, changes["credit_score"].new_value) == (
+        "data_correction", 41, 70.0)
+    assert changes["credit_risk"].kind == "expert_override" and changes["credit_risk"].new_value == 2
+    assert changes["material_group"].kind == "data_correction"
+
+    request = CorrectionRequest(supplier_id="SUP-003", changes=pending["SUP-003"], reason="Updated (synthetic)")
+    new_rows, comparison = preview_correction(rows, request, MODELS)
+    assert comparison["risk"]["score"][0] == 84.0 and comparison["risk"]["score"][1] < 84.0
+    assert next(r for r in new_rows if r["supplier_id"] == "SUP-003")["material_group"] == "plastics"
+
+
+def test_deleting_an_assessed_supplier_is_not_applied():
+    rows = sample_rows()
+    edited = [r for r in as_editor(rows) if r["supplier_id"] != "SUP-002"]
+    kept, pending, notes = split_table_edits(rows, edited, ASSESSED, MODELS)
+    assert any(r["supplier_id"] == "SUP-002" for r in kept) and pending == {}
+    assert notes == ["SUP-002: evaluated suppliers cannot be deleted in the table; the row was kept"]

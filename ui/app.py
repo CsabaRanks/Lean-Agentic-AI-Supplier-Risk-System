@@ -20,6 +20,7 @@ This file only collects input and displays results. Every number comes from
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import altair as alt
@@ -42,6 +43,7 @@ from supplier_risk_agent.tools.corrections import (
     correctable_fields,
     parse_cell,
     preview_correction,
+    split_table_edits,
 )
 from supplier_risk_agent.tools.reporting import ALL_GROUPS, action_plan, group_summary, top_risks
 from supplier_risk_agent.tools.tabular import (
@@ -127,6 +129,45 @@ def history() -> HistoryStore:
 
 def assessments() -> list:
     return list((run_info().get("state") or {}).get("results", {}).values())
+
+
+def assessed_ids() -> set[str]:
+    """Suppliers that already have a result in any view: changes to them go through a correction."""
+    return {sid for info in st.session_state.get("runs", {}).values()
+            for sid in ((info or {}).get("state") or {}).get("results", {})}
+
+
+def show_comparison(comparison: dict) -> None:
+    """Before/after of a proposed correction, per view and per changed criterion."""
+    st.dataframe(pd.DataFrame([{
+        "view": ui_model(v).view_label, "score": f"{c['score'][0]} → {c['score'][1]}",
+        "class": f"{c['class'][0]} → {c['class'][1]}",
+        "data": f"{c['data_completeness'][0]:.0%} → {c['data_completeness'][1]:.0%}",
+        "needs review": f"{c['needs_review'][0]} → {c['needs_review'][1]}",
+        "rules now triggered": ", ".join(c["rules_now_triggered"]) or "—",
+        "rules no longer triggered": ", ".join(c["rules_no_longer_triggered"]) or "—",
+    } for v, c in comparison.items()]), hide_index=True, width="stretch")
+    changed = [{"view": v, "criterion": x["criterion"], "rating": f"{x['rating'][0]} → {x['rating'][1]}",
+                "origin": f"{x['origin'][0]} → {x['origin'][1]}",
+                "points": f"{x['contribution_points'][0]} → {x['contribution_points'][1]}"}
+               for v, c in comparison.items() for x in c["changed_criteria"]]
+    if changed:
+        st.dataframe(pd.DataFrame(changed), hide_index=True, width="stretch")
+    else:
+        st.caption("No criterion rating changes.")
+
+
+def apply_corrections(items: list[tuple], new_rows: list[dict]) -> None:
+    """Adopt confirmed corrections: record each in the history, replace the data, recalculate."""
+    for request, comparison in items:
+        entry = history().record_correction(request, comparison)
+        if request.supplier_id in st.session_state.get("ai_explanations", {}):
+            st.session_state.setdefault("ai_outdated", {})[request.supplier_id] = (
+                f"the correction of {entry['recorded_at']} ({request.reason})")
+    st.session_state.rows = new_rows
+    st.session_state.editor_version = st.session_state.get("editor_version", 0) + 1
+    st.session_state.runs = {}
+    run(calibrate=False, material_group=None)
 
 
 def run(calibrate: bool, material_group: str | None, view: str | None = None) -> None:
@@ -383,9 +424,10 @@ with tab_history:
 with tab_run:
     st.subheader("Supplier inputs")
     st.caption(
-        "One sheet for both views: shared criteria appear once. Edit cells directly, add rows at the bottom, "
-        "or import a CSV in the sidebar, then press **Recalculate**. Expert ratings: 1 (favourable) – "
-        "5 (unfavourable). Empty cells mean “no data”."
+        "One sheet for both views: shared criteria appear once. Add new suppliers at the bottom (or import a "
+        "CSV in the sidebar) and press **Recalculate**. Changes to suppliers that already have a result are "
+        "not applied directly: they need a reason, a preview and your confirmation, and are recorded in the "
+        "history. Expert ratings: 1 (favourable) – 5 (unfavourable). Empty cells mean “no data”."
     )
     all_factors = {f.key for v in views for d in ui_model(v).dimensions for f in d.factors}
     # expert labels are edited only in the Calibration tab, so that two editors never compete for a cell
@@ -413,10 +455,60 @@ with tab_run:
         key=f"input_editor_{st.session_state.editor_version}",
     )
     previous = {r.get("supplier_id"): r for r in st.session_state.rows}
-    st.session_state.rows = [
+    edited_rows = [
         {**{k: v for k, v in previous.get(row.get("supplier_id"), {}).items() if label_view(k)}, **row}
         for row in edited.astype(object).where(edited.notna(), None).to_dict("records")
     ]
+    # First data entry stays direct; changes to suppliers that already have a result become corrections.
+    view_models = [ui_model("risk"), ui_model("performance")]
+    st.session_state.rows, table_changes, table_notes = split_table_edits(
+        st.session_state.rows, edited_rows, assessed_ids(), view_models)
+    for note in table_notes:
+        st.warning(note)
+    if table_changes:
+        st.warning("Changes to suppliers that already have a result are **not applied yet**. Give a reason, "
+                   "preview the effect in both views and confirm; the correction is then recorded in the history. "
+                   "New suppliers can still be entered directly.", icon="✋")
+        st.dataframe(pd.DataFrame([{"supplier": sid, "field": c.field, "kind": c.kind.replace("_", " "),
+                                    "current": c.old_value, "proposed": c.new_value}
+                                   for sid, changes in table_changes.items() for c in changes]).astype(str),
+                     hide_index=True, width="stretch")
+        digest = json.dumps({sid: [(c.field, c.new_value) for c in cs] for sid, cs in table_changes.items()},
+                            sort_keys=True, default=str)
+        with st.form("table_correction_form"):
+            t_reason = st.text_area("Reason for the change (required)", key="table_reason")
+            t_name = st.text_input("Your name (optional, not verified)", key="table_name")
+            t_preview = st.form_submit_button("Preview table changes")
+        if t_preview:
+            try:
+                items, rows_now = [], st.session_state.rows
+                active = {v: ((st.session_state.get("runs", {}).get(v) or {}).get("state") or {}).get(
+                    "active_weights") or {} for v in ("risk", "performance")}
+                for sid, changes in table_changes.items():
+                    req = CorrectionRequest(supplier_id=sid, changes=changes, reason=t_reason,
+                                            entered_by=t_name.strip() or None)
+                    rows_now, comparison = preview_correction(rows_now, req, view_models, active, providers())
+                    items.append((req, comparison))
+                st.session_state.table_preview = {"digest": digest, "items": items, "new_rows": rows_now}
+            except (ValidationError, ValueError) as exc:
+                st.session_state.pop("table_preview", None)
+                st.error(f"Correction not possible: {exc}")
+        preview = st.session_state.get("table_preview")
+        if preview and preview["digest"] == digest:
+            st.markdown("**Preview — nothing is applied yet**")
+            for req, comparison in preview["items"]:
+                st.markdown(f"`{req.supplier_id}`")
+                show_comparison(comparison)
+            b1, b2 = st.columns(2)
+            if b1.button("✅ Confirm table changes", type="primary", width="stretch"):
+                apply_corrections(preview["items"], preview["new_rows"])
+                st.session_state.pop("table_preview", None)
+                st.toast("Changes applied and recorded")
+                st.rerun()
+            if b2.button("Discard table changes", width="stretch"):
+                st.session_state.pop("table_preview", None)
+                st.session_state.editor_version = st.session_state.get("editor_version", 0) + 1
+                st.rerun()
 
     c1, c2, _ = st.columns([2, 1, 3])
     group = c1.selectbox("Scope", ["All material groups", *material_groups()], key="run_scope")
@@ -874,32 +966,10 @@ with tab_explain:
             if pending and pending["sid"] == sid:
                 st.markdown("**Preview — nothing is applied yet**")
                 comparison = pending["comparison"]
-                st.dataframe(pd.DataFrame([{
-                    "view": ui_model(v).view_label, "score": f"{c['score'][0]} → {c['score'][1]}",
-                    "class": f"{c['class'][0]} → {c['class'][1]}",
-                    "data": f"{c['data_completeness'][0]:.0%} → {c['data_completeness'][1]:.0%}",
-                    "needs review": f"{c['needs_review'][0]} → {c['needs_review'][1]}",
-                    "rules now triggered": ", ".join(c["rules_now_triggered"]) or "—",
-                    "rules no longer triggered": ", ".join(c["rules_no_longer_triggered"]) or "—",
-                } for v, c in comparison.items()]), hide_index=True, width="stretch")
-                changed = [{"view": v, "criterion": x["criterion"], "rating": f"{x['rating'][0]} → {x['rating'][1]}",
-                            "origin": f"{x['origin'][0]} → {x['origin'][1]}",
-                            "points": f"{x['contribution_points'][0]} → {x['contribution_points'][1]}"}
-                           for v, c in comparison.items() for x in c["changed_criteria"]]
-                if changed:
-                    st.dataframe(pd.DataFrame(changed), hide_index=True, width="stretch")
-                else:
-                    st.caption("No criterion rating changes.")
+                show_comparison(comparison)
                 a1, a2 = st.columns(2)
                 if a1.button("✅ Confirm and apply", type="primary", width="stretch"):
-                    request = pending["request"]
-                    entry = history().record_correction(request, comparison)
-                    st.session_state.rows = pending["new_rows"]
-                    st.session_state.editor_version = st.session_state.get("editor_version", 0) + 1
-                    st.session_state.runs = {}
-                    run(calibrate=False, material_group=None)
-                    if sid in explanations:
-                        outdated_notes[sid] = f"the correction of {entry['recorded_at']} ({request.reason})"
+                    apply_corrections([(pending["request"], comparison)], pending["new_rows"])
                     st.session_state.pop("pending_correction", None)
                     st.toast("Correction applied and recorded")
                     st.rerun()
