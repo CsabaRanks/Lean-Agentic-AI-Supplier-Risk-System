@@ -4,7 +4,9 @@
 measurement and not an overall ranking. Rationale and sources per value:
 [research/comparison-matrix.md](research/comparison-matrix.md).*
 
-# Lean Agentic AI for Supplier Risk & Performance Evaluation
+# Lean Agentic AI — Supplier Risk Radar System
+
+**Explainable supplier risk and performance evaluation with expert calibration and human review.**
 
 [![CI](https://github.com/CsabaRanks/lean-agentic-supplier-risk/actions/workflows/ci.yml/badge.svg)](https://github.com/CsabaRanks/lean-agentic-supplier-risk/actions/workflows/ci.yml)
 ![python](https://img.shields.io/badge/python-3.10%2B-blue)
@@ -13,6 +15,10 @@ measurement and not an overall ranking. Rationale and sources per value:
 **Supplier risk and supplier performance on one criteria catalogue, with deterministic scoring,
 weights calibrated against expert judgement, and human approval built into a LangGraph
 multi-agent workflow.** Runs locally, open source, all sample data fictional.
+
+*Radar* refers to the evaluation overview: the risk and performance view of each supplier and the
+portfolio. It does not mean continuous live monitoring of external signals, which is not
+implemented; indicators are entered or imported from files and recalculated on request.
 
 📄 **Working paper:** [Lean Agentic AI for Supplier Risk Management and Performance Evaluation](https://github.com/CsabaRanks/lean-agentic-supplier-risk/blob/main/docs/paper/paper.pdf)
 (PDF, draft v0.8; LaTeX and Markdown sources in [docs/paper/](docs/paper/))
