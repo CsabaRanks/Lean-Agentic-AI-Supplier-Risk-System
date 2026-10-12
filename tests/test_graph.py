@@ -40,8 +40,8 @@ def test_flow_without_calibration(evaluator):
     assert "calibration_performed" not in state
 
 
-def test_flow_with_calibration_rescores_once(calibration_evaluator):
-    state = calibration_evaluator.run(calibrate=True)
+def test_flow_with_calibration_rescores_once(auto_apply_evaluator):
+    state = auto_apply_evaluator.run(calibrate=True)
     assert agents(state) == [
         "supervisor", "data_collection",
         "supervisor", "scoring",
@@ -63,13 +63,14 @@ def test_calibration_skipped_without_labels(evaluator):
     assert "skipped" in state["calibration_report"].message
 
 
-def test_proposed_weights_need_approval_when_auto_apply_off(calibration_evaluator):
+def test_proposed_weights_need_approval_by_default(calibration_evaluator):
+    """The bundled risk template never applies calibrated weights without a reviewer."""
     from supplier_risk_agent import SupplierRiskEvaluator
 
-    model = calibration_evaluator.model.model_copy(deep=True)
-    model.calibration.auto_apply = False
-    state = SupplierRiskEvaluator(calibration_evaluator.source, model).run(calibrate=True)
+    assert calibration_evaluator.model.calibration.auto_apply is False
+    state = calibration_evaluator.run(calibrate=True)
     assert state["calibration_report"].accepted and not state["calibration_applied"]
+    assert all(r.weights_origin == "default" for r in state["results"].values())
     assert SupplierRiskEvaluator.pending_review(state)["proposed_weights"] is not None
     assert any("approval required" in r for r in state["review_reasons"])
 
@@ -85,12 +86,12 @@ def test_material_group_run_rejects_overfit_on_few_labels(calibration_evaluator)
     assert not report.accepted and "plastics" not in state["active_weights"]
 
 
-def test_material_group_run_applies_group_scope_with_in_sample_rule(calibration_evaluator):
+def test_material_group_run_applies_group_scope_with_in_sample_rule(auto_apply_evaluator):
     from supplier_risk_agent import SupplierRiskEvaluator
 
-    model = calibration_evaluator.model.model_copy(deep=True)
+    model = auto_apply_evaluator.model.model_copy(deep=True)
     model.calibration.acceptance = "in_sample"
-    state = SupplierRiskEvaluator(calibration_evaluator.source, model).run(material_group="plastics", calibrate=True)
+    state = SupplierRiskEvaluator(auto_apply_evaluator.source, model).run(material_group="plastics", calibrate=True)
     assert state["calibration_report"].accepted and state["calibration_report"].acceptance_basis == "in_sample"
     assert "plastics" in state["active_weights"]
 
@@ -133,5 +134,6 @@ def test_level_offset_warn_mode_applies(model):
 
     warn = model.model_copy(deep=True)
     warn.calibration.level_bias_action = "warn"
+    warn.calibration.auto_apply = True
     state = SupplierRiskEvaluator(_level_shifted_source(warn), warn).run(calibrate=True)
     assert state["calibration_report"].level_bias_detected and state["calibration_applied"]

@@ -194,9 +194,12 @@ def main(argv: list[str] | None = None) -> int:
     if report:
         _print_calibration(report)
     if request:
-        print(f"\nReview pending for {len(request['flagged_suppliers'])} supplier(s)"
-              + (" and proposed weights" if request["proposed_weights"] else "")
-              + " — rerun with --review interactive to decide.")
+        pending = []
+        if request["flagged_suppliers"]:
+            pending.append(f"{len(request['flagged_suppliers'])} supplier(s)")
+        if request["proposed_weights"]:
+            pending.append("proposed weights")
+        print(f"\nReview pending for {' and '.join(pending)} — rerun with --review interactive to decide.")
     return 0
 
 

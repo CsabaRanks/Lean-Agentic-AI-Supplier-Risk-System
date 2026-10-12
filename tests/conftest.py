@@ -20,3 +20,11 @@ def evaluator():
 @pytest.fixture(scope="session")
 def calibration_evaluator():
     return SupplierRiskEvaluator.from_json(DATA_DIR / "calibration_portfolio.json")
+
+
+@pytest.fixture(scope="session")
+def auto_apply_evaluator(calibration_evaluator):
+    """Calibration portfolio with auto_apply switched on (the bundled templates propose weights only)."""
+    model = calibration_evaluator.model.model_copy(deep=True)
+    model.calibration.auto_apply = True
+    return SupplierRiskEvaluator(calibration_evaluator.source, model)

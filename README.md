@@ -71,7 +71,7 @@ weight, its data source and the resulting actions.
 ### 2. Checking the weights against the category managers
 
 ```bash
-supplier-risk --data data/calibration_portfolio.json --calibrate --weights-dir data/weights
+supplier-risk --data data/calibration_portfolio.json --calibrate --weights-dir data/weights --review interactive
 ```
 
 The demo portfolio contains 36 synthetic suppliers, 32 of them with a synthetic expert judgement.
@@ -79,7 +79,7 @@ The Calibration Agent fits new weights and tests them out of sample before accep
 
 ```
 Calibration [global] — 32 labelled supplier(s): accepted: cross-validated MSE 37.8 -> 22.8, z = 2.4
-  in-sample MSE 37.77 -> 13.265  |  class agreement 84% -> 88%  |  applied: True
+  in-sample MSE 37.77 -> 13.265  |  class agreement 84% -> 88%  |  applied: False
   mean label - score: +2.2 points (t = +2.1)
   factor                     old     new  delta
   business_impact          14.0%   18.1%  +4.1%
@@ -92,8 +92,9 @@ Read as: the synthetic "experts" weight sourcing strategy and business impact mo
 than the template. The change is accepted because the error drops by about 40 % on held-out
 suppliers *and* the drop is clearly larger than its own uncertainty (z ≥ 2). With fewer or noisier
 labels the same step rejects the change, or flags patterns that weights cannot express (a level
-offset between experts and model, knock-out logic). In the UI, calibrated weights are never applied
-automatically; they wait for approval in the **Review & approval** tab.
+offset between experts and model, knock-out logic). Accepted weights are only **proposed**: the run
+pauses, a reviewer approves or rejects them in the terminal or in the **Review & approval** tab, and
+approved weights are stored as a new version with the reviewer's name.
 
 ## What is deterministic, what is "agentic", what uses an LLM
 

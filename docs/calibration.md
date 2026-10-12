@@ -96,7 +96,9 @@ away from the methodology. A test covers this.
 4. Old vs. new weights (factor and dimension level), MSE, class agreement, sample size, exclusions
    and the stored file are written to `state["calibration_report"]` and the audit trail.
 
-For weights that drive real supplier decisions, `auto_apply: false` is the recommended setting.
+For weights that drive real supplier decisions, `auto_apply: false` is the recommended setting. It is
+the default of the bundled risk template; the performance template still auto-applies for demo
+purposes. The Streamlit app always proposes.
 
 ## Persisting weights: the weight store
 
@@ -124,15 +126,16 @@ data/weights/
 ## Usage
 
 ```bash
-# auto-apply (template default) and persist
-supplier-risk --data data/calibration_portfolio.json --calibrate --weights-dir data/weights
+# calibrate and decide in the terminal (risk template default: propose, then approve)
+supplier-risk --data data/calibration_portfolio.json --calibrate --weights-dir data/weights \
+              --review interactive
 
 # per material group
 supplier-risk --data data/calibration_portfolio.json --material-group plastics --calibrate --weights-dir data/weights
 
-# with approval: set `auto_apply: false` in your model YAML, then decide in the terminal
+# auto-apply without review: set `auto_apply: true` in your model YAML
 supplier-risk --data data/calibration_portfolio.json --model my_model.yaml --calibrate \
-              --weights-dir data/weights --review interactive
+              --weights-dir data/weights
 ```
 
 ```python
@@ -151,8 +154,9 @@ print(state["calibration_report"].stored_as)
 Example output on the synthetic portfolio:
 
 ```
-Calibration [global] — 32 labelled supplier(s): accepted: MSE 37.8 -> 13.3 (64.9% better)
-  MSE 37.77 -> 13.265  |  class agreement 84% -> 88%  |  applied: True
+Calibration [global] — 32 labelled supplier(s): accepted: cross-validated MSE 37.8 -> 22.8, z = 2.4 (in-sample 37.8 -> 13.3), 39.8% better
+  cross-validated MSE 37.77 -> 22.756, z = 2.4 (acceptance basis)
+  in-sample MSE 37.77 -> 13.265  |  class agreement 84% -> 88%  |  applied: False
   factor                     old     new  delta
   business_impact          14.0%   18.1%  +4.1%
   sourcing_strategy         8.8%   14.6%  +5.8%

@@ -46,8 +46,8 @@ def test_mismatching_factor_set_is_skipped(model, tmp_path):
     assert active == {} and "do not match" in warnings[0]
 
 
-def test_auto_applied_calibration_is_persisted_and_reused(calibration_evaluator, tmp_path):
-    ev = SupplierRiskEvaluator(calibration_evaluator.source, calibration_evaluator.model, WeightStore(tmp_path))
+def test_auto_applied_calibration_is_persisted_and_reused(auto_apply_evaluator, tmp_path):
+    ev = SupplierRiskEvaluator(auto_apply_evaluator.source, auto_apply_evaluator.model, WeightStore(tmp_path))
 
     first = ev.run(calibrate=True)
     assert first["calibration_report"].stored_as.endswith("global_v001.yaml")
