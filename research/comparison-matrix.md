@@ -157,7 +157,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 
 - **Excel** *(M)*: Fully modifiable and kept in-house; separate sheets allow material-group-specific criteria and weights. Not 5: logic diverges between copies and is not maintainable as shared software.
 - **SaaS** *(M)*: Configurable within the product; method and code are not independently changeable; data hosted by the vendor. Prewave includes commodity in its peer score and offers customised perspectives, but detailed per-commodity configuration is not publicly documented for either vendor. Such product configuration does not establish customer control of the method, implementation or data.
-- **Open repos** *(H)*: Code visible, but 2 repos have no licence and 1 is GPL, which restricts reuse. None provides material-group adaptation out of the box; adding it requires code changes. Visible code alone does not give unrestricted, ready-to-use control of the method.
+- **Open repos** *(H)*: Code visible, but 1 repo has no licence, 2 state MIT only in the README without a licence file, and 1 is GPL-3.0, which restricts reuse. None provides material-group adaptation out of the box; adding it requires code changes. Visible code alone does not give unrestricted, ready-to-use control of the method.
 - **Lean Agentic** *(H)*: MIT licence, config-driven, data and model stay in-house. Material-group weights and most-specific weight resolution provide a concrete, implemented case of customer-controlled adaptation; per-group fitting is assessed under expert calibration. No vendor is needed to modify the method or implementation.
 
 ### 12. Scalability: Excel 2 · SaaS 5 · Open repos 2 · Lean Agentic 3

@@ -371,4 +371,7 @@ Issues and pull requests are welcome.
 
 ## License
 
-[MIT](LICENSE). All sample data is fictional; all expert labels are synthetic.
+[MIT](LICENSE), Copyright (c) 2026 Csaba Bakay. This covers the code, the documentation, the working
+paper and the figures. No third-party code is included; dependencies, references, data and
+trademarks are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). All sample data is
+fictional; all expert labels are synthetic.

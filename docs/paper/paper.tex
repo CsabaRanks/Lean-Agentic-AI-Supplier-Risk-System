@@ -66,7 +66,9 @@ and Performance Evaluation\\[0.35em]
 \large\mdseries Turning spreadsheet scorecards into transparent, expert-calibrated
 multi-agent systems: a benchmark of four approaches and an open-source demonstrator}
 \author{Csaba Bakay}
-\date{Working paper, draft v0.8 \textperiodcentered{} October 2026}
+\date{Working paper, draft v0.8 \textperiodcentered{} October 2026\\[0.4ex]
+  {\footnotesize \textcopyright{} 2026 Csaba Bakay. Text, figures and code released under the MIT License;
+  see LICENSE and THIRD\_PARTY\_NOTICES.md in the repository.}}
 
 \begin{document}
 \maketitle
@@ -272,7 +274,7 @@ supervisor --- and diverge sharply on scoring. One contains no scoring at all; t
 compute deterministic, hard-coded weighted scores, one of them deliberately overwriting
 numbers produced by the language model; two leave the risk judgement to a language
 model, and in one a published example contains arithmetic errors in the weighted
-totals, which illustrates the risk of letting a language model generate numbers. Two carry no licence, one a copyleft licence, and none ships an automated test
+totals, which illustrates the risk of letting a language model generate numbers. One carries no licence, two state MIT only in their README without a licence file, one is under a copyleft licence (GPL-3.0), and none ships an automated test
 suite. The repositories are most useful here as \textbf{architectural blueprints}; their
 focus differs from the scoring-method focus of this paper. This work reuses ideas from
 them, but no code.
@@ -489,7 +491,7 @@ weights and alert reporting with reasons (documented minimums), while for Sphera
 breakdown was found, so that value is unknown rather than low. They are risk
 platforms: performance evaluation is not part of their documented scope, and their AI is
 not exposed as an inspectable multi-agent workflow.
-\textbf{The open-source repositories are blueprints}: free to license but demo-grade,
+\textbf{The open-source repositories are blueprints}: free to read but not all free to reuse, and demo-grade,
 with agent architectures as their main asset; they are rated rudimentary on most
 methodological factors, which reflects a different focus rather than a failed method.
 \textbf{The Lean Agentic demonstrator is strongest where the method itself matters}:
@@ -1775,17 +1777,17 @@ reviewed; \ev{[doc]} documentation read; \ev{[web]} web page read.
 \emph{Open-source repositories} (GitHub). The stated commits are the default-branch heads as
 cloned and re-checked on 12 October 2026; the earlier v0.2 code review (11 October 2026) was
 not pinned to a commit.
-aniket-work, \emph{supply-chain-risk-intelligence},
+aniket-work, \emph{supply-chain-risk-intelligence}, MIT stated in the README (no licence file),
 \url{https://github.com/aniket-work/supply-chain-risk-intelligence}, commit 6f7de32
 (2025-12-30) \ev{[code]}.
 Bhardwaj-Saurabh, \emph{OmniSupply-AI Multi-Agent Supply Chain Intelligence Platform},
 GPL-3.0,
 \url{https://github.com/Bhardwaj-Saurabh/OmniSupply-AI-Multi-Agent-Supply-Chain-Intelligence-Platform},
 commit 0b486e3 (2025-12-06) \ev{[code]}.
-chinmaynadgir, \emph{supplychain-ai-agent},
+chinmaynadgir, \emph{supplychain-ai-agent}, MIT stated in the README (no licence file),
 \url{https://github.com/chinmaynadgir/supplychain-ai-agent}, commit 0d91a53 (2025-10-11)
 \ev{[code]}.
-poshalanavateja, \emph{Vendor-Bid-Evaluation-Ai},
+poshalanavateja, \emph{Vendor-Bid-Evaluation-Ai}, no licence,
 \url{https://github.com/poshalanavateja/Vendor-Bid-Evaluation-Ai}, commit ff684f6
 (2026-03-08) \ev{[code]}.
 mergisi, \emph{awesome-openclaw-agents}, agent \code{vendor-evaluator}, MIT,

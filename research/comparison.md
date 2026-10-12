@@ -24,7 +24,7 @@ ideas this repository adopts, and why.
 | Human review | — | — | — | yes | — | **yes (exit node; interrupt planned)** |
 | Audit trail | history list | tracing | — | messages | — | **append-only typed audit trail** |
 | Tests / CI | no | no | ad-hoc scripts | no | no | **pytest suite** |
-| License | MIT (stated) | GPL-3.0 | none | none | MIT | **MIT** |
+| License | MIT (README only) | GPL-3.0 | MIT (README only) | none | MIT | **MIT** |
 
 ## Common ground
 

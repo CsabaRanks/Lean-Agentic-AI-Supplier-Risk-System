@@ -4,6 +4,9 @@
 
 *Csaba Bakay · Working paper, draft v0.8 · October 2026*
 
+*© 2026 Csaba Bakay. Text, figures and code released under the MIT License; see `LICENSE` and
+`THIRD_PARTY_NOTICES.md` in the repository.*
+
 > **Draft status.** All sections (1–12) exist as a first, continuous draft. Remaining gaps are
 > marked in the text and summarised in [paper-outline.md](paper-outline.md). Markers in the text:
 > - **[TBD-RESULT]** — to be completed or confirmed with results from the local calibration runs
@@ -270,8 +273,9 @@ scoring.
 - **LLM-judged.** Two leave the risk judgement to a language model. In one of them, a published
   example contains arithmetic errors in the weighted totals, which illustrates the risk of letting
   a language model generate numbers.
-- **Licensing and tests.** Two repositories carry no licence, one is under a copyleft licence, and
-  none ships an automated test suite.
+- **Licensing and tests.** One repository carries no licence, two state MIT only in their README
+  without a licence file, one is under a copyleft licence (GPL-3.0), and none ships an automated test
+  suite.
 
 The repositories are therefore most useful here as **architectural blueprints**; their focus
 differs from the scoring-method focus of this paper, and as demonstrators they were not built to
@@ -543,7 +547,7 @@ documented minimum, and for Sphera no per-result breakdown was found, so that va
 rather than low. Both are risk platforms: performance evaluation is not part of their documented scope,
 and their AI is not exposed as an inspectable multi-agent workflow.
 
-**The open-source repositories are blueprints.** They are free to license but demo-grade, and
+**The open-source repositories are blueprints.** They are free to read but not all free to reuse (see Section 2.3) and demo-grade;
 their agent architectures are their main asset. On most methodological factors they are rated
 rudimentary here, which reflects a different focus (architecture demonstration) rather than a
 failed attempt at a scoring method.
@@ -2244,10 +2248,10 @@ documentation page read; [web] = vendor or third-party web page read.
 re-checked on 12 October 2026. The earlier v0.2 code review (11 October 2026) was not pinned to a
 commit.
 
-- aniket-work, *supply-chain-risk-intelligence*. https://github.com/aniket-work/supply-chain-risk-intelligence, commit `6f7de32` (2025-12-30). [code]
+- aniket-work, *supply-chain-risk-intelligence*, MIT stated in the README (no licence file). https://github.com/aniket-work/supply-chain-risk-intelligence, commit `6f7de32` (2025-12-30). [code]
 - Bhardwaj-Saurabh, *OmniSupply-AI Multi-Agent Supply Chain Intelligence Platform*, GPL-3.0. https://github.com/Bhardwaj-Saurabh/OmniSupply-AI-Multi-Agent-Supply-Chain-Intelligence-Platform, commit `0b486e3` (2025-12-06). [code]
-- chinmaynadgir, *supplychain-ai-agent*. https://github.com/chinmaynadgir/supplychain-ai-agent, commit `0d91a53` (2025-10-11). [code]
-- poshalanavateja, *Vendor-Bid-Evaluation-Ai*. https://github.com/poshalanavateja/Vendor-Bid-Evaluation-Ai, commit `ff684f6` (2026-03-08). [code]
+- chinmaynadgir, *supplychain-ai-agent*, MIT stated in the README (no licence file). https://github.com/chinmaynadgir/supplychain-ai-agent, commit `0d91a53` (2025-10-11). [code]
+- poshalanavateja, *Vendor-Bid-Evaluation-Ai*, no licence. https://github.com/poshalanavateja/Vendor-Bid-Evaluation-Ai, commit `ff684f6` (2026-03-08). [code]
 - mergisi, *awesome-openclaw-agents*, agent `vendor-evaluator`, MIT. https://github.com/mergisi/awesome-openclaw-agents/tree/main/agents/supply-chain/vendor-evaluator, commit `05820c5` (2026-05-25). [code]
 
 *Vendor pages, accessed 12 October 2026.*

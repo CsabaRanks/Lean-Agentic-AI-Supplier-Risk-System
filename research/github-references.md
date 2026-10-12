@@ -49,7 +49,7 @@ source code and the GitHub API in October 2026; star counts and dates change ove
   Streamlit UI.
 - **Scoring:** LLM-judged tiers (Low / Medium / High / Critical) from financial health,
   compliance, dependency, on-time rate and quality; no explicit weights.
-- **License:** none.
+- **License:** README states MIT and refers to a LICENSE file that is not in the repo (checked at commit `0d91a53`, 2026-10-12).
 - **Why relevant:** Useful supplier data model and a business-friendly UI idea.
 - **Limitations:** results are not reproducible or explainable; no typed state.
 
