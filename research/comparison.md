@@ -18,6 +18,7 @@ ideas this repository adopts, and why.
 | Scoring | none (simulated) | deterministic, hard-coded weights | LLM-judged | deterministic tiers, hard-coded | LLM-judged | **deterministic, config-driven** |
 | Weights configurable | — | no | — | no | in prompt | **yes (YAML, per material group)** |
 | Weights calibrated against experts | — | no | no | no | no | **yes — Calibration Agent** |
+| Language model used | none in active code path | yes | yes | yes | yes (prompt) | **no (deterministic agents)** |
 | Escalation / hard gates | — | thresholds | — | hard compliance gate | — | **escalation rules (class floors)** |
 | Missing-data handling | — | — | — | defaults to 0.5 | — | **re-weighting + completeness flag** |
 | Human review | — | — | — | yes | — | **yes (exit node; interrupt planned)** |
@@ -65,10 +66,12 @@ This repository adds a dedicated **Calibration Agent**:
 - supports a **global** scope and **per-material-group** scopes, because one weighting rarely fits
   all commodities.
 
-Why it matters: it makes the system **learn from the people who know the suppliers best**, turns
-a static scorecard into a model that improves with every review cycle, and gives category managers
-a transparent, auditable reason for each weight — something neither spreadsheets nor black-box
-SaaS scores offer.
+Why it matters: it lets the system **learn from the people who know the suppliers best**, turns
+a static scorecard into a model that can be updated when enough consistent labels exist (the
+cross-validated acceptance rule withholds calibrations otherwise), and gives category managers a
+transparent, auditable reason for each weight. Neither a typical spreadsheet nor the SaaS examples
+document such a fitted procedure publicly (as of October 2026). Calibration has so far been
+examined on synthetic labels only.
 
 ### 2. Configuration over code
 Criteria, weights, thresholds, rules and actions are one YAML file, validated by Pydantic. A
@@ -87,5 +90,6 @@ synthetic labels) and integration tests for the graph flow.
 - **LLM supervisor loop** — costly and non-deterministic for a workflow whose order is known;
   kept as an optional extension point.
 - **LLM-judged scores** — not reproducible, not auditable.
-- **Heavy platform scope** (SQL warehouse, vector store, web UI) — out of scope for the core; a UI
-  and data connectors are on the roadmap.
+- **Heavy platform scope** (SQL warehouse, vector store) — out of scope for the core. A simple
+  spreadsheet-style UI and file-based data providers exist; live data connectors are on the
+  roadmap.

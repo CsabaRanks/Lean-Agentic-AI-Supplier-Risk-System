@@ -18,6 +18,9 @@ truth. The generated [comparison-matrix.md](comparison-matrix.md) and the radar 
   confidence mark (see [comparison-matrix.md](comparison-matrix.md)).
 - "Measurable / assessable by" names **observable evidence**, so that a rating can be checked
   and argued by someone else.
+- **Who rates.** The factors and all ratings so far come from a single rater, the author, who also
+  built the Lean Agentic demonstrator. Ratings are qualitative expert judgement, not measurement,
+  and have not been independently re-rated.
 
 ---
 

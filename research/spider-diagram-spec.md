@@ -11,6 +11,8 @@ of model v0.4.
 > - The chart and [comparison-matrix.md](comparison-matrix.md) are **generated** from that file,
 >   so they cannot drift apart.
 > - Captions must say "illustrative assessment, not an empirical measurement".
+> - All values are the qualitative judgement of a single rater, the author, who also built the
+>   Lean Agentic demonstrator. This bias must be disclosed wherever the chart is used.
 > - The chart shows **profiles**: no area, total or ranking is derived from it.
 
 ## Pipeline
@@ -95,7 +97,8 @@ Values: see the generated [comparison-matrix.md](comparison-matrix.md).
 ## Paper caption (draft)
 
 > *Figure 1. Four approaches to supplier risk management and performance evaluation profiled on
-> 15 success factors (model v0.4). Illustrative assessment based on public information and code review (October 2026).
+> 15 success factors (model v0.4). Illustrative, qualitative assessment by the author based on public
+> information and code review (October 2026); expert judgement, not an empirical measurement.
 > Proprietary SaaS is plotted as the mean of Prewave and Sphera; shaded bars show where the two
 > differ. Rationale and confidence for every value are given in Table 2 / the comparison matrix.
 > No weighting is applied and no total or ranking is derived.*

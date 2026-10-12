@@ -2,7 +2,7 @@
 
 ### Turning spreadsheet scorecards into transparent, expert-calibrated multi-agent systems: a benchmark of four approaches and an open-source demonstrator
 
-*Csaba Bakay · Working paper, draft v0.5 · October 2026*
+*Csaba Bakay · Working paper, draft v0.6 · October 2026*
 
 > **Draft status.** All sections (1–12) exist as a first, continuous draft. Remaining gaps are
 > marked in the text and summarised in [paper-outline.md](paper-outline.md). Markers in the text:
@@ -17,8 +17,13 @@
 > reference run (Section 7.2) reproduces exactly, and the synthetic suppliers of E1–E5 receive
 > identical factor ratings, so Sections 7.2–7.8 and Figures 4–7 are unaffected.
 >
+>
 > Draft v0.5 updates the benchmark to factor model v0.4 (Section 3.1) and puts the integration of
 > supplier risk management and performance evaluation at the centre of the positioning.
+> Draft v0.6 reconciles the text with the code and result files, states explicitly that no
+> language model is used in the current implementation, marks the benchmark as the author's
+> qualitative assessment and the experiments as synthetic-only, and softens comparative claims
+> about third-party products. No rating value and no experimental number was changed.
 
 ---
 
@@ -35,7 +40,7 @@ inconsistent bases. The available options each fall short:
   limited control over how scores are formed, and without performance evaluation
 
 Open-source agent projects show how such systems could be built, but mostly as demonstrators
-without a defensible scoring method. A further problem cuts across all of them: the weights that
+whose focus is the agent architecture rather than the scoring method. A further problem cuts across all of them: the weights that
 turn criteria into a score are typically set once and never checked against the judgement of the
 people who know the suppliers.
 
@@ -45,23 +50,31 @@ This paper makes three contributions.
    first removed means-as-ends and added two factors on which commercial platforms are strong; the
    second added the integration factor and sharpened agentic orchestration; the third folded
    material-group adaptation into customisability to remove a subset overlap.
-2. It profiles four approaches on these factors without aggregating them:
+2. It profiles four approaches on these factors without aggregating them. The profiles are the
+   author's qualitative expert assessment from public information and code review (October
+   2026), not a measurement:
    - spreadsheet practice
    - two commercial platforms, Prewave and Sphera
    - five open-source repositories
    - the approach proposed here
-3. It presents *Lean Agentic AI* and an open-source demonstrator. Its central advantage over pure
-   risk platforms is the integration of both views: risk management and performance evaluation on
-   one criteria catalogue, each with its own weights, classes and actions. The demonstrator is an
-   agentic workflow: specialised agents over a shared state, including a calibration agent and a
-   review pause in the graph. The approach starts from existing scorecard practice. Its scoring is deterministic and
+3. It presents *Lean Agentic AI* and an open-source demonstrator. Its main difference from pure
+   risk platforms, as far as their public documentation shows, is the integration of both views:
+   risk management and performance evaluation on one criteria catalogue, each with its own
+   weights, classes and actions. The demonstrator is an agentic workflow in a narrow sense: an
+   orchestrated multi-agent workflow of deterministic agents (Python nodes in a LangGraph state
+   graph) over a shared state, including a calibration agent, routed by a rule-based supervisor and
+   paused for human review inside the graph. No language model is called in the current
+   implementation; "agentic" denotes orchestration, not autonomy. The approach starts from existing scorecard practice. Its scoring is deterministic and
    configurable, with material-group-specific weights. Weights are calibrated against category
    managers' expert labels by constrained least squares. A human-in-the-loop step pauses the
    workflow for approval, and approved weights are versioned. The same criteria serve two views,
    supplier performance evaluation and supplier risk management, and results map to concrete
    actions per factor.
 
-On synthetic portfolios whose labels were generated from a hidden weighting plus noise:
+All experimental results are on synthetic data only: portfolios whose "expert" labels were
+generated from a hidden weighting plus noise or, in the robustness experiments, from constructed
+expert policies. No real expert labels were used and no field validation was performed. On these
+synthetic portfolios:
 - **Cross-validated error.** Calibration reduced the cross-validated mean squared error between
   model score and expert label from 37.8 to 20.6 score points², close to the irreducible label
   noise of 18.1.
@@ -79,7 +92,10 @@ On synthetic portfolios whose labels were generated from a hidden weighting plus
   at most 4 %. The price is that calibration is withheld when labels are few or inconsistent.
 
 The paper states what this does not establish:
-- the labels are synthetic, and even the robustness experiments use constructed expert policies
+- the labels are synthetic, and even the robustness experiments use constructed expert policies;
+  there are no real expert labels and no field validation
+- the benchmark ratings are the author's own judgement, including of the author's own demonstrator, and
+  have not been independently re-rated
 - predictive validity against real disruptions is untested
 - the demonstrator provides partial external signal coverage, without live monitoring, at about
   half the level of the strongest platform
@@ -139,20 +155,29 @@ enterprise licence.
 
 The argument proceeds in two steps.
 - **A benchmark.** Fifteen success factors are proposed, and four approaches are profiled on them
-  (Figure 1). The profile is read factor by factor, without weighting, total or ranking.
+  (Figure 1). The profile is read factor by factor, without weighting, total or ranking. It is a
+  qualitative expert assessment by the author, not a measurement.
 - **A demonstrator.** The proposed approach is implemented as an open-source multi-agent workflow.
   Each claimed property can then be inspected in code, tests and documentation rather than
   asserted.
 
-The demonstrator runs on synthetic data. This is a deliberate constraint, and it has a cost,
-discussed in Section 10. It also has a benefit: because the expert labels in the
+A note on terminology. "Agentic" is used here for an *orchestrated multi-agent workflow*:
+specialised agents (data collection, scoring, calibration, recommendation, human review) are
+deterministic Python functions that act as nodes of a LangGraph state graph, a rule-based
+supervisor routes between them, and the workflow pauses for human approval. No language model is
+called anywhere in the current implementation. Language-model roles (a narrating explanation
+agent, an LLM-based supervisor) are planned extensions only (Sections 8.5 and 11). The term does
+not imply autonomous, LLM-driven decision making.
+
+The demonstrator runs on synthetic data, and so do all experiments: no real expert labels and no
+field data were used. This is a deliberate constraint, and it has a cost, discussed in Section 10. It also has a benefit: because the expert labels in the
 calibration experiment were generated from a known hidden weighting, it can be checked whether
 calibration recovers that weighting, which no field dataset would allow.
 
 ![Figure 1](../images/spider-diagram.png)
 
 *Figure 1. Four approaches to supplier risk management and performance evaluation profiled on
-fifteen success factors (model v0.4); half points mark a profile between two levels. Illustrative assessment based on public information and code review (October 2026).
+fifteen success factors (model v0.4); half points mark a profile between two levels. Illustrative, qualitative assessment by the author based on public information and code review (October 2026); expert judgement, not an empirical measurement. The author also built one of the rated approaches (Section 4.4).
 Proprietary SaaS is plotted as the mean of Prewave and Sphera; shaded bars mark where the two
 differ. Rationale and confidence for every value: Table 2 and `research/comparison-matrix.md`. No
 weighting is applied, and no total or ranking is derived.*
@@ -169,7 +194,8 @@ weighting is applied, and no total or ranking is derived.*
    agentic architecture. Its positioning rests on two features: the integration of risk management
    and performance evaluation, and calibration against expert labels inside an agentic workflow
    (Section 5).
-4. **An open-source demonstrator.** It is a LangGraph workflow with:
+4. **An open-source demonstrator.** It is a LangGraph workflow of deterministic agents, without any
+   language model, with:
    - deterministic, configurable scoring
    - material-group weights
    - constrained least-squares calibration
@@ -246,7 +272,8 @@ Three observations matter for this paper.
 3. **Both are risk platforms.** Neither documents a supplier performance evaluation with its own
    criteria and grades. Neither documents a customer-inspectable multi-agent workflow in public
    sources: specialised agents over a shared state, a calibration agent, a review pause in the
-   workflow graph.
+   workflow graph. This describes public documentation as of October 2026, not the products
+   themselves; capabilities that are not documented publicly may still exist.
 
 Other vendors were checked only briefly and are not part of the benchmark:
 - **Resilinc:** fixed score components against universal standards.
@@ -263,13 +290,14 @@ scoring.
 - **Deterministic, hard-coded weights.** Two compute deterministic weighted scores. One of them
   deliberately overwrites any numbers produced by the language model with values computed in code.
 - **LLM-judged.** Two leave the risk judgement to a language model. In one of them, a published
-  example contains arithmetic errors in the weighted totals, a small but telling illustration of
-  why numbers should not be generated by a language model.
+  example contains arithmetic errors in the weighted totals, which illustrates the risk of letting
+  a language model generate numbers.
 - **Licensing and tests.** Two repositories carry no licence, one is under a copyleft licence, and
   none ships an automated test suite.
 
-The repositories are therefore valuable as **architectural blueprints**, not as methods. The
-approach in this paper reuses ideas from them, but no code.
+The repositories are therefore most useful here as **architectural blueprints**; their focus
+differs from the scoring-method focus of this paper, and as demonstrators they were not built to
+meet it. The approach in this paper reuses ideas from them, but no code.
 
 ### 2.4 Calibrating weights against expert judgement
 
@@ -391,9 +419,9 @@ can be trusted.
    (Section 11).
 
 v0.2 kept fifteen axes and contains four factors on which the commercial examples are clearly
-ahead: 8, 9, 13 and 15.
+ahead: 8, 9, 13 and 15 in v0.2 numbering (now 7, 8, 12 and 14).
 
-**A second review (v0.3)** followed practitioner feedback (the numbers in this paragraph refer to v0.3).
+**A second review (v0.3)** followed informal practitioner feedback, not a structured survey (the numbers in this paragraph refer to v0.3).
 - **Added:** factor 16, *integration of risk management and performance evaluation*. The common
   split between a risk platform and spreadsheet-based evaluation was not captured by any factor.
 - **Sharpened:** factor 14, now *agentic orchestration & extensibility*. "Uses AI" and "is an
@@ -436,7 +464,10 @@ their scores (now factors 7, 8, 12 and 14). See `research/success-factors.md` fo
 ### 4.1 Method
 
 Four approaches are rated on the fifteen factors on a five-point scale (1 weak or absent, 3
-adequate, 5 very strong). A half point marks a profile clearly between two levels. Each rating carries a short rationale and a confidence mark:
+adequate, 5 very strong). A half point marks a profile clearly between two levels. The ratings
+are the author's qualitative expert judgement, formed from public information, source-code review
+and practitioner experience. They are not measurements, and no rating was obtained by testing a
+product. Each rating carries a short rationale and a confidence mark:
 - **H**: verified from code or primary documentation
 - **M**: plausible, partly documented
 - **L**: assumption
@@ -448,20 +479,21 @@ disclosed rather than hidden:
 
 | Approach | What is rated | Evidence |
 |---|---|---|
-| Excel / manual | A typical procurement scorecard (criteria sheet, weights, annual update) | Practitioner experience; assumption-based |
+| Excel / manual | A typical procurement scorecard (criteria sheet, weights, annual update) | The author's practitioner experience; assumption-based |
 | Proprietary SaaS | Prewave and Sphera, **rated separately**; the profile plots their mean and shows the spread | Public information only, October 2026 |
 | Open-source repos | The five reviewed repositories | Source-code review |
 | Lean Agentic | The demonstrator **as implemented**, not its roadmap | Code, tests and documentation |
 
-**Table 2 (condensed).** Strongest and weakest factors per approach. The full matrix, with a
-rationale and confidence mark for every cell, is in Appendix A.
+**Table 2 (condensed).** Strongest and weakest factors per approach (author's assessment, not a
+measurement). The full matrix, with a rationale and confidence mark for every cell, is in
+Appendix A.
 
-| Approach | Strongest (4–5) | Weakest (1–2) |
-|---|---|---|
-| Excel / manual | Method transparency; customisability | Expert calibration; external signals; agentic orchestration; risk & performance integration |
-| Proprietary SaaS (Prewave, Sphera) | External signals & coverage; scalability; operational maturity; regulatory evidence; action framework; human-in-the-loop | Cost; customisability & data sovereignty; expert calibration; risk & performance integration |
-| Open-source repos | Cost; agentic orchestration | Expert calibration; regulatory evidence; operational maturity |
-| Lean Agentic (this work) | Method transparency; customisability; risk & performance integration; expert calibration; agentic orchestration; traceability & reproducibility; cost; time-to-value | Regulatory evidence; operational maturity |
+| Approach | Strongest (4–5) | Weakest (1) | Also low (2) |
+|---|---|---|---|
+| Excel / manual | Method transparency; customisability | Expert calibration; external signals; agentic orchestration | Traceability; action framework; human-in-the-loop; regulatory evidence; scalability; risk & performance integration |
+| Proprietary SaaS (Prewave, Sphera) | External signals & coverage; scalability; operational maturity; regulatory evidence; criteria & weights; action framework; human-in-the-loop | — | Cost; customisability & data sovereignty; expert calibration; risk & performance integration |
+| Open-source repos | Cost; agentic orchestration | Expert calibration; regulatory evidence; operational maturity | Most other factors (criteria & weights, traceability, actions, human-in-the-loop, external signals, time-to-value, scalability, integration) |
+| Lean Agentic (this work) | Method transparency; customisability; risk & performance integration; expert calibration; agentic orchestration; traceability & reproducibility; criteria & weights; cost; time-to-value | — | Regulatory evidence; operational maturity |
 
 ### 4.2 Reading the profiles
 
@@ -494,7 +526,9 @@ does not. Both are risk platforms: performance evaluation is not part of their d
 and their AI is not exposed as an inspectable multi-agent workflow.
 
 **The open-source repositories are blueprints.** They are free to license but demo-grade, and
-their agent architectures are their main asset. On almost every methodological factor they are rudimentary.
+their agent architectures are their main asset. On most methodological factors they are rated
+rudimentary here, which reflects a different focus (architecture demonstration) rather than a
+failed attempt at a scoring method.
 
 **The Lean Agentic demonstrator is strongest where the method itself matters:**
 - methodological transparency
@@ -530,8 +564,8 @@ Section 8.2 develops this hybrid reading.
 
 ### 4.4 Threats to validity of the benchmark
 
-- **Author bias.** The factors and the ratings come from the authors of one of the rated
-  approaches. Mitigations:
+- **Author bias.** The factors and all ratings come from a single rater, the author, who also
+  built one of the rated approaches and therefore rates their own work. Mitigations:
   - the v0.2 correction against home-field bias
   - rating the demonstrator as implemented rather than as planned
   - a rationale and confidence mark for every value
@@ -572,14 +606,16 @@ Section 8.2 develops this hybrid reading.
 (→ `research/lean-agentic-positioning.md`.)
 
 **Positioning: one basis for risk and performance.** The approach is not a further risk platform.
-Its central advantage over pure risk platforms such as Prewave and Sphera is that it evaluates
+Its main difference from pure risk platforms such as Prewave and Sphera, as far as their public
+documentation shows (October 2026), is that it evaluates
 *supplier risk management* and *supplier performance evaluation* on one consistent basis: one
 criteria catalogue, one data sheet, one engine, and two views with their own logic (Section 6.6).
 This closes the gap described in the introduction, where a risk platform and a spreadsheet
 evaluation judge the same supplier separately. It does not replace the platform's signals; it can
 consume them as indicators (Section 8.2). The second pillar is that the method is run by an
 agentic workflow whose agents, including a calibration agent, share an inspectable state and stop
-for human approval inside the graph.
+for human approval inside the graph. The agents are deterministic code; no language model is
+involved (Section 2.5).
 
 ### 5.2 A synthesis of three traditions
 
@@ -637,13 +673,14 @@ configuration, they are either applied automatically or proposed for approval. O
 the error before and after, and the share of suppliers whose model class matches the class implied
 by the expert label are all reported. Formulation: Section 6.4.
 
-None of the reviewed repositories, and neither commercial example in its public documentation,
-offers this. It turns the scorecard from a fixed instrument into one that learns from the people
+None of the reviewed repositories, and neither commercial example in its public documentation
+(as of October 2026), offers this. It turns the scorecard from a fixed instrument into one that learns from the people
 accountable for it, while every weight remains explainable.
 
 **(3) Agentic orchestration.** The method runs as a graph of specialised agents (data collection,
 scoring, calibration, recommendation, human review) over one typed, inspectable state, coordinated
-by a supervisor with bounded loops. The calibration agent proposes weights; the review is a pause in
+by a rule-based supervisor with bounded loops. Each agent is a deterministic Python function; none
+calls a language model. The calibration agent proposes weights; the review is a pause in
 the graph that resumes with a recorded decision. The commercial examples use AI for signal
 processing, summaries and, in one case, marketed "agentic" capabilities, but neither documents such
 a workflow publicly. The agents orchestrate; they do not decide (Section 8.5).
@@ -716,8 +753,10 @@ The demonstrator is a LangGraph state graph in hub-and-spoke form (Figure 3). A 
   review cycles (Section 6.7)
 - **human review**
 
-Every worker returns control to the supervisor. The routing rules fit in one function, which is
-also the single extension point for a language-model-based supervisor.
+Every worker returns control to the supervisor. All workers and the supervisor are deterministic
+Python code; no language model is called at any point of the workflow. The routing rules fit in
+one function, which is also the single, so far unused, extension point for a planned
+language-model-based supervisor.
 
 ```mermaid
 flowchart TD
@@ -739,8 +778,8 @@ flowchart TD
 ```
 
 *Figure 3. Workflow of the demonstrator. Every worker returns to a rule-based supervisor; the
-calibration loop and the human-review loop each run at most once per run. [TBD-INPUT: render as a
-static figure for the typeset version.]*
+calibration loop and the human-review loop each run at most once per run. All nodes are
+deterministic; no language model is called. (Rendered as a static figure in the typeset version.)*
 
 ```
 collect_data → score → [calibrate → score] → recommend → [human_review ⏸ → score? → recommend] → end
@@ -868,7 +907,8 @@ Practice distinguishes two questions about the same supplier:
 The two answers can diverge. A supplier can deliver excellently and still be a critical
 dependency; in the sample portfolio, two suppliers are critical in the risk view and A in the
 performance view. The demonstrator therefore keeps both as separate **views** on one engine. This
-integration is the approach's central advantage over pure risk platforms (Section 5):
+integration is the approach's main difference from pure risk platforms as publicly documented
+(Section 5):
 - **Shared catalogue.** Each criterion, with its meaning and rating source, is defined once.
   Criteria such as credit risk or compliance status are used by both views.
 - **One configuration per view.** It selects criteria and sets its own dimensions, weights,
@@ -879,7 +919,8 @@ integration is the approach's central advantage over pure risk platforms (Sectio
   view, so calibrating one view never changes the other.
 
 Everything in Sections 6.1–6.5 applies to each view unchanged. The calibration experiments in
-Section 7 use the risk view; in the template, calibration of the performance view is switched off.
+Section 7 use the risk view. In both templates calibration is disabled by default and enabled per
+run; the performance view has not been calibrated in any experiment.
 
 ### 6.7 Actions, data providers and history
 
@@ -940,9 +981,14 @@ All numbers in this section are produced by deterministic scripts, run on commit
 - `scripts/robustness_calibration.py`: experiment E4 (Section 7.7)
 - `scripts/plot_calibration_validation.py`: Figures 4–7
 
-The tables behind every figure are in `docs/paper/results/calibration-validation/`, with
-`SUMMARY.md` as the overview. The data is synthetic throughout. What that does and does not allow
-is discussed in Section 7.6.
+The tables behind every figure are in `docs/paper/results/` (`calibration-validation/`,
+`calibration-robustness/`, `acceptance-threshold/`), each with `SUMMARY.md` as the overview.
+
+**Scope of the evidence.** The data is synthetic throughout. Every "expert label" in E1–E5 is
+generated by a constructed expert policy; no real category manager provided labels, and no result
+has been validated in the field. The experiments therefore show how the calibration procedure
+behaves under known conditions, not how well it works in practice. What that does and does not
+allow is discussed in Sections 7.9 and 10.
 
 ### 7.1 Design
 
@@ -1327,8 +1373,8 @@ Thresholds were derived on these E4 policies (rates at n = 16 / 32 / 64,
   predicts, after the overall offset is removed.
   - **Detection:** the knock-out policy was found in 13 / 53 / 97 % of runs, always on the right
     factor family.
-  - **False hints:** at most 3 % with linear experts. Worst-factor experts trigger it in 7–30 %
-    of runs, which is defensible, since their policy is itself non-compensatory.
+  - **False hints:** at most 3 % with linear experts (up to 7 % with very noisy labels, σ = 8).
+    Worst-factor experts trigger it in 7–30 % of runs, which is defensible, since their policy is itself non-compensatory.
   - **Response:** an escalation rule (Section 6.2).
 - **Pushed to the minimum weight.** A factor's weight fell from at least twice the minimum to the
   minimum.
@@ -1338,7 +1384,7 @@ Thresholds were derived on these E4 policies (rates at n = 16 / 32 / 64,
   - **Not a reliable knock-out signal:** a knock-out tends to make the affected factor look
     *more* important, not less.
 
-None of the hints detects disagreement between experts reliably (0–17 %). That still requires
+None of the hints detects disagreement between experts reliably (0–20 % of runs). That still requires
 repeated labels (Section 11).
 
 **What E4 adds.** It turns the main limitation of E1–E3 ("best-case labels") into a map of where
@@ -1474,18 +1520,19 @@ paper answer this from different directions.
 - *Spreadsheets* keep the method in the procurement team's hands but cannot hold it to account.
 - *Commercial platforms* bring data, scale and operational maturity. Depending on the vendor, they
   keep the method partly or largely outside the customer's view.
-- *Open-source agent projects* offer architecture without method.
+- *Open-source agent projects* offer architecture, with little emphasis on a scoring method.
 
-No approach in the comparison is strong both on *data coverage* and on *ownership of the method*,
-and none of the established ones evaluates risk and performance on one basis. The profiles are
-complementary.
+In the author's assessment, no approach in the comparison is strong both on *data coverage* and
+on *ownership of the method*, and none of the established ones documents publicly an evaluation of
+risk and performance on one basis. The profiles are complementary. This reading rests on the
+qualitative ratings of Section 4, not on measurement.
 
 **The demonstrator (Sections 5–7) shows that the method layer can be built lean, and can carry
 both views.**
 - **Integrated:** risk management and performance evaluation from one criteria catalogue, each with
   its own logic.
-- **Agentic:** specialised agents over a shared state, with a calibration agent and a review pause
-  in the graph.
+- **Agentic:** deterministic, specialised agents over a shared state, routed by a rule-based
+  supervisor, with a calibration agent and a review pause in the graph; no language model.
 - **Transparent and reproducible:** the scoring is deterministic, configurable and fully tested.
 - **Governed:** the human review is a real pause in the workflow, not a notification, and weights
   are versioned with their approver.
@@ -1494,7 +1541,7 @@ both views.**
 - **At open-source cost:** the code base is small and MIT-licensed: about 3,600 lines of Python
   in the package plus about 700 for the interface, with no agent longer than 150 lines.
 
-On synthetic data, the calibration:
+On synthetic data only, the calibration:
 - generalises close to the noise floor of the labels
 - recovers the direction of substantial weight differences
 - with the cross-validated acceptance rule, rarely makes things worse than the defaults
@@ -1684,7 +1731,9 @@ already run:
 
 **Evidence limitations.**
 - **Synthetic data.** No field data supports the demonstration. All suppliers and expert labels
-  are synthetic, and they are labelled as such.
+  are synthetic, and they are labelled as such. Experiments E1–E5 are empirical only in the sense
+  of controlled simulation: no real expert labels were collected, and no result was validated in
+  the field.
 - **Constructed expert policies.** The main experiments (E1–E3) use labels from the fitted, linear
   model family, which is the best case. E4 tests constructed alternatives: non-additive,
   knock-out, level-shifted and disagreeing experts. It shows clear failure modes for knock-outs,
@@ -1695,8 +1744,11 @@ already run:
   accordingly.
 
 **Benchmark limitations.**
-- **Who rated.** The success factors and all ratings come from the authors of one of the rated
-  approaches. Rationales, confidence marks and the v0.2 correction reduce this bias but do not
+- **Qualitative, not measured.** The benchmark (Table 2, Figure 1) is the author's expert
+  judgement from public information, code review and practitioner experience. It is not an
+  empirical measurement, and its numbers should not be read as such.
+- **Who rated.** The success factors and all ratings come from a single rater, the author, who
+  also built one of the rated approaches and thus rates their own work. Rationales, confidence marks and the v0.2 correction reduce this bias but do not
   remove it. The v0.3 review added a factor on which the proposed approach is strong (risk and
   performance integration), sharpened another towards agentic orchestration, and re-rated five
   factors in its favour after practitioner feedback. These changes are documented, but they
@@ -1731,7 +1783,10 @@ already run:
   This includes the bands that map the political stability percentile and the time to exit to
   ratings (Section 6.2), and the factor-level actions. None of them was calibrated or validated.
 - **Second view not examined.** The performance view uses the same engine, but none of the
-  experiments in Section 7 covers it, and its calibration is switched off in the template.
+  experiments in Section 7 covers it. Calibration is disabled by default in both templates.
+- **No language model.** The "agentic" architecture is an orchestrated workflow of deterministic
+  agents with a rule-based supervisor. Language-model components (explanation, extraction, an
+  LLM-based supervisor) are planned, not implemented; nothing in this paper evaluates them.
 - **Not production-hardened.** The demonstrator has:
   - no roles or permissions
   - review pauses held in memory only
@@ -1838,7 +1893,8 @@ performance evaluation in separate systems. The paper then presented Lean Agenti
 fill the method side of that gap and to close the second one:
 - evaluate risk and performance as two views on one criteria catalogue
 - start from existing scorecard practice
-- run the method as an agentic workflow of specialised agents over a shared state
+- run the method as an agentic workflow of deterministic, specialised agents over a shared
+  state, with a rule-based supervisor and no language model
 - build on open agentic blueprints
 - keep every number deterministic
 - calibrate weights against expert labels under constraints, with a cross-validated acceptance
@@ -1851,7 +1907,9 @@ test. The validation found, and the demonstrator now corrects, an acceptance rul
 otherwise have let harmful calibrations through.
 
 What remains open is stated as plainly:
-- The labels were synthetic and generated by the fitted model family.
+- The labels were synthetic, generated by the fitted model family or by constructed expert
+  policies; no real expert labels were used and nothing was validated in the field.
+- The benchmark is the author's qualitative assessment, not a measurement.
 - Agreement with experts is not predictive validity.
 - The approach supplies external signals only in part.
 

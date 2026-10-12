@@ -14,7 +14,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 
 | Approach | What exactly is rated | Evidence base |
 |---|---|---|
-| **Excel / manual process** | A typical spreadsheet scorecard maintained by procurement (criteria sheet, weights, annual update). | Practitioner experience; assumption-based. |
+| **Excel / manual process** | A typical spreadsheet scorecard maintained by procurement (criteria sheet, weights, annual update). | The author's practitioner experience; assumption-based. |
 | **Proprietary SaaS (Prewave, Sphera)** | Prewave and Sphera Supply Chain Risk Management as examples of commercial SCRM platforms. | Public information only (vendor websites, help centre, press releases, vendor-commissioned studies), see research/saas-references.md. No hands-on test. |
 | **Open-source GitHub repos** | The five reviewed open-source blueprints. | Source code review, see research/github-references.md and research/comparison.md. |
 | **Lean Agentic (this repo)** | This repository as implemented (v0.1.0, October 2026), not the roadmap. | Code, tests and documentation in this repository. |
@@ -58,7 +58,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 - **Excel** *(M)*: Scorecards with criteria and weights are common and can mix data and judgement, but definitions, scales and provenance are often informal and drift between versions.
 - **SaaS** *(M)*: Prewave publishes a structured score combining peer, alert, assessment and external data; Sphera describes indicator scorecards combining monitoring and questionnaires.
 - **Open repos** *(H)*: Only 2 of 5 repos have deterministic weighted scoring, both with hard-coded weights; mostly one input type.
-- **Lean Agentic** *(H)*: Multi-dimensional criteria, 1-5 scales, weights in a validated config; expert ratings and indicator-derived ratings with provenance and documented overrides. Not 5: template is illustrative, not empirically validated; objective indicators are entered, not fetched.
+- **Lean Agentic** *(H)*: Multi-dimensional criteria, 1-5 scales, weights in a validated config; expert ratings and indicator-derived ratings with provenance and documented overrides. Not 5: template is illustrative, not empirically validated; objective indicators are entered or imported from files (CSV export, downloaded WGI table), not fetched live.
 
 ### 2. Traceability & reproducibility: Excel 2 · SaaS 2.5 · Open repos 2 · Lean Agentic 4
 
@@ -79,7 +79,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 - **Excel** *(M)*: Weights are adjusted by discussion, if at all.
 - **SaaS** *(L)*: Weights are adjustable by configuration (Prewave, partly via customer success); a documented fit against the customer's own expert labels was not found publicly for either vendor.
 - **Open repos** *(H)*: None of the 5 repos.
-- **Lean Agentic** *(H)*: Constrained least-squares calibration against expert labels with MSE and class agreement, approval step and versioning. Not 5: validated on synthetic labels only, no cross-validation yet.
+- **Lean Agentic** *(H)*: Constrained least-squares calibration against expert labels with MSE and class agreement, approval step and versioning; cross-validated acceptance with an uncertainty threshold and fit diagnostics. Not 5: examined on synthetic labels only, no real expert labels or field validation.
 
 ### 5. Action framework: Excel 2 · SaaS 4 · Open repos 2 · Lean Agentic 3.5
 
@@ -142,7 +142,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 - **Excel** *(H)*: None beyond macros.
 - **SaaS** *(M)*: Prewave: REST APIs, ERP write-back and connectors for external AI agents; Sphera: "agentic AI" capabilities marketed, workflow embedding stated, public API documentation not found. Neither documents a customer-inspectable multi-agent workflow (specialised agents over a shared state, calibration agent, graph-based review pause). Both closed.
 - **Open repos** *(H)*: Agent architectures are their main asset: specialised agents over a typed shared state, graph or supervisor orchestration; review pauses rare, no calibration agent.
-- **Lean Agentic** *(H)*: LangGraph supervisor over a typed shared state with specialised agents (data collection, scoring, calibration, recommendation, human review as graph interrupt); documented extension points (data sources, data providers, rating sources, views, agents). Not 5: rule-based supervisor, no LLM agents yet.
+- **Lean Agentic** *(H)*: LangGraph supervisor over a typed shared state with specialised agents (data collection, scoring, calibration, recommendation, human review as graph interrupt); documented extension points (data sources, data providers, rating sources, views, agents). All agents are deterministic Python nodes; no language model is called. Not 5: rule-based supervisor, no LLM agents yet.
 
 ### 14. Operational maturity & support: Excel 3 · SaaS 5 · Open repos 1 · Lean Agentic 2
 
@@ -160,7 +160,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 
 ## Known weaknesses of this comparison
 
-- **Author bias.** Factors and ratings come from the authors of the Lean Agentic approach. Mitigations: factors where SaaS is stronger are included (v0.2), Lean Agentic is rated as implemented, every rating carries rationale and confidence. v0.3 adds a factor (risk and performance integration) on which the proposed approach is strong, and re-rates five factors after practitioner feedback; both are disclosed. v0.4 folds material-group adaptation into customisability to remove a subset overlap; retained ratings and confidence are unchanged. Recommended: independent re-rating by 3-5 practitioners, reporting the spread.
+- **Author bias.** Factors and all ratings come from a single rater, the author of the Lean Agentic approach, who thus rates their own work; the ratings are qualitative judgement, not measurement. Mitigations: factors where SaaS is stronger are included (v0.2), Lean Agentic is rated as implemented, every rating carries rationale and confidence. v0.3 adds a factor (risk and performance integration) on which the proposed approach is strong, and re-rates five factors after practitioner feedback; both are disclosed. v0.4 folds material-group adaptation into customisability to remove a subset overlap; retained ratings and confidence are unchanged. Recommended: independent re-rating by 3-5 practitioners, reporting the spread.
 - **The Excel profile is a stereotype.** Real spreadsheet practices vary widely.
 - **SaaS rated on public information only.** Hands-on evaluation could move several ratings, especially traceability, customisability (including material-group fit), action framework, human-in-the-loop and time-to-value.
 - **No factor measures predictive validity**, i.e. whether a score anticipates real disruptions (see research/success-factors.md).

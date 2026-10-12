@@ -11,16 +11,20 @@ series), whose formal conventions are reused:
 - **Section order.** Limitations, then Future work, then Conclusion.
 
 Status: outline with bullet points. Sources: `research/` files, linked per section.
-**Draft text:** all sections 1–12 are drafted in [paper.md](paper.md) (working draft v0.5).
+**Draft text:** all sections 1–12 are drafted in [paper.md](paper.md) (working draft v0.6).
 
-### Remaining gaps (draft v0.5)
+### Remaining gaps (draft v0.6)
 
 - **[TBD-RESULT] Section 7:**
   - optional label-vs-score scatter
   - λ: done. Scaled with 1/n by default; CV selection tested and not adopted (Section 7.4).
   - E4 (misspecification, noise) is done: Section 7.7, Table 6, Figure 7
-- Section 7.7: the level-offset diagnostic is implemented and evaluated on E4. Residual and
-  knock-out diagnostics remain future work.
+- Section 7.7: the level-offset, high-residual, knock-out-candidate and minimum-weight
+  diagnostics are implemented and evaluated on E4 (E4b). Turning them into proposals is future
+  work.
+- **Evidence status (v0.6):** the benchmark is the author's qualitative assessment; E1–E5 use
+  synthetic labels only; no language model is used in the demonstrator. These statements must
+  stay in abstract, Sections 1, 4, 6, 7 and 10 of both `paper.md` and `paper.tex`.
 - **Figure 3 (workflow):** rendered as a static TikZ figure in the typeset version (`paper.tex`,
   Figure 2 there); `paper.md` keeps the Mermaid version.
 - **Section 9, Table 9:** provider and data vintage are recorded per indicator; the source data
@@ -54,7 +58,7 @@ with Open Agentic Workflows"*
   - human-in-the-loop via graph interrupts
   - versioned weights
 - **Results.** On synthetic data with labels generated from a hidden weighting:
-  - MSE 37.8 → 13.3
+  - cross-validated MSE 37.8 → 20.6 (in-sample 37.8 → 13.3)
   - class agreement 84 % → 88 %
   - weights move towards the hidden weighting
 - **Not established:** predictive validity, real-world labels, external signal feeds.

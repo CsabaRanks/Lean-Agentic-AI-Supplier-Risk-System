@@ -146,7 +146,7 @@ request and the audit trail.
    first, because without centring every level shift looks like a knock-out on every factor.
 3. **Pushed to the minimum weight.**
 
-**Probe before building.** The user's hypothesis "factor pushed to the minimum = knock-out
+**Probe before building.** The author's hypothesis "factor pushed to the minimum = knock-out
 candidate" was checked first. It is unspecific: it fires with level shifts and knock-outs, but
 also in 13–17 % of linear and up to 53 % of very noisy runs. A knock-out makes its factor look
 more important, not less. The minimum-weight hint is therefore kept, but worded as "check this

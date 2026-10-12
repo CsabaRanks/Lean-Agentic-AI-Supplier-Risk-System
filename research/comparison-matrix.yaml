@@ -8,6 +8,8 @@
 #   python scripts/generate_spider.py --check    # fail if the Markdown is out of date (used in tests)
 #
 # Edit ratings HERE only. Ratings are a reasoned, illustrative assessment, not a measurement.
+# All ratings are the qualitative judgement of a single rater (the author), who also built the
+# Lean Agentic demonstrator; they have not been independently re-rated.
 #
 # Rating format per approach:
 #   value:       1..5 (1 weak / absent, 2 rudimentary, 3 adequate, 4 strong, 5 very strong); a half point
@@ -26,7 +28,8 @@ meta:
   caption: >-
     Four approaches to supplier risk management and performance evaluation profiled on 15 success factors
     (model v0.4).
-    Illustrative assessment based on public information and code review (October 2026);
+    Illustrative, qualitative assessment by the author based on public information and code review
+    (October 2026); expert judgement, not an empirical measurement;
     rationale and confidence for every value in research/comparison-matrix.md.
     Proprietary SaaS plotted as the mean of Prewave and Sphera, with the spread marked where they differ.
     No weighting is applied and no total or ranking is derived.
@@ -36,7 +39,7 @@ approaches:
     label: Excel / manual process
     short: Excel
     rated: A typical spreadsheet scorecard maintained by procurement (criteria sheet, weights, annual update).
-    evidence: Practitioner experience; assumption-based.
+    evidence: The author's practitioner experience; assumption-based.
   - key: saas
     label: Proprietary SaaS (Prewave, Sphera)
     short: SaaS
@@ -87,7 +90,8 @@ factors:
         rationale: >-
           Multi-dimensional criteria, 1-5 scales, weights in a validated config; expert ratings and
           indicator-derived ratings with provenance and documented overrides. Not 5: template is illustrative,
-          not empirically validated; objective indicators are entered, not fetched.
+          not empirically validated; objective indicators are entered or imported from files (CSV export,
+          downloaded WGI table), not fetched live.
 
   - id: 2
     key: traceability
@@ -172,7 +176,8 @@ factors:
         confidence: H
         rationale: >-
           Constrained least-squares calibration against expert labels with MSE and class agreement, approval step and
-          versioning. Not 5: validated on synthetic labels only, no cross-validation yet.
+          versioning; cross-validated acceptance with an uncertainty threshold and fit diagnostics. Not 5:
+          examined on synthetic labels only, no real expert labels or field validation.
 
   - id: 5
     key: actions
@@ -436,7 +441,8 @@ factors:
         rationale: >-
           LangGraph supervisor over a typed shared state with specialised agents (data collection, scoring,
           calibration, recommendation, human review as graph interrupt); documented extension points (data
-          sources, data providers, rating sources, views, agents). Not 5: rule-based supervisor, no LLM agents yet.
+          sources, data providers, rating sources, views, agents). All agents are deterministic Python nodes; no
+          language model is called. Not 5: rule-based supervisor, no LLM agents yet.
 
   - id: 14
     key: operations
@@ -518,7 +524,8 @@ narrative:
       a SaaS subscription or open data as signal source feeding a transparent, calibrated in-house model.
   known_weaknesses:
     - >-
-      **Author bias.** Factors and ratings come from the authors of the Lean Agentic approach. Mitigations:
+      **Author bias.** Factors and all ratings come from a single rater, the author of the Lean Agentic
+      approach, who thus rates their own work; the ratings are qualitative judgement, not measurement. Mitigations:
       factors where SaaS is stronger are included (v0.2), Lean Agentic is rated as implemented, every rating
       carries rationale and confidence. v0.3 adds a factor (risk and performance integration) on which the
       proposed approach is strong, and re-rates five factors after practitioner feedback; both are disclosed. v0.4 folds material-group adaptation into customisability to remove a subset overlap; retained ratings and confidence are unchanged. Recommended: independent re-rating by 3-5 practitioners, reporting the spread.

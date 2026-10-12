@@ -4,19 +4,27 @@
 
 **Lean Agentic AI** starts from the practice that already exists, typically a spreadsheet
 scorecard. Using open agentic workflows as blueprints, it builds a **tailored, transparent and
-low-cost** system on top of that practice, rather than replacing it with a black-box platform.
+low-cost** system on top of that practice, rather than replacing it with a platform whose
+scoring method is largely vendor-controlled.
+
+"Agentic" here means an orchestrated multi-agent workflow: deterministic Python agents in a
+LangGraph state graph, a rule-based supervisor and a human-in-the-loop pause. No language model
+is used in the current implementation.
 
 ## The gap
 
 | | Excel practice | Proprietary SaaS | Open-source agent repos |
 |---|---|---|---|
 | Strength | Cheap, familiar, transparent formulas | Data coverage, scale, workflows, compliance modules | Modern architecture patterns, free |
-| Limitation | No audit trail or learning, error-prone, does not scale | Cost, limited control over the method, scores not recomputable, vendor lock-in | Demonstrators; scoring absent, hard-coded or LLM-judged; licences unclear |
+| Limitation | No audit trail or learning, error-prone, does not scale | Cost, limited customer control over the method, scores not recomputable by the customer, vendor dependence | Demonstrators focused on architecture; scoring absent, hard-coded or LLM-judged; licences unclear |
 
 Many mid-sized procurement organisations sit between the first two columns. They have outgrown
 spreadsheets but cannot justify, or do not want, an enterprise platform for their *method*.
-The open-source column shows how such systems *could* be built, but not a production-grade
-method.
+The open-source column shows how such systems *could* be built; its focus is architecture
+rather than a scoring method.
+
+The table is the author's qualitative reading of public information (vendors, as of October
+2026) and source code (repositories), not a measurement.
 
 ## Why it is a synthesis
 
@@ -26,11 +34,12 @@ The approach deliberately inherits from all three:
   ratings, weighted dimensions such as a severity index, and a class-based action framework.
   Teams keep their method and their language, and it becomes explicit, versioned and testable.
 - **From SaaS:** the expectations of a professional system. Workflows, review steps, audit
-  trail, and integration of objective indicators. External signal feeds are on the roadmap and
-  can come from open data or from an existing SaaS subscription.
+  trail, and integration of objective indicators. A provider interface reads open data and
+  file exports; live signal feeds are on the roadmap and can come from open data or from an
+  existing SaaS subscription.
 - **From open-source agent repos:** the architecture. A LangGraph supervisor with specialised
   agents and typed shared state. It also takes the lesson the better repos teach: compute
-  numbers in code, and use AI for language and orchestration.
+  numbers in code, and use language models, if at all, only for language (not implemented yet).
 
 "Lean" means three things: build only what adds value, reuse open blueprints, and keep the
 procurement team in control of the method.
@@ -46,7 +55,7 @@ procurement team in control of the method.
    - **Governance:** applied only after approval, or automatically if configured, and stored
      as a new weight version.
    - **Novelty:** none of the reviewed open-source repos and neither SaaS example documents
-     this publicly.
+     this publicly (as of October 2026); undocumented capabilities may exist.
 2. **Configurable weights as a first-class object.** Default weights, material-group weights and
    calibrated weights are interchangeable `WeightSet`s. They are never hard-coded, and they are
    versioned with approver and timestamp.
@@ -81,6 +90,8 @@ procurement team owns.
 
 ## Core message for README and paper
 
-> Spreadsheets are transparent but don't scale or learn. Platforms scale but don't let you own
-> the method. Lean Agentic AI turns your existing scorecard into a transparent, auditable,
-> self-calibrating multi-agent system that you own and can afford.
+> Spreadsheets are transparent but don't scale or learn. Platforms bring data and scale, but
+> the scoring method stays largely with the vendor. Lean Agentic AI turns your existing
+> scorecard into a transparent, auditable multi-agent workflow, with weights calibrated against
+> expert labels under human approval, that you own and can afford. (Calibration has so far been
+> examined on synthetic data only.)
