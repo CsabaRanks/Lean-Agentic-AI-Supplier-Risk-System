@@ -26,8 +26,8 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/CsabaRanks/lean-agentic-supplier-risk"
-Paper = "https://github.com/CsabaRanks/lean-agentic-supplier-risk/blob/main/docs/paper/paper.pdf"
+Repository = "https://github.com/CsabaRanks/Lean-Agentic-AI-Supplier-Risk-System"
+Paper = "https://github.com/CsabaRanks/Lean-Agentic-AI-Supplier-Risk-System/blob/main/docs/paper/paper.pdf"
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.5"]

@@ -4,11 +4,11 @@
 measurement and not an overall ranking. Rationale and sources per value:
 [research/comparison-matrix.md](research/comparison-matrix.md).*
 
-# Lean Agentic AI — Supplier Risk Radar System
+# Lean Agentic AI - Supplier Risk System
 
 **Explainable supplier risk and performance evaluation with expert calibration and human review.**
 
-[![CI](https://github.com/CsabaRanks/lean-agentic-supplier-risk/actions/workflows/ci.yml/badge.svg)](https://github.com/CsabaRanks/lean-agentic-supplier-risk/actions/workflows/ci.yml)
+[![CI](https://github.com/CsabaRanks/Lean-Agentic-AI-Supplier-Risk-System/actions/workflows/ci.yml/badge.svg)](https://github.com/CsabaRanks/Lean-Agentic-AI-Supplier-Risk-System/actions/workflows/ci.yml)
 ![python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -16,11 +16,11 @@ measurement and not an overall ranking. Rationale and sources per value:
 weights calibrated against expert judgement, and human approval built into a LangGraph
 multi-agent workflow.** Runs locally, open source, all sample data fictional.
 
-*Radar* refers to the evaluation overview: the risk and performance view of each supplier and the
-portfolio. It does not mean continuous live monitoring of external signals, which is not
-implemented; indicators are entered or imported from files and recalculated on request.
+The radar chart and the risk and performance views are evaluation overviews. Continuous live
+monitoring of external signals is not implemented; indicators are entered or imported from files
+and recalculated on request.
 
-📄 **Working paper:** [Lean Agentic AI for Supplier Risk Management and Performance Evaluation](https://github.com/CsabaRanks/lean-agentic-supplier-risk/blob/main/docs/paper/paper.pdf)
+📄 **Working paper:** [Lean Agentic AI for Supplier Risk Management and Performance Evaluation](https://github.com/CsabaRanks/Lean-Agentic-AI-Supplier-Risk-System/blob/main/docs/paper/paper.pdf)
 (PDF, draft v0.8; LaTeX and Markdown sources in [docs/paper/](docs/paper/))
 
 ![Risk view of the fictional sample portfolio in the spreadsheet-style UI](docs/images/ui-risk-view.png)
@@ -226,8 +226,8 @@ Details: [docs/architecture.md](docs/architecture.md), [docs/scoring-model.md](d
 Requires Python 3.10 or newer.
 
 ```bash
-git clone https://github.com/CsabaRanks/lean-agentic-supplier-risk.git
-cd lean-agentic-supplier-risk
+git clone https://github.com/CsabaRanks/Lean-Agentic-AI-Supplier-Risk-System.git
+cd Lean-Agentic-AI-Supplier-Risk-System
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -e ".[dev,ui]"
 pytest -q                                               # optional: run the test suite
