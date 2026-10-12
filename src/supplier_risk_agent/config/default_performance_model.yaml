@@ -154,4 +154,4 @@ calibration:
   level_bias_threshold: 5.0
   level_bias_min_t: 2.0
   level_bias_action: review
-  auto_apply: true
+  auto_apply: false        # propose accepted weights for human approval (true = re-score immediately)

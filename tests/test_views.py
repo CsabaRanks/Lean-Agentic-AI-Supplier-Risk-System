@@ -5,6 +5,7 @@ import yaml
 from conftest import DATA_DIR
 
 from supplier_risk_agent import SupplierProfile, SupplierRiskEvaluator, load_risk_model
+from supplier_risk_agent.models import ReviewDecision
 from supplier_risk_agent.models.config import available_views, criteria_catalogue
 from supplier_risk_agent.tools import WeightStore
 
@@ -56,10 +57,21 @@ def test_performance_escalation_floor():
 def test_performance_calibration_and_material_group(tmp_path):
     ev = SupplierRiskEvaluator.from_json(DATA_DIR / "calibration_portfolio.json", view="performance",
                                          weights_dir=tmp_path)
-    report = ev.run(calibrate=True)["calibration_report"]
+    state = ev.run(calibrate=True)
+    report = state["calibration_report"]
     assert report.accepted and report.n_samples == 32
     assert report.new_weights["on_time_delivery"] > report.old_weights["on_time_delivery"]  # hidden: delivery-heavy
+
+    # proposed only: nothing is applied or stored until a reviewer approves
+    assert not state["calibration_applied"] and ev.pending_review(state)["proposed_weights"] is not None
+    assert not (tmp_path / "performance").exists()
+    approved = ev.resume(state["run_id"], ReviewDecision(reviewer="jane.doe", approve_weights=True))
+    assert approved["calibration_applied"]
+    assert all(r.weights_origin == "calibrated" for r in approved["results"].values())
+    stored = WeightStore(tmp_path).for_view("performance")
     assert (tmp_path / "performance" / "global_v001.yaml").exists()  # stored per view
+    assert "jane.doe" in (tmp_path / "performance" / "global_v001.yaml").read_text()
+    assert stored.load("global").origin == "calibrated"
     assert not (tmp_path / "risk").exists()
 
     group = ev.run(material_group="plastics", calibrate=True)
@@ -70,7 +82,8 @@ def test_performance_calibration_and_material_group(tmp_path):
 def test_weights_of_one_view_are_not_used_by_the_other(tmp_path):
     perf = SupplierRiskEvaluator.from_json(DATA_DIR / "calibration_portfolio.json", view="performance",
                                            weights_dir=tmp_path)
-    perf.run(calibrate=True)
+    state = perf.run(calibrate=True)
+    perf.resume(state["run_id"], ReviewDecision(reviewer="jane.doe", approve_weights=True))
     risk = SupplierRiskEvaluator.from_json(DATA_DIR / "calibration_portfolio.json", weights_dir=tmp_path)
     assert all(r.weights_origin == "default" for r in risk.run()["results"].values())
     assert WeightStore(tmp_path).for_view("performance").load("global").origin == "calibrated"

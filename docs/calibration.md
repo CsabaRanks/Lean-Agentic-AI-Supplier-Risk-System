@@ -97,8 +97,7 @@ away from the methodology. A test covers this.
    and the stored file are written to `state["calibration_report"]` and the audit trail.
 
 For weights that drive real supplier decisions, `auto_apply: false` is the recommended setting. It is
-the default of the bundled risk template; the performance template still auto-applies for demo
-purposes. The Streamlit app always proposes.
+the default of both bundled templates (risk and performance). The Streamlit app always proposes.
 
 ## Persisting weights: the weight store
 
