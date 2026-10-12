@@ -67,6 +67,11 @@ input, and corrects it in a controlled way. The tab **Explain & correct** walks 
 4. **Dispute assessment.** Records that you disagree with a criterion. It changes no score and does
    not train weights.
 
+The same rule applies to the input table in **Scoring run**: new suppliers are entered directly, but
+a changed cell of a supplier that already has a result is held back as a pending correction and
+applied only after a reason, the before/after preview and your confirmation. Deleting such a
+supplier in the table is not applied.
+
 Confirmed corrections are written to `corrections.jsonl` in the history folder: old and new value,
 kind, reason, time, model and weight version, before and after per view, and the name you typed,
 marked as not verified. An existing AI explanation is then marked **Outdated**.
@@ -315,7 +320,8 @@ assessment by the author, not a measurement**: based on public information and c
 [research/comparison-matrix.md](research/comparison-matrix.md). Factors 2 (explainability &
 traceability), 3 (method transparency) and 6 (human review & correction) have written rating anchors.
 Where no public evidence was found, a value is marked unknown ("?"), not rated low; "≥" marks a
-documented minimum. The author also built one of the rated approaches and wrote the anchors after
+documented minimum and "*" an uncertain value kept at its earlier level; no value is lowered only
+because evidence is missing. The author also built one of the rated approaches and wrote the anchors after
 building Explain & correct, so the ratings are not independent. No totals or rankings are derived.
 
 The profiles differ in focus. Commercial risk platforms (Prewave and Sphera are used as public
@@ -341,8 +347,8 @@ procurement team owns. Factor model: [research/success-factors.md](research/succ
   reduction of false alarms is claimed. The LLM explanation sends data to an external provider when
   you trigger it, and its text can contain errors.
 - **Corrections are single-user.** Names are typed in and not verified; there are no roles or
-  approval of corrections by a second person. Edits in the Portfolio input table are bulk data entry
-  and are not recorded as corrections; use Explain & correct for documented corrections.
+  approval of corrections by a second person. A CSV import or "Load example" replaces the whole data
+  set and is not recorded as a correction.
 
 ## About the author
 

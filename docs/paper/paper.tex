@@ -206,7 +206,8 @@ making.
   profile between two levels. Proprietary SaaS is plotted as the mean of the known
   Prewave and Sphera values; shaded bars mark where the two differ. Unknown values (no public
   evidence) are not plotted as low: ``?'' marks an unknown value, ``S?'' a point where Sphera is
-  unknown and only Prewave is shown, and ``$\geq$'' a documented minimum. Rationale and confidence for
+  unknown and only Prewave is shown, ``$\geq$'' a documented minimum (P = Prewave) and ``S*'' a
+  Sphera value kept but uncertain. Rationale and confidence for
   every value: Table~\ref{tab:matrix} and \code{research/comparison-matrix.md}.
   \textbf{Illustrative, qualitative assessment by the author based on public information
   and code review, October 2026; expert judgement, not an empirical measurement.} The author
@@ -444,9 +445,13 @@ capability from being rewarded twice: 3 is the method before use, 2 the reasons 
 pause as architecture, 6 what a reviewer can do in it; a language-model explanation counts under
 2 only. \emph{Unknown is not absent}: a value without public evidence is marked unknown and not
 plotted as low, and one covering only the documented part is marked as a documented minimum
-($\geq$). Re-rated values: factor 2, Excel 3 (was 2), SaaS 3 (Prewave $\geq3$, Sphera unknown;
-was 2.5), open repos 2.5 (was 2), Lean Agentic 4.5 (was 4); factor 6, Excel 2, SaaS 3.5 (Prewave
-$\geq4$, Sphera $\geq3$; was 4), open repos 2, Lean Agentic 4 (was 3.5). Platform sources were
+($\geq$); a value kept at its earlier level because the evidence neither confirms nor
+contradicts the new anchor is marked uncertain (*). Re-rated values: factor 2, Excel 3 (was 2), SaaS 3 (Prewave $\geq3$, Sphera unknown;
+was 2.5), open repos 2.5 (was 2), Lean Agentic 4.5 (was 4); factor 6, Excel 2, SaaS 4 (Prewave
+$\geq4$, Sphera 4 uncertain; unchanged), open repos 2, Lean Agentic 4 (was 3.5). For Sphera the
+sources document level 3 of the new anchor; the level-4 element ``corrections or overrides with a
+reason'' was not found, and since nothing says it is absent, the earlier value is kept and marked
+uncertain rather than lowered on missing evidence. Platform sources were
 re-checked on 12 October 2026 (Prewave help centre: score components with weights, alert
 reporting with reasons reviewed by Prewave, supplier portal; Sphera: AI summaries at marketing
 level only), the repositories in code. v0.5 and its anchors were written by the author
@@ -464,7 +469,9 @@ author's qualitative expert judgement from public information, source-code revie
 practitioner experience; they are not measurements, and no product was tested. Each rating carries a rationale and a confidence mark: \textsc{h} verified from
 code or primary documentation, \textsc{m} plausible and partly documented, \textsc{l}
 assumption. A value without public evidence is marked \emph{unknown} rather than rated low,
-and one covering only the publicly documented part as a documented minimum ($\geq$); the SaaS
+one covering only the publicly documented part as a documented minimum ($\geq$), and one kept at
+its earlier level because the evidence neither confirms nor contradicts the anchor as uncertain (*);
+no value is lowered only because evidence is missing; the SaaS
 profile is the mean of the known Prewave and Sphera values. All ratings live in one machine-readable file from which
 Figure~\ref{fig:profile} and Table~\ref{tab:matrix} are generated; a consistency check
 fails if the published table no longer matches the source. The evidence differs by
@@ -517,8 +524,9 @@ of Section~\ref{sec:explain}), expert calibration and customisability (including
 material-group configuration) --- and on the two factors that set it apart from pure risk platforms,
 the integration of risk management and performance evaluation and agentic orchestration
 (both 4, against 2 and 2.5 for the platforms). On human review and correction it is rated
-4, against 3.5 for the platforms, whose values are documented minimums: reasoned corrections,
-a before/after preview and a history exist, but roles and verified identities do not. On
+4, the same as the platforms (Prewave a documented minimum, Sphera uncertain): reasoned
+corrections, a before/after preview and a history exist, but roles and verified identities do
+not, where the platforms describe ownership and approval workflows. On
 actions it is close to the platforms (3.5 against 4); tracking to closure is missing. It is better than spreadsheets on cost of
 ownership and time-to-value, because scoring, actions and reports run automatically from
 a template. On external signals it reaches about half of the strongest platform (2.5
@@ -928,7 +936,9 @@ and contribution, and rules now or no longer triggered. Nothing is applied until
 confirmed correction is appended to a history with old and new values, kind, reason, time, the
 name as typed (not verified), model and weight version, and before/after per view. An existing
 AI explanation is then marked \emph{outdated}, because its input hash differs, and is not
-regenerated automatically.
+regenerated automatically. The same path applies to the spreadsheet-like input table: first data
+entry is direct, but a changed cell of a supplier that already has a result is held back as a
+pending correction and applied only after a reason, the preview and confirmation.
 
 \emph{4. Dispute.} An objection (criterion, reason, status \emph{open}) can be recorded
 without a corrected value; it changes no score and trains no weights.
@@ -1803,7 +1813,7 @@ metadata and read at abstract level unless noted.}
   \captionof{table}{Ratings per success factor and approach on the scale 1--5, with confidence
   (\textsc{h}, \textsc{m}, \textsc{l}); factor model v0.5. For SaaS, the mean of the known
   Prewave and Sphera values, with both values in brackets where they differ; ``?'' = unknown
-  (no public evidence, not rated low). Values that are documented minimums ($\geq$) are marked
+  (no public evidence, not rated low). Documented minimums ($\geq$) and uncertain values (*) are marked
   in \code{research/comparison-matrix.md}. Generated from
   \code{research/comparison-matrix.yaml}; the rationale for every cell is in
   \code{research/comparison-matrix.md}.}

@@ -215,8 +215,8 @@ calibration recovers that weighting, which no field dataset would allow.
 fifteen success factors (model v0.5); half points mark a profile between two levels. Illustrative, qualitative assessment by the author based on public information and code review (October 2026); expert judgement, not an empirical measurement. The author also built one of the rated approaches and wrote the v0.5 rating anchors after building the feature they reward (Section 4.4).
 Proprietary SaaS is plotted as the mean of the known Prewave and Sphera values; shaded bars mark
 where the two differ. Unknown values (no public evidence) are not plotted as low: "?" marks an
-unknown value, "S?" a point where Sphera is unknown and only Prewave is shown, and "≥" a documented
-minimum. Rationale and confidence for every value: Table 2 and `research/comparison-matrix.md`. No
+unknown value, "S?" a point where Sphera is unknown and only Prewave is shown, "≥" a documented
+minimum (P = Prewave) and "S\*" a Sphera value kept but uncertain. Rationale and confidence for every value: Table 2 and `research/comparison-matrix.md`. No
 weighting is applied, and no total or ranking is derived.*
 
 **Contributions.**
@@ -518,11 +518,16 @@ checked against a written standard.
   what people decide and change; factor 13 is the review pause as architecture, factor 6 what a
   reviewer can do in it. A language-model explanation counts under factor 2 only.
 - **Unknown is not absent.** A value without public evidence is marked unknown and not plotted as
-  low; a value covering only what is publicly documented is marked as a documented minimum (≥).
+  low; a value covering only what is publicly documented is marked as a documented minimum (≥); a
+  value kept at its earlier level because the evidence neither confirms nor contradicts the new anchor
+  is marked uncertain (\*).
 
 The re-rated values are: factor 2, Excel 3 (was 2), SaaS 3 (Prewave ≥ 3, Sphera unknown; was 2.5),
-open repos 2.5 (was 2), Lean Agentic 4.5 (was 4); factor 6, Excel 2, SaaS 3.5 (Prewave ≥ 4, Sphera
-≥ 3; was 4), open repos 2, Lean Agentic 4 (was 3.5). Platform sources were re-checked on 12 October
+open repos 2.5 (was 2), Lean Agentic 4.5 (was 4); factor 6, Excel 2, SaaS 4 (Prewave ≥ 4, Sphera 4
+uncertain; unchanged), open repos 2, Lean Agentic 4 (was 3.5). For Sphera the public sources document
+level 3 of the new anchor (incident management, playbooks with ownership and tracked closure), while
+the level-4 element "corrections or overrides with a reason" was not found; since nothing says it is
+absent, the earlier value is kept and marked uncertain rather than lowered on missing evidence. Platform sources were re-checked on 12 October
 2026 (Prewave help centre: score components with weights, alert reporting with reasons reviewed by
 Prewave, supplier portal; Sphera: AI summaries at marketing level only), and the repositories in
 code. v0.5 and its anchors were written by the author *after* building the Explain & correct
@@ -544,8 +549,10 @@ product. Each rating carries a short rationale and a confidence mark:
 - **L**: assumption
 
 Where no public evidence was found, a value is marked *unknown* rather than rated low, and a value
-that covers only the publicly documented part is marked as a documented minimum (≥). The SaaS
-profile is the mean of the known Prewave and Sphera values.
+that covers only the publicly documented part is marked as a documented minimum (≥), and one kept
+at its earlier level because the evidence neither confirms nor contradicts the anchor as uncertain
+(\*). No value is lowered only because evidence is missing. The SaaS profile is the mean of the known
+Prewave and Sphera values.
 
 All ratings live in one machine-readable file, `research/comparison-matrix.yaml`. Table 2 and
 Figure 1 are generated from it by a script that also validates the file. A consistency check fails
@@ -616,9 +623,10 @@ failed attempt at a scoring method.
 
 It is also strong on the two factors that set it apart from pure risk platforms: the integration
 of risk management and performance evaluation, and agentic orchestration (both 4, against 2 and
-2.5 for the platforms). On human review and correction it is rated 4, against 3.5 for the
-platforms, whose values are documented minimums: corrections with a reason, a before/after preview
-and a history exist, but roles and verified identities do not. On actions it is close to the
+2.5 for the platforms). On human review and correction it is rated 4, the same as the platforms
+(Prewave a documented minimum, Sphera uncertain): corrections with a reason, a before/after preview
+and a history exist, but roles and verified identities do not, where the platforms describe
+ownership and approval workflows. On actions it is close to the
 platforms (3.5 against 4): tracking to closure is missing. It is better than spreadsheets on cost of ownership and time-to-value, because scoring,
 actions and reports run automatically from a template.
 
@@ -1180,7 +1188,10 @@ rules now or no longer triggered. Nothing is applied until the correction is con
 correction is appended to a history (`corrections.jsonl`) with old and new values, kind, reason,
 time, the name as typed (`identity_verified: false`), model and weight version, and before/after
 per view. An existing AI explanation is then marked *outdated*, because its input hash no longer
-matches, and is not regenerated automatically.
+matches, and is not regenerated automatically. The same path applies to the spreadsheet-like
+input table: first data entry for a supplier without a result is direct, but a changed cell of a
+supplier that already has a result is held back as a pending correction and applied only after a
+reason, the preview and confirmation; deleting such a supplier in the table is not applied.
 
 **4. Dispute.** A user who disagrees with an assessment without having a corrected value can
 record an objection (criterion, reason, status *open*; `objections.jsonl`). An objection changes
