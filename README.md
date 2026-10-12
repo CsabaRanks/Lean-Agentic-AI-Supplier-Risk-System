@@ -1,3 +1,9 @@
+![Radar chart: simple spreadsheet scorecards, risk platforms, open-source repos and this approach on 15 success factors](docs/images/spider-diagram.png)
+
+*Four approaches profiled on 15 success factors. Qualitative assessment by the author, not an empirical
+measurement and not an overall ranking. Rationale and sources per value:
+[research/comparison-matrix.md](research/comparison-matrix.md).*
+
 # Lean Agentic AI for Supplier Risk & Performance Evaluation
 
 [![CI](https://github.com/CsabaRanks/lean-agentic-supplier-risk/actions/workflows/ci.yml/badge.svg)](https://github.com/CsabaRanks/lean-agentic-supplier-risk/actions/workflows/ci.yml)
@@ -312,9 +318,7 @@ actions), which led to stating the limits explicitly in the prompt.
 
 ## How this compares to other approaches
 
-![Radar chart: simple spreadsheet scorecards, risk platforms, open-source repos and this approach on 15 success factors](docs/images/spider-diagram.png)
-
-The chart profiles four approaches on 15 success factors (model v0.5). **It is a qualitative
+The chart at the top profiles four approaches on 15 success factors (model v0.5). **It is a qualitative
 assessment by the author, not a measurement**: based on public information and code review (October
 2026), with a rationale, a confidence mark and sources per value in
 [research/comparison-matrix.md](research/comparison-matrix.md). Factors 2 (explainability &
