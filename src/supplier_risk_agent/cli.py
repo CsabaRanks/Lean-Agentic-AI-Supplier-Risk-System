@@ -181,9 +181,14 @@ def _ai_review(args, store, providers, ask=None) -> int:
         print(f"\nAI review not available: {settings.unavailable_reason}")
         print("The deterministic evaluation works without it.")
         return 0
-    if not args.yes and ask("\nSend this data to the provider? [y/N] ").strip().lower() not in {"y", "yes", "j", "ja"}:
-        print("Not sent.")
-        return 0
+    if not args.yes:
+        try:
+            answer = ask("\nSend this data to the provider? [y/N] ")
+        except EOFError:  # no interactive input (e.g. piped or in CI): never send
+            answer = ""
+        if answer.strip().lower() not in {"y", "yes", "j", "ja"}:
+            print("\nNot sent.")
+            return 0
 
     evaluator, state = runs[0]
     state = evaluator.ai_review(state["run_id"], payload)

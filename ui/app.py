@@ -740,10 +740,10 @@ def show_trace(t: dict) -> None:
                 f"data {t['data_completeness']:.0%} · model `{t['model']}` · weights `{t['weights']}`")
     st.caption(s["note"] + f". Sum of contributions: {s['sum_of_contributions']} = internal score "
                f"{s['internal_value']}.")
-    frame = pd.DataFrame([{
-        "id": c["id"], "criterion": c["label"], "rating": c["rating"], "origin": c["rating_origin"],
-        "inputs (source)": inputs_text(c["inputs"]), "rule": c["rule"], "weight": c["nominal_weight"],
-        "effective weight": c["effective_weight"], "points": c["contribution_points"],
+    frame = pd.DataFrame([{  # numbers first, long texts last, so the contributions stay visible
+        "id": c["id"], "criterion": c["label"], "rating": c["rating"], "points": c["contribution_points"],
+        "weight": c["nominal_weight"], "effective weight": c["effective_weight"], "origin": c["rating_origin"],
+        "inputs (source)": inputs_text(c["inputs"]), "rule": c["rule"],
     } for c in sorted(t["criteria"], key=lambda c: -(c["contribution_points"] or 0))])
     st.dataframe(frame, hide_index=True, width="stretch", column_config={
         "weight": st.column_config.NumberColumn("Weight", format="%.3f"),

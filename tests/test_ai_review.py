@@ -355,3 +355,23 @@ def test_real_provider_smoke():
     state = risk.ai_review(rs["run_id"], ai_review_payload("SUP-003", (risk, rs), (perf, ps)))
     assert state.get("ai_review_errors", {}) == {}, state.get("ai_review_errors")
     assert state["ai_reviews"]["SUP-003"].review.management_summary
+
+
+def test_cli_never_sends_without_confirmation(monkeypatch, tmp_path, capsys):
+    """With a key but no interactive input (e.g. CI), the CLI shows the payload and sends nothing."""
+    from supplier_risk_agent import cli
+
+    monkeypatch.chdir(tmp_path)  # no local .env
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+
+    def no_input(prompt=""):
+        raise EOFError
+
+    def must_not_be_called(*args, **kwargs):
+        raise AssertionError("provider called without confirmation")
+
+    monkeypatch.setattr("builtins.input", no_input)
+    monkeypatch.setattr("supplier_risk_agent.agents.ai_review.reviewer_from_env", must_not_be_called)
+    assert cli.main(["--data", str(SAMPLE), "--ai-review", "SUP-004"]) == 0
+    out = capsys.readouterr().out
+    assert '"risk:rule:compliance_status"' in out and out.rstrip().endswith("Not sent.")
