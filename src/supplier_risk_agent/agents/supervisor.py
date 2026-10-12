@@ -9,6 +9,9 @@ Flow:
     collect_data -> score -> [calibrate -> score] -> recommend
         -> [human_review (pauses) -> [score] -> recommend] -> end
 
+    A follow-up request on a finished or paused run:
+        ai_review_request -> ai_review (LLM, optional) -> [human_review] -> end
+
 Calibration runs at most once per run, and only if enabled (per run via
 ``state["calibrate"]`` or globally via ``calibration.enabled``). If it applies
 new weights (automatically or after reviewer approval), the supervisor routes
@@ -45,6 +48,8 @@ class Supervisor:
             return "score"  # feedback loop: re-score with calibrated weights
         if not state.get("recommendations_done"):
             return "recommend"
+        if state.get("ai_review_request"):
+            return "ai_review"  # explicit, one-shot request on a scored run (see AIReviewAgent)
         if state.get("requires_human_review") and "review_status" not in state:
             return "human_review"
         return "end"

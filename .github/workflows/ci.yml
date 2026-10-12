@@ -28,8 +28,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - name: Install
-        # research extra (matplotlib) so the figure-generation test runs instead of being skipped
-        run: pip install -e ".[dev,ui,research]"
+        # research and llm extras so no test is skipped for a missing package. No API key is set in CI:
+        # LLM tests use mocked responses, and the real smoke test is skipped.
+        run: pip install -e ".[dev,ui,research,llm]"
       - name: Lint
         run: ruff check src tests examples scripts ui
       - name: Test
@@ -41,3 +42,5 @@ jobs:
           supplier-risk --data data/sample_suppliers.json
           supplier-risk --data data/sample_suppliers.json --view performance
           supplier-risk --data data/calibration_portfolio.json --calibrate
+          # without an API key the AI review shows its payload and exits cleanly, without calling a provider
+          supplier-risk --data data/sample_suppliers.json --ai-review SUP-003

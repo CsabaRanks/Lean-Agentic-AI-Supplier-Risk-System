@@ -15,6 +15,7 @@ from __future__ import annotations
 import operator
 from typing import Annotated, Literal, TypedDict
 
+from .ai_review import AIReviewResult
 from .config import WeightSet
 from .domain import (
     AuditEntry,
@@ -25,7 +26,7 @@ from .domain import (
     SupplierProfile,
 )
 
-Step = Literal["collect_data", "score", "calibrate", "recommend", "human_review", "end"]
+Step = Literal["collect_data", "score", "calibrate", "recommend", "human_review", "ai_review", "end"]
 
 
 class SupplierRiskState(TypedDict, total=False):
@@ -60,6 +61,11 @@ class SupplierRiskState(TypedDict, total=False):
 
     # --- recommendation ----------------------------------------------------------
     recommendations_done: bool
+
+    # --- optional LLM review (only on explicit request, never changes scores) ----
+    ai_review_request: dict | None  # {"payload": ...}; cleared by the AI review node
+    ai_reviews: dict[str, AIReviewResult]  # supplier_id -> latest validated review
+    ai_review_errors: dict[str, str]  # supplier_id -> last error message
 
     # --- control flow & governance ------------------------------------------------
     next_step: Step

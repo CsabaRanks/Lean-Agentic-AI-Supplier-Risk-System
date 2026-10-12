@@ -1,3 +1,4 @@
+from .ai_review import AIReviewAgent
 from .calibration import CalibrationAgent
 from .data_collection import DataCollectionAgent
 from .human_review import HumanReviewAgent
@@ -6,6 +7,7 @@ from .scoring import ScoringAgent
 from .supervisor import Supervisor
 
 __all__ = [
+    "AIReviewAgent",
     "CalibrationAgent",
     "DataCollectionAgent",
     "HumanReviewAgent",

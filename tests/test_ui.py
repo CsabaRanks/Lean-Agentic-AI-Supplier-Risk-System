@@ -1,5 +1,6 @@
 """End-to-end tests of the spreadsheet UI (skipped if streamlit is not installed)."""
 
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -11,7 +12,10 @@ APP = str(Path(__file__).resolve().parents[1] / "ui" / "app.py")
 
 
 def app() -> AppTest:
-    at = AppTest.from_file(APP, default_timeout=240).run()
+    at = AppTest.from_file(APP, default_timeout=240)
+    # keep snapshots written by the tests (e.g. after an approved review) out of the repository's data/history
+    at.session_state["history_dir"] = tempfile.mkdtemp(prefix="sra-ui-history-")
+    at.run()
     assert not at.exception, [e.value for e in at.exception]
     return at
 
@@ -113,3 +117,37 @@ def test_wgi_mock_option_and_recalculate_now():
     click(at, "Recalculate now")
     sup1 = state(at)["results"]["SUP-001"]
     assert "WGI" in next(f.rationale for f in sup1.factor_scores if f.factor == "country_risk")
+
+
+# --- optional AI review --------------------------------------------------------------------------
+
+
+def ai_button(at: AppTest):
+    return next(b for b in at.button if b.label == "Generate AI Review")
+
+
+def test_ai_review_unavailable_without_api_key(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    at = app()
+    assert ai_button(at).disabled
+    assert any("AI review not available" in i.value for i in at.info)
+    assert any('"views"' in c.value for c in at.code)  # the payload preview is shown anyway
+
+
+def test_ai_review_button_calls_provider_once(monkeypatch):
+    from test_ai_review import FakeReviewer
+
+    reviewer = FakeReviewer()
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    monkeypatch.setattr("supplier_risk_agent.agents.ai_review.reviewer_from_env", lambda: reviewer)
+    at = app()
+    assert not ai_button(at).disabled and reviewer.calls == []
+
+    ai_button(at).click().run()
+    assert not at.exception, [e.value for e in at.exception]
+    assert len(reviewer.calls) == 1
+    assert any("Management summary" in m.value for m in at.markdown)
+    assert ai_button(at).disabled  # kept for this exact input; no second paid call
+
+    at.run()  # plain rerun, e.g. after any widget interaction
+    assert len(reviewer.calls) == 1

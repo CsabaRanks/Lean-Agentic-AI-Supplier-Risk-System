@@ -8,9 +8,11 @@ from pathlib import Path
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.types import Command
 
+from ..llm import ReviewModel
 from ..models.config import RiskModelConfig, load_risk_model
 from ..models.domain import ReviewDecision, RiskAssessment
 from ..models.state import SupplierRiskState
+from ..tools.ai_review import build_review_payload, view_section
 from ..tools.data_sources import JsonFileSource, SupplierDataSource
 from ..tools.weight_store import WeightStore
 from .builder import build_graph
@@ -31,14 +33,17 @@ class SupplierRiskEvaluator:
         weight_store: WeightStore | None = None,
         checkpointer: BaseCheckpointSaver | None = None,
         providers=(),
+        ai_reviewer: ReviewModel | None = None,
     ):
-        """``providers``: external data providers applied before scoring (see ``providers`` package)."""
+        """``providers``: external data providers applied before scoring (see ``providers`` package).
+        ``ai_reviewer``: LLM provider for :meth:`ai_review`; default: configured from the environment.
+        """
         self.model = model or load_risk_model()
         self.source = source
         # weights are stored per view (<dir>/<view>/<scope>_vNNN.yaml)
         self.weight_store = weight_store.for_view(self.model.view) if weight_store else None
         self.providers = list(providers)
-        self.app = build_graph(self.model, source, self.weight_store, checkpointer, self.providers)
+        self.app = build_graph(self.model, source, self.weight_store, checkpointer, self.providers, ai_reviewer)
 
     @classmethod
     def from_json(
@@ -93,6 +98,15 @@ class SupplierRiskEvaluator:
         payload = decision.model_dump() if isinstance(decision, ReviewDecision) else decision
         return self.app.invoke(Command(resume=payload), self._config(run_id))
 
+    def ai_review(self, run_id: str, payload: dict) -> SupplierRiskState:
+        """Request the optional LLM review of one supplier as a follow-up step of a run.
+
+        ``payload`` is the preview from :func:`ai_review_payload`, shown to the
+        user beforehand; it is sent unchanged. The run's scores, classes and
+        weights are not modified. A pending human review stays pending.
+        """
+        return self.app.invoke({"ai_review_request": {"payload": payload}}, self._config(run_id))
+
     def assess(self, supplier_id: str) -> RiskAssessment:
         state = self.run([supplier_id])
         if supplier_id not in state.get("results", {}):
@@ -107,3 +121,19 @@ def ranked(state: SupplierRiskState) -> list[RiskAssessment]:
     """Results of a run, highest risk first."""
     results = state.get("results", {}).values()
     return sorted(results, key=lambda r: r.overall_score if r.overall_score is not None else -1, reverse=True)
+
+
+def ai_review_payload(supplier_id: str, *runs: tuple[SupplierRiskEvaluator, SupplierRiskState]) -> dict:
+    """The exact data an AI review of ``supplier_id`` would send, from one run per view.
+
+    Pass the risk and the performance run, e.g.
+    ``ai_review_payload("SUP-003", (risk_ev, risk_state), (perf_ev, perf_state))``.
+    """
+    sections, group = [], None
+    for evaluator, state in runs:
+        result = state.get("results", {}).get(supplier_id)
+        if result is None:
+            raise LookupError(f"supplier '{supplier_id}' has no result in the {evaluator.model.view} view")
+        sections.append(view_section(result, evaluator.model))
+        group = group or result.material_group
+    return build_review_payload(sections, supplier_id, group)

@@ -27,10 +27,14 @@ import pandas as pd
 import streamlit as st
 
 from supplier_risk_agent import SupplierRiskEvaluator, load_risk_model
+from supplier_risk_agent.graph import ai_review_payload
+from supplier_risk_agent.llm import LLMReviewError, LLMSettings, load_env_file
 from supplier_risk_agent.models import ClassOverride, ReviewDecision
+from supplier_risk_agent.models.ai_review import AIReviewResult
 from supplier_risk_agent.models.config import available_views
 from supplier_risk_agent.providers import WorldBankWgiProvider
 from supplier_risk_agent.tools import HistoryStore, InMemorySource, JsonFileSource, WeightStore
+from supplier_risk_agent.tools.ai_review import payload_hash, payload_json
 from supplier_risk_agent.tools.reporting import ALL_GROUPS, action_plan, group_summary, top_risks
 from supplier_risk_agent.tools.tabular import (
     all_view_columns,
@@ -55,6 +59,7 @@ NUMERIC_INPUTS = {"annual_spend", "credit_score", "distress_signals", "country_r
                   "esg_score", "on_time_rate", "quality_ppm"}
 
 st.set_page_config(page_title="Supplier Risk Agent", page_icon="📋", layout="wide")
+load_env_file(ROOT / ".env")  # optional LLM settings; variables already set in the environment win
 
 
 # --- views, data and runs --------------------------------------------------------------
@@ -116,14 +121,16 @@ def assessments() -> list:
     return list((run_info().get("state") or {}).get("results", {}).values())
 
 
-def run(calibrate: bool, material_group: str | None) -> None:
-    profiles, errors = rows_to_profiles(st.session_state.rows, model())
+def run(calibrate: bool, material_group: str | None, view: str | None = None) -> None:
+    """Score the current data in the current view (or in ``view``)."""
+    view_model = ui_model(view) if view else model()
+    profiles, errors = rows_to_profiles(st.session_state.rows, view_model)
     st.session_state.input_errors = errors
-    info = run_info()
+    info = st.session_state.setdefault("runs", {}).setdefault(view_model.view, {})
     info.clear()
     if not profiles:
         return
-    evaluator = SupplierRiskEvaluator(InMemorySource(profiles), model(), weight_store(), providers=providers())
+    evaluator = SupplierRiskEvaluator(InMemorySource(profiles), view_model, weight_store(), providers=providers())
     info.update(
         evaluator=evaluator,
         state=evaluator.run(material_group=material_group, calibrate=calibrate),
@@ -197,12 +204,14 @@ with st.sidebar:
         st.checkbox("Store approved weights (versioned)", key="use_store",
                     help="Approved weights are saved as a new version per view and used as the starting "
                          "point of later runs.")
-        st.text_input("Weight store folder", value="data/weights", key="store_dir")
+        st.session_state.setdefault("store_dir", "data/weights")
+        st.text_input("Weight store folder", key="store_dir")
         st.checkbox("Political stability from World Bank WGI (MOCK)", key="use_wgi_mock",
                     help="Placeholder provider with FICTIONAL values for the sample regions. For real data, "
                          "download WGI and use WorldBankWgiProvider.from_csv() (see docs/data-providers.md). "
                          "Recalculate after switching.")
-        st.text_input("History folder", value="data/history", key="history_dir")
+        st.session_state.setdefault("history_dir", "data/history")
+        st.text_input("History folder", key="history_dir")
         st.caption(f"Model: {model().name} v{model().version}")
 
 
@@ -226,9 +235,9 @@ st.caption(
 for error in st.session_state.get("input_errors", []):
     st.error(f"Input: {error}")
 
-tab_portfolio, tab_dash, tab_actions, tab_history, tab_run, tab_cal, tab_review = st.tabs(
+tab_portfolio, tab_dash, tab_actions, tab_history, tab_run, tab_cal, tab_review, tab_ai = st.tabs(
     ["📋 Portfolio", "📊 Dashboard", "🛠 Actions", "🕓 History", "▶️ Scoring run", "🎯 Calibration",
-     "✅ Review & approval"]
+     "✅ Review & approval", "🤖 AI review (optional)"]
 )
 
 
@@ -673,3 +682,103 @@ with tab_review:
         with st.expander("Messages"):
             for error in state["errors"]:
                 st.warning(error)
+
+
+# --- tab: optional LLM review -------------------------------------------------------------
+
+
+def show_ai_review(result: AIReviewResult) -> None:
+    st.warning(result.disclaimer, icon="🤖")
+    cols = st.columns(len(result.scores))
+    for col, (view, s) in zip(cols, result.scores.items()):
+        col.metric(f"{ui_model(view).view_label}: {s['score_label']} (deterministic)",
+                   f"{s['score']} · {s['class']}", help=f"Data completeness {s['data_completeness']:.0%}")
+    r = result.review
+    st.markdown("**Management summary**")
+    st.write(r.management_summary)
+    st.markdown("**Main drivers**")
+    st.dataframe(pd.DataFrame([d.model_dump() for d in r.risk_drivers]), hide_index=True, width="stretch",
+                 column_config={"criterion": "Criterion", "view": "View", "explanation": "Why it matters"})
+    if r.view_differences:
+        st.markdown("**Risk vs. performance**")
+        for d in r.view_differences:
+            st.markdown(f"- **{d.topic}** — {d.explanation} `{', '.join(d.criteria)}`")
+    st.markdown("**Suggested actions** — proposals for human review, not decisions")
+    st.dataframe(pd.DataFrame([{**a.model_dump(), "criteria": ", ".join(a.criteria)} for a in r.suggested_actions]),
+                 hide_index=True, width="stretch",
+                 column_config={"priority": "Priority", "action": "Action", "rationale": "Rationale",
+                                "criteria": "Criteria"})
+    if r.open_questions or result.data_gaps:
+        st.markdown("**Open questions**")
+        for q in r.open_questions:
+            st.markdown(f"- {q.question} `{', '.join(q.criteria)}`")
+        if result.data_gaps:
+            st.caption("Missing data in the input (determined by the tool, not by the LLM): "
+                       + ", ".join(result.data_gaps))
+    st.caption(f"{result.provider} / {result.model} · {result.created_at} · input SHA-256 {result.payload_sha256[:12]}…")
+
+
+with tab_ai:
+    st.caption("An optional language model interprets the deterministic results of one supplier across both "
+               "views: summary, main drivers, differences between the views, action proposals and open "
+               "questions. It does not change scores, classes or weights, and nothing is sent until you "
+               "press the button.")
+    try:
+        llm_settings = LLMSettings.from_env()
+        unavailable = llm_settings.unavailable_reason
+    except LLMReviewError as exc:
+        llm_settings, unavailable = None, str(exc)
+    if unavailable:
+        st.info(f"AI review not available: {unavailable} All other tabs work without it.")
+    else:
+        st.caption(f"Provider: **{llm_settings.describe()}** · timeout {llm_settings.timeout_seconds:g} s per "
+                   f"attempt · up to {llm_settings.max_retries} retries")
+
+    current = assessments()
+    if not current:
+        st.info("No results yet.")
+    else:
+        names = {a.supplier_id: a.supplier_name for a in current}
+        sid = st.selectbox("Supplier", sorted(names), format_func=lambda i: f"{i} · {names[i]}", key="ai_supplier")
+        runs = st.session_state.setdefault("runs", {})
+        for view in ("risk", "performance"):
+            if not (runs.get(view) or {}).get("state"):
+                run(calibrate=False, material_group=None, view=view)
+        try:
+            payload = ai_review_payload(sid, *((runs[v]["evaluator"], runs[v]["state"])
+                                               for v in ("risk", "performance")))
+        except (KeyError, LookupError) as exc:
+            payload = None
+            st.warning(f"Both views are needed for an AI review: {exc}")
+        if payload is not None:
+            digest = payload_hash(payload)
+            with st.expander("Data sent to the provider (exactly this JSON)"):
+                st.caption("Not sent: supplier name, country, annual spend, the raw indicator record and expert "
+                           "labels. Use synthetic or approved data only.")
+                st.code(payload_json(payload), language="json")
+            cache = st.session_state.setdefault("ai_review_results", {})  # input hash -> AIReviewResult
+            failures = st.session_state.setdefault("ai_review_failures", {})
+            cached = cache.get(digest)
+            c1, c2 = st.columns([1, 1])
+            clicked = c1.button("Generate AI Review", type="primary", width="stretch",
+                                disabled=bool(unavailable) or cached is not None,
+                                help="One paid API call. The result is kept for this exact input; reruns of the "
+                                     "app do not call the provider again.")
+            if cached is not None:
+                c2.button("Discard review", width="stretch", on_click=lambda d=digest: cache.pop(d, None))
+            if clicked and digest not in cache:  # explicit trigger only; guarded against double clicks
+                risk_run = runs["risk"]
+                with st.spinner(f"Waiting for {llm_settings.describe()} …"):
+                    new_state = risk_run["evaluator"].ai_review(risk_run["state"]["run_id"], payload)
+                risk_run["state"] = new_state
+                error = new_state.get("ai_review_errors", {}).get(sid)
+                if error:
+                    failures[digest] = error
+                else:
+                    failures.pop(digest, None)
+                    cache[digest] = new_state["ai_reviews"][sid]
+                st.rerun()  # redraw with the stored result (the button above was drawn before the call)
+            if digest in failures and cached is None:
+                st.error(f"AI review failed: {failures[digest]}")
+            if cached is not None:
+                show_ai_review(cached)

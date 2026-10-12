@@ -8,6 +8,7 @@ Examples:
     supplier-risk --data data/calibration_portfolio.json --calibrate --weights-dir data/weights
     supplier-risk --data data/sample_suppliers.json --review interactive
     supplier-risk --data data/sample_suppliers.json --json
+    supplier-risk --data data/sample_suppliers.json --ai-review SUP-003   # optional LLM review
 """
 
 from __future__ import annotations
@@ -16,11 +17,14 @@ import argparse
 import json
 import sys
 
-from .graph import SupplierRiskEvaluator, ranked
+from .graph import SupplierRiskEvaluator, ai_review_payload, ranked
+from .llm import LLMReviewError, LLMSettings, load_env_file
+from .models.ai_review import AIReviewResult
 from .models.config import RiskModelConfig, available_views, load_risk_model
 from .models.domain import CalibrationReport, ClassOverride, ReviewDecision, RiskAssessment
 from .providers import WorldBankWgiProvider
 from .tools import HistoryStore, JsonFileSource, WeightStore
+from .tools.ai_review import payload_json
 
 
 def _print_portfolio(results: list[RiskAssessment], model: RiskModelConfig) -> None:
@@ -125,6 +129,72 @@ def _interactive_review(request: dict, ask=None) -> ReviewDecision:
     return ReviewDecision(reviewer=reviewer, approve_weights=approve, overrides=overrides)
 
 
+def _print_ai_review(result: AIReviewResult) -> None:
+    r = result.review
+    print(f"\n=== AI review of {result.supplier_id} ({result.provider} / {result.model}) ===")
+    for view, s in result.scores.items():
+        print(f"  {view:<12} {s['score_label']}: {s['score']}  class: {s['class']}  "
+              f"data: {s['data_completeness']:.0%}   (deterministic)")
+    print(f"\nSummary\n  {r.management_summary}")
+    print("\nMain drivers")
+    for d in r.risk_drivers:
+        print(f"  - [{d.view}] {d.criterion}: {d.explanation}")
+    if r.view_differences:
+        print("\nRisk vs. performance")
+        for d in r.view_differences:
+            print(f"  - {d.topic}: {d.explanation} ({', '.join(d.criteria) or '-'})")
+    print("\nSuggested actions (for human review)")
+    for a in r.suggested_actions:
+        print(f"  - ({a.priority}) {a.action} — {a.rationale} ({', '.join(a.criteria) or '-'})")
+    if r.open_questions or result.data_gaps:
+        print("\nOpen questions")
+        for q in r.open_questions:
+            print(f"  - {q.question} ({', '.join(q.criteria) or '-'})")
+        if result.data_gaps:
+            print(f"  Missing data (from the input): {', '.join(result.data_gaps)}")
+    print(f"\n{result.disclaimer}")
+
+
+def _ai_review(args, store, providers, ask=None) -> int:
+    """Run both views, show the payload, and call the LLM only after confirmation."""
+    ask = ask or input
+    load_env_file(".env")
+    try:
+        settings = LLMSettings.from_env()
+    except LLMReviewError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    runs = []
+    for view in ("risk", "performance"):
+        model = load_risk_model(args.model if view == args.view else None, view=view)
+        evaluator = SupplierRiskEvaluator(JsonFileSource(args.data), model, store, providers=providers)
+        runs.append((evaluator, evaluator.run(supplier_ids=[args.ai_review])))
+    try:
+        payload = ai_review_payload(args.ai_review, *runs)
+    except LookupError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+    print(f"Data that will be sent to the LLM provider ({settings.describe()}):\n")
+    print(payload_json(payload))
+    if settings.unavailable_reason:
+        print(f"\nAI review not available: {settings.unavailable_reason}")
+        print("The deterministic evaluation works without it.")
+        return 0
+    if not args.yes and ask("\nSend this data to the provider? [y/N] ").strip().lower() not in {"y", "yes", "j", "ja"}:
+        print("Not sent.")
+        return 0
+
+    evaluator, state = runs[0]
+    state = evaluator.ai_review(state["run_id"], payload)
+    error = state.get("ai_review_errors", {}).get(args.ai_review)
+    if error:
+        print(f"error: AI review failed: {error}", file=sys.stderr)
+        return 1
+    _print_ai_review(state["ai_reviews"][args.ai_review])
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="supplier-risk", description=__doc__.splitlines()[0])
     parser.add_argument("--data", required=True, help="JSON file with supplier records")
@@ -146,6 +216,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--review", choices=["defer", "interactive"], default="defer",
                         help="when review is needed: leave it open (default) or ask in the terminal")
     parser.add_argument("--json", action="store_true", help="print machine-readable JSON")
+    parser.add_argument("--ai-review", metavar="SUPPLIER_ID",
+                        help="optional LLM review of one supplier across both views (needs ANTHROPIC_API_KEY); "
+                             "shows the data to be sent and asks before calling the provider")
+    parser.add_argument("--yes", action="store_true", help="with --ai-review: send without asking")
     args = parser.parse_args(argv)
 
     providers = []
@@ -153,8 +227,10 @@ def main(argv: list[str] | None = None) -> int:
         providers.append(WorldBankWgiProvider.mock())
     elif args.wgi_csv:
         providers.append(WorldBankWgiProvider.from_csv(args.wgi_csv))
-    model = load_risk_model(args.model, view=args.view)
     store = WeightStore(args.weights_dir) if args.weights_dir else None
+    if args.ai_review:
+        return _ai_review(args, store, providers)
+    model = load_risk_model(args.model, view=args.view)
     evaluator = SupplierRiskEvaluator(JsonFileSource(args.data), model, store, providers=providers)
     state = evaluator.run(
         supplier_ids=[args.supplier] if args.supplier else None,
