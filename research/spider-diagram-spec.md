@@ -3,7 +3,7 @@
 The radar chart is the project's signature figure. It appears in the README in the section
 "Where this approach sits", after the problem statement. It is also Figure 1 of the paper. It
 places the Lean Agentic approach relative to three other approaches across the 15 success factors
-of model v0.4.
+of model v0.5.
 
 > **The values are illustrative and must stay defensible.**
 > - Every value has a rationale, evidence and a confidence mark in the single source of truth,
@@ -29,12 +29,13 @@ research/comparison-matrix.yaml        ← edit ratings here only
   - value range
   - confidence codes
   - non-empty rationales
-  - SaaS value equals the mean of the Prewave and Sphera values
+  - SaaS value equals the mean of the known Prewave and Sphera values (null if both are unknown)
+  - evidence paths given for a rating exist in the repository
 
   It also fails if the Markdown is stale. The test suite runs this check, and so does CI.
 - Rendering needs matplotlib (`pip install -e ".[research]"`). The check does not.
 
-## Axes (model v0.4, in this order)
+## Axes (model v0.5, in this order)
 
 The order puts related factors next to each other so that the shapes are readable:
 - method (1–4)
@@ -49,11 +50,11 @@ This is an ordering for the eye only. It is not a hierarchy, and it carries no w
 | Axis | Chart label | Factor |
 |---|---|---|
 | 1 | Criteria & weights | Structured criteria & weights (objective + subjective) |
-| 2 | Traceability & reproducibility | Traceability & reproducibility |
+| 2 | Explainability & traceability | Explainability & traceability (per result) |
 | 3 | Method transparency | Methodological transparency |
 | 4 | Expert calibration | Expert calibration / ability to learn |
 | 5 | Action framework | Action framework |
-| 6 | Human-in-the-loop | Human-in-the-loop & governance |
+| 6 | Human review & correction | Human review & correction |
 | 7 | External signals & coverage | External signals & data coverage |
 | 8 | Regulatory evidence | Regulatory evidence (due-diligence documentation) |
 | 9 | Cost / TCO | Cost / total cost of ownership |
@@ -78,8 +79,11 @@ Values: see the generated [comparison-matrix.md](comparison-matrix.md).
   - Excel: grey, dashed, triangles
 - Lean Agentic is drawn last, on top, with a heavier line.
 - **No filled areas.** An area would suggest a total.
-- **Prewave and Sphera are rated separately.** The SaaS line plots their mean. Where they differ,
-  a shaded bar on the spoke shows the spread (factors 2, 3, 8 and 13).
+- **Prewave and Sphera are rated separately.** The SaaS line plots the mean of their known values.
+  Where the known values differ, a shaded bar on the spoke shows the spread (factors 3, 6, 8 and 13).
+- **Unknown is never plotted as low.** A value without public evidence leaves a gap in the profile with a
+  "?" on the spoke. If only one example is unknown, the point shows the known one and is labelled
+  "S?" (Sphera unknown). A documented minimum is labelled "≥". The footnote explains both marks.
 - Legend and a footnote ("illustrative · evidence date · no weighting, total or ranking") are part
   of the image, so it stays honest when shared on its own.
 - Deterministic output: fixed SVG hash salt, no timestamps in the metadata.
@@ -97,7 +101,7 @@ Values: see the generated [comparison-matrix.md](comparison-matrix.md).
 ## Paper caption (draft)
 
 > *Figure 1. Four approaches to supplier risk management and performance evaluation profiled on
-> 15 success factors (model v0.4). Illustrative, qualitative assessment by the author based on public
+> 15 success factors (model v0.5). Illustrative, qualitative assessment by the author based on public
 > information and code review (October 2026); expert judgement, not an empirical measurement.
 > Proprietary SaaS is plotted as the mean of Prewave and Sphera; shaded bars show where the two
 > differ. Rationale and confidence for every value are given in Table 2 / the comparison matrix.

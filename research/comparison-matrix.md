@@ -3,7 +3,7 @@
 
 # Comparison matrix: four approaches × success factors
 
-Rates four approaches to supplier risk evaluation against the **15 success factors of model v0.4** (see [success-factors.md](success-factors.md)). Evidence as of 2026-10.
+Rates four approaches to supplier risk evaluation against the **15 success factors of model v0.5** (see [success-factors.md](success-factors.md)). Evidence as of 2026-10.
 
 > **Read this as a reasoned, illustrative assessment, not a measurement.** Every rating has a
 > rationale and a confidence mark. No weights are applied, no total is formed and no ranking is
@@ -19,20 +19,20 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 | **Open-source GitHub repos** | The five reviewed open-source blueprints. | Source code review, see research/github-references.md and research/comparison.md. |
 | **Lean Agentic (this repo)** | This repository as implemented (v0.1.0, October 2026), not the roadmap. | Code, tests and documentation in this repository. |
 
-**Scale:** 1 = weak / absent · 2 = rudimentary · 3 = adequate · 4 = strong · 5 = very strong. For proprietary SaaS, values are rated per example; where Prewave (P) and Sphera (S) differ, the cell shows the mean and both values.
+**Scale:** 1 = weak / absent · 2 = rudimentary · 3 = adequate · 4 = strong · 5 = very strong. For proprietary SaaS, values are rated per example; where Prewave (P) and Sphera (S) differ, the cell shows the mean of the known values and both values. **unknown** means that no public evidence was found either way; it is not rated as absent and not plotted as a low value. **≥** marks a documented minimum: the value covers what is publicly documented, further functions are unknown.
 
 **Confidence:** **H** = verified from code / primary documentation · **M** = plausible, partly documented · **L** = assumption, little public evidence.
 
 ## Matrix
 
-| # | Success factor (v0.4) | Excel | SaaS | Open repos | Lean Agentic | from v0.1 |
+| # | Success factor (v0.5) | Excel | SaaS | Open repos | Lean Agentic | from v0.1 |
 |---|---|:-:|:-:|:-:|:-:|:-:|
 | 1 | Structured criteria & weights (objective + subjective) | 3 | 4 | 2 | 4 | 1, 5 |
-| 2 | Traceability & reproducibility | 2 | 2.5 (P 3 · S 2) | 2 | 4 | 2, 8 |
+| 2 | Explainability & traceability (per result) | 3 | 3 (P ≥3 · S unknown) | 2.5 | 4.5 | 2, 8 |
 | 3 | Methodological transparency | 4 | 2.5 (P 3 · S 2) | 3 | 5 | 13 |
 | 4 | Expert calibration / ability to learn | 1 | 2 | 1 | 4 | 3 |
 | 5 | Action framework | 2 | 4 | 2 | 3.5 | 6 |
-| 6 | Human-in-the-loop & governance | 2 | 4 | 2 | 3.5 | 7 |
+| 6 | Human review & correction | 2 | 3.5 (P ≥4 · S ≥3) | 2 | 4 | 7 |
 | 7 | External signals & data coverage | 1 | 5 | 2 | 2.5 | 11 |
 | 8 | Regulatory evidence (due-diligence documentation) | 2 | 4.5 (P 5 · S 4) | 1 | 2 | new |
 | 9 | Cost / total cost of ownership | 3 | 2 | 4 | 4 | 9 |
@@ -60,14 +60,34 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 - **Open repos** *(H)*: Only 2 of 5 repos have deterministic weighted scoring, both with hard-coded weights; mostly one input type.
 - **Lean Agentic** *(H)*: Multi-dimensional criteria, 1-5 scales, weights in a validated config; expert ratings and indicator-derived ratings with provenance and documented overrides. Not 5: template is illustrative, not empirically validated; objective indicators are entered or imported from files (CSV export, downloaded WGI table), not fetched live.
 
-### 2. Traceability & reproducibility: Excel 2 · SaaS 2.5 · Open repos 2 · Lean Agentic 4
+### 2. Explainability & traceability (per result): Excel 3 · SaaS 3 · Open repos 2.5 · Lean Agentic 4.5
 
-- **Excel** *(M)*: Formulas are deterministic, but there is no per-result record and copy-paste / versioning errors are common.
-- **SaaS** *(L)*: Audit-ready due-diligence documentation is claimed (Prewave); audit-trail controls not found publicly (Sphera). Continuously updated, partly NLP-based scores cannot be recomputed by the customer from documented inputs, a design consequence of real-time monitoring rather than a flaw.
-- **Open repos** *(H)*: History lists / tracing in some repos; 2 of 5 repos use LLM-judged scores.
-- **Lean Agentic** *(H)*: Pure scoring functions with automated tests; append-only audit trail per run; versioned weight files with approver; model version on every result; timestamped assessment snapshots per view (local JSONL files). Not 5: no central, access-controlled persistence of runs yet.
+*Scope:* Result level: can a user see why one specific supplier got its score and class, and reproduce it? Inputs with source and data date, missing data, rating rules, weights, contributions, rules that are not additive, and a record of the result. Method documentation in general belongs to factor 3; human decisions and corrections belong to factor 6.
+
+| Level | Anchor |
+|:-:|---|
+| 1 | Only a score or class is shown; no reasons per supplier. |
+| 2 | Main drivers or categories are named per supplier, but inputs and weights are not visible; the user cannot reproduce the result. |
+| 3 | Per supplier, the breakdown into components or criteria with their weights is visible; sources are partly linked; reproduction needs the vendor or manual work. |
+| 4 | Complete per-supplier trace of inputs, sources, rules and weights, a record of each result, and recomputation from recorded inputs. |
+| 5 | As 4, plus quantified contributions that add up to the result, separate explanation of non-additive rules, explicit marking of missing data and sources, and explanations that cite trace entries. |
+
+- **Excel** *(M)*: A scorecard usually shows criterion ratings and weights per supplier row, so the breakdown is visible; sources and data dates are rarely recorded, and there is no per-result record beyond file copies.
+- **SaaS** *(M)*: Prewave documents per supplier the 360° score split into components with fixed weights (peer 30 %, alerts 40 %, self-assessment 20 %, external data 10 %), a 24-month score history filterable by alert, and links from country risk to the underlying indices; the contribution of individual alerts and explanations citing data were not found publicly (unknown, not absent). Sphera describes AI summaries and "weighted risk scoring" at marketing level only; no per-result breakdown is documented, so the value is unknown rather than low. Evidence: <https://help.prewave.com/en/articles/246667-target-profile-overview>, <https://help.prewave.com/en/articles/237277-how-is-the-prewave-score-generated>, <https://sphera.com/company/news/sphera-launches-supplier-360-intelligence>.
+- **Open repos** *(H)*: Two of five repos print a per-result breakdown (one with weights, contributions and the reasons of a hard disqualification gate); the others return a tier or simulated text without reasons. No sources or data dates; 2 of 5 use LLM-judged scores. Evidence: <https://github.com/poshalanavateja/Vendor-Bid-Evaluation-Ai>, <https://github.com/Bhardwaj-Saurabh/OmniSupply-AI-Multi-Agent-Supply-Chain-Intelligence-Platform>.
+- **Lean Agentic** *(H)*: Deterministic scoring trace per supplier and view: inputs with source and data date (missing ones flagged), rating rules generated from the engine's own constants, nominal and effective weights, contributions that add up to the score (tested for all sample suppliers), escalation rules and the completeness check explained separately; the optional LLM explanation must cite trace entry ids. Model and weight version on every result; corrections and snapshots recorded. Not 5: run records are local files, not a central, access-controlled store, and sources are only as good as the data entered. Evidence: `src/supplier_risk_agent/tools/explain.py`, `tests/test_explain_correct.py`, `src/supplier_risk_agent/tools/ai_review.py`, `docs/images/ui-explain-correct.png`.
 
 ### 3. Methodological transparency: Excel 4 · SaaS 2.5 · Open repos 3 · Lean Agentic 5
+
+*Scope:* Model level, before use: are the method, formulas, weights, rules and data sources documented and checkable? Explaining an individual result is factor 2.
+
+| Level | Anchor |
+|:-:|---|
+| 1 | The method is not disclosed. |
+| 2 | Components are named, without weights or rules. |
+| 3 | Components and their weights are published; rules, data handling or parts of the method stay closed. |
+| 4 | Formulas, weights, thresholds and rules are documented; some parts (e.g. data processing) are closed. |
+| 5 | The complete method (formulas, weights, thresholds, rules, data sources) is documented and testable. |
 
 - **Excel** *(M)*: Formulas are visible to everyone, provided they are documented.
 - **SaaS** *(M)*: Prewave publishes its score composition and component weights, but not source weighting / NLP classification; for Sphera no scoring methodology was found publicly.
@@ -88,12 +108,22 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 - **Open repos** *(H)*: Narrative recommendations.
 - **Lean Agentic** *(H)*: Configurable action framework on three levels (risk class, elevated dimension, factor level), each action with owner and review cycle; filterable, exportable action plan per material group. Below the platforms: no tracking of actions to closure, no supplier collaboration.
 
-### 6. Human-in-the-loop & governance: Excel 2 · SaaS 4 · Open repos 2 · Lean Agentic 3.5
+### 6. Human review & correction: Excel 2 · SaaS 3.5 · Open repos 2 · Lean Agentic 4
 
-- **Excel** *(M)*: Fully manual, but without structured review or approval points.
-- **SaaS** *(M)*: Incident management, ownership and approval workflows are described.
-- **Open repos** *(H)*: One repo has a human-review exit.
-- **Lean Agentic** *(H)*: Graph-based review pause (interrupt / resume) for weight approval and class overrides with comment, recorded with the reviewer, surviving re-scoring and snapshotted to the history; review also in the UI. Below the platforms: no roles / permissions, in-memory pauses only.
+*Scope:* What a person can do with a result: review and approve, challenge it, correct data or override a rating with a reason, see the effect before applying it, and find the decision in a history; roles and permissions. The system's own record of results is factor 2; the workflow architecture is factor 13.
+
+| Level | Anchor |
+|:-:|---|
+| 1 | No structured review; changes happen silently in data or formulas. |
+| 2 | Data or results can be edited, but without reasons, approval or history. |
+| 3 | Defined review or approval points, or a channel to report wrong data, with recorded outcomes. |
+| 4 | Review and approval workflow with recorded decisions, plus documented corrections or overrides with a reason; roles or a before/after view. |
+| 5 | Corrections and overrides kept apart with a mandatory reason, before/after recomputation before confirmation, a channel to dispute results, a complete decision history, and roles with verified identities. |
+
+- **Excel** *(M)*: Cells can be changed at any time, but without reasons, approval or a decision history.
+- **SaaS** *(M)*: Prewave documents alert reporting with reason categories (false data, irrelevant, duplicate, ...), manual review by Prewave with defined outcomes, and suppliers answering alerts and filling in self-assessments; incident ownership and approval workflows are described. Sphera documents assessments that feed survey results into risk profiles, playbooks, ownership and measurable closure. For both, overriding a score with a reason, a before/after view and the audit history are unknown (not found publicly), so the values are documented minimums. Evidence: <https://help.prewave.com/en/articles/423361-alert-reporting>, <https://supplier.prewave.com/en/articles/589775-register-with-prewave>, <https://sphera.com/risk-assessment>, <https://sphera.com/solutions/supply-chain-risk-management/>.
+- **Open repos** *(H)*: One repo ends the run with a human-review status and reasons; its override fields exist but are never set (listed as a future improvement). No correction, dispute or decision history in the others. Evidence: <https://github.com/poshalanavateja/Vendor-Bid-Evaluation-Ai>.
+- **Lean Agentic** *(H)*: Review pause in the graph for proposed weights and flagged suppliers (approve, override class with comment, defer); calibrated weights need approval by default. Explain & correct separates data corrections from expert overrides, requires a reason, recomputes both views and shows before/after before confirmation, records old and new values with reason, time, model and weight version, and marks an earlier AI explanation as outdated; disputes are recorded without changing scores or weights. Not 5: no roles or permissions, names are typed in and not verified, and review state is per session. Evidence: `src/supplier_risk_agent/tools/corrections.py`, `src/supplier_risk_agent/tools/history.py`, `src/supplier_risk_agent/agents/human_review.py`, `tests/test_explain_correct.py`, `tests/test_ui.py`.
 
 ### 7. External signals & data coverage: Excel 1 · SaaS 5 · Open repos 2 · Lean Agentic 2.5
 
@@ -139,10 +169,12 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 
 ### 13. Agentic orchestration & extensibility: Excel 1 · SaaS 2.5 · Open repos 4 · Lean Agentic 4
 
+*Scope:* Architecture: specialised agents over a shared, inspectable state, bounded loops, a review pause as a workflow element, extension points. What a person can do in that pause is factor 6; the explanation of results, including an LLM explanation, is factor 2.
+
 - **Excel** *(H)*: None beyond macros.
 - **SaaS** *(M)*: Prewave: REST APIs, ERP write-back and connectors for external AI agents; Sphera: "agentic AI" capabilities marketed, workflow embedding stated, public API documentation not found. Neither documents a customer-inspectable multi-agent workflow (specialised agents over a shared state, calibration agent, graph-based review pause). Both closed.
 - **Open repos** *(H)*: Agent architectures are their main asset: specialised agents over a typed shared state, graph or supervisor orchestration; review pauses rare, no calibration agent.
-- **Lean Agentic** *(H)*: LangGraph supervisor over a typed shared state with specialised agents (data collection, scoring, calibration, recommendation, human review as graph interrupt); documented extension points (data sources, data providers, rating sources, views, agents). All agents are deterministic Python nodes; no language model is called. Not 5: rule-based supervisor, no LLM agents yet.
+- **Lean Agentic** *(H)*: LangGraph supervisor over a typed shared state with specialised agents (data collection, scoring, calibration, recommendation, human review as graph interrupt); documented extension points (data sources, data providers, rating sources, views, agents). Scoring, calibration, recommendation and routing are deterministic Python nodes; one optional node calls a language model to explain results (counted under factor 2, not here). Not 5: rule-based supervisor, no LLM-driven planning or tool use.
 
 ### 14. Operational maturity & support: Excel 3 · SaaS 5 · Open repos 1 · Lean Agentic 2
 
@@ -160,8 +192,9 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 
 ## Known weaknesses of this comparison
 
-- **Author bias.** Factors and all ratings come from a single rater, the author of the Lean Agentic approach, who thus rates their own work; the ratings are qualitative judgement, not measurement. Mitigations: factors where SaaS is stronger are included (v0.2), Lean Agentic is rated as implemented, every rating carries rationale and confidence. v0.3 adds a factor (risk and performance integration) on which the proposed approach is strong, and re-rates five factors after practitioner feedback; both are disclosed. v0.4 folds material-group adaptation into customisability to remove a subset overlap; retained ratings and confidence are unchanged. Recommended: independent re-rating by 3-5 practitioners, reporting the spread.
+- **Author bias.** Factors and all ratings come from a single rater, the author of the Lean Agentic approach, who thus rates their own work; the ratings are qualitative judgement, not measurement. Mitigations: factors where SaaS is stronger are included (v0.2), Lean Agentic is rated as implemented, every rating carries rationale and confidence. v0.3 adds a factor (risk and performance integration) on which the proposed approach is strong, and re-rates five factors after practitioner feedback; both are disclosed. v0.4 folds material-group adaptation into customisability to remove a subset overlap; retained ratings and confidence are unchanged. v0.5 sharpens factors 2 and 6 and adds rating anchors after the author built the Explain & correct workflow; the anchors were written by the same person who built the feature they reward, which favours the demonstrator's design. Recommended: independent re-rating by 3-5 practitioners against the published anchors, reporting the spread.
 - **The Excel profile is a stereotype.** Real spreadsheet practices vary widely.
 - **SaaS rated on public information only.** Hands-on evaluation could move several ratings, especially traceability, customisability (including material-group fit), action framework, human-in-the-loop and time-to-value.
 - **No factor measures predictive validity**, i.e. whether a score anticipates real disruptions (see research/success-factors.md).
 - **Date dependency.** Products change; all SaaS ratings refer to public information as of October 2026.
+- **Unknown is not absent.** Where no public evidence was found, a value is marked unknown ("?") or as a documented minimum ("≥"). Vendors may offer more than their public documentation shows; such values are the most likely to change with a hands-on test.

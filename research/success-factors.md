@@ -1,11 +1,12 @@
 # Success factors for supplier risk management and performance evaluation
 
-**Status: model v0.4 adopted (October 2026).** The factors remain a working model, a reasoned
+**Status: model v0.5 adopted (October 2026).** The factors remain a working model, a reasoned
 hypothesis for comparing approaches, not a validated or final framework. v0.2 came out of a critical
 review of the initial working model v0.1, which is kept further down for traceability. v0.3 adds one
 factor and sharpens others after practitioner feedback. v0.4 removes a subset overlap by
-folding material-group adaptation into customisability (see the version history below).
-Ratings against v0.4 live in [comparison-matrix.yaml](comparison-matrix.yaml), the single source of
+folding material-group adaptation into customisability. v0.5 sharpens factors 2 and 6, adds rating
+anchors and draws explicit boundaries between overlapping factors (see the version history below).
+Ratings against v0.5 live in [comparison-matrix.yaml](comparison-matrix.yaml), the single source of
 truth. The generated [comparison-matrix.md](comparison-matrix.md) and the radar chart are built from it.
 
 **Conventions**
@@ -24,16 +25,16 @@ truth. The generated [comparison-matrix.md](comparison-matrix.md) and the radar 
 
 ---
 
-## Current model v0.4: 15 factors
+## Current model v0.5: 15 factors
 
 | # | Factor | Definition (short) | Assessable by | v0.1 |
 |---|---|---|---|---|
 | 1 | Structured criteria & weights (objective + subjective) | Explicit criteria, scales and weights combining measurable indicators and structured expert assessment | Criteria with definition and scale; explicit weights; both input types with provenance | 1 + 5 |
-| 2 | Traceability & reproducibility | Every result can be reconstructed afterwards (inputs, weights, decisions, authors) and recomputed from documented inputs | Per-result record; change history; recomputation possible; automated tests; no LLM-generated numbers | 2 + 8 |
-| 3 | Methodological transparency | How results are calculated is documented and checkable *before* use | Published formula, weights, data sources and rules | 13 |
+| 2 | Explainability & traceability (per result) | For one specific supplier, a user can see why it got its score and class, and the result can be reproduced | Inputs with source and data date; missing data marked; rating rules, weights and contributions per criterion; non-additive rules explained separately; per-result record; recomputation; explanations citing the trace; no LLM-generated numbers | 2 + 8 |
+| 3 | Methodological transparency | How results are calculated is documented and checkable *before* use (model level) | Published formula, weights, thresholds, data sources and rules | 13 |
 | 4 | Expert calibration / ability to learn | Parameters are systematically fitted to expert judgement, with documented approval | Calibration procedure; fit metric; logged old/new parameters; approval step | 3 |
 | 5 | Action framework | Results map to defined actions, review cycles and owners | Actions per class and per driver; review cycles; tracking to closure | 6 |
-| 6 | Human-in-the-loop & governance | Defined review and approval points; decisions recorded; roles | Review/approval steps; recorded overrides; approval of model changes; roles and permissions | 7 |
+| 6 | Human review & correction | People can review, challenge and correct results in a controlled way, and their decisions are recorded | Review and approval points; data corrections and overrides with a mandatory reason; before/after effect shown before confirmation; dispute channel; decision history; approval of model changes; roles and permissions | 7 |
 | 7 | External signals & data coverage | Use of current external data and breadth of supplier coverage | Sources and update frequency; languages and regions; Tier-N visibility | 11 |
 | 8 | Regulatory evidence | Support for due-diligence documentation duties | Regulation-specific workflows and reports; evidence export | new |
 | 9 | Cost / total cost of ownership | Total cost of use, including recurring internal effort, and access barriers | Licence model and prices; implementation effort; recurring manual effort per cycle; minimum contract size | 9 |
@@ -43,6 +44,36 @@ truth. The generated [comparison-matrix.md](comparison-matrix.md) and the radar 
 | 13 | Agentic orchestration & extensibility | Work is orchestrated as an explicit workflow of specialised agents, and new capabilities can be added without rebuilding the core | Specialised agents over a shared, inspectable state; bounded loops; review pauses in the workflow; extension points; APIs | 15 |
 | 14 | Operational maturity & support | Production readiness: support, hosting, security, service levels | Support organisation; SLAs; security and permission model; release process | new |
 | 15 | Integration of risk management and performance evaluation | Supplier risk (forward-looking exposure) and supplier performance (delivery, quality, price, responsiveness) are evaluated on one consistent basis, each with its own logic | Shared criteria and data; separate weights, classes and actions per view; both results side by side per supplier | new (v0.3) |
+
+## Changes from v0.4 to v0.5, and why
+
+**Decision:** keep 15 factors, sharpen two of them and add rating anchors, so that ratings can be
+checked against a written standard.
+
+- **Factor 2** becomes *Explainability & traceability (per result)*. It now asks whether the reasons for
+  one specific supplier's result are visible and reproducible (inputs, sources and data dates, missing
+  data, rules, weights, contributions, non-additive rules, explanations that cite them). v0.4 mixed
+  this with general reproducibility.
+- **Factor 6** becomes *Human review & correction*. It now asks what a person can actually do with a
+  result: review and approve, dispute, correct data or override a rating with a reason, see the effect
+  before confirming, and find the decision again later.
+- **Anchors** (levels 1–5) are defined for factors 2, 3 and 6 in
+  [comparison-matrix.yaml](comparison-matrix.yaml) and rendered in [comparison-matrix.md](comparison-matrix.md).
+- **Unknown is not absent.** A value without public evidence is marked *unknown* and not plotted as low;
+  a value that covers only the documented part is marked as a documented minimum (≥).
+
+Boundaries, so that one capability is rewarded once:
+
+| Overlap | Boundary |
+|---|---|
+| Method transparency (3) / explainability (2) | 3 = the method in general, before use; 2 = the reasons for one result. |
+| Explainability (2) / human review (6) | 2 = what the system records and explains about a result; 6 = what people decide and change, and the record of those decisions. |
+| Human review (6) / agentic orchestration (13) | 13 = the review pause as an element of the workflow architecture; 6 = what a reviewer can do in it. |
+| LLM explanation | Counted under 2 only (it explains results); it does not raise 13. |
+
+**Disclosure.** v0.5 was written after the author built the Explain & correct workflow, by the same
+person; the anchors therefore fit the demonstrator's design. Ratings of other approaches against these
+anchors depend on public documentation, which may understate their capabilities.
 
 ## Changes from v0.3 to v0.4, and why
 
@@ -373,4 +404,4 @@ strongest on factors 8, 9, 13 and 15, and the proposed approach is weak there to
 balance is what makes the comparison credible.
 
 **Historical decision (October 2026): v0.2 adopted, subsequently superseded.**
-See "Current model v0.4" at the top.
+See "Current model v0.5" at the top.

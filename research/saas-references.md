@@ -69,3 +69,24 @@ Two commercial supplier-risk platforms serve as **examples** for the "proprietar
   - regulatory documentation
   - scale
   - operational maturity
+
+## Addendum (accessed 2026-10-12): explainability and human correction
+
+Collected for factors 2 (explainability & traceability per result) and 6 (human review &
+correction) of model v0.5. "Unknown" means no public evidence was found, not that a feature is
+absent.
+
+| Vendor | Explainability per supplier | Human review & correction | Unknown |
+|---|---|---|---|
+| Prewave | 360° score split into components with fixed weights (peer 30 %, alerts 40 %, self-assessment 20 %, external data 10 %); 24-month score history filterable by alert; country risk linked to the underlying indices | Alert reporting with reason categories (false data, irrelevant, duplicate, …), reviewed manually by Prewave with defined outcomes; suppliers can answer alerts and fill in self-assessments | Contribution of individual alerts; explanations citing data; score override with a reason; before/after view; audit history of corrections |
+| Sphera SCRM | AI summaries and "weighted risk scoring" described at marketing level | Risk assessments feed survey results into risk profiles; playbooks, ownership and measurable closure | Scoring method and weights; whether summaries cite sources; relevance feedback; override with a reason; approval steps; audit trail |
+
+Sources:
+- https://help.prewave.com/en/articles/246667-target-profile-overview
+- https://help.prewave.com/en/articles/237277-how-is-the-prewave-score-generated
+- https://help.prewave.com/en/articles/423361-alert-reporting
+- https://supplier.prewave.com/en/articles/589775-register-with-prewave
+- https://knowledgebase.prewave.com/en/knowledge/how-to-send-out-a-ssa
+- https://sphera.com/company/news/sphera-launches-supplier-360-intelligence
+- https://sphera.com/solutions/supply-chain-risk-management/
+- https://sphera.com/risk-assessment

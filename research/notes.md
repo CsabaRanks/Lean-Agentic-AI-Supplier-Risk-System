@@ -2,6 +2,28 @@
 
 Lightweight decision log. Newest first.
 
+## 2026-10 — Explain & correct; factor model v0.5
+
+**D33: Explain & correct as the per-result layer on top of the scoring engine.**
+- **Change.** A deterministic scoring trace per supplier and view (inputs with source and data date,
+  rules, weights, contributions that add up to the score, non-additive rules), an optional LLM
+  explanation that must cite trace entries, controlled corrections (data correction vs. expert
+  override, mandatory reason, before/after in both views, explicit confirmation, history) and a
+  dispute record that changes nothing.
+- **Why.** Calibration answers "are the weights right?"; category managers also need "why this
+  supplier, and is the input right?" without leaving the deterministic method.
+- **Not changed.** Weights, thresholds and rules stay in calibration and approval; a dispute never
+  trains weights.
+
+**D34: Factor model v0.5 — sharpen factors 2 and 6, anchors, "unknown is not absent".**
+- **Change.** Factor 2 becomes *Explainability & traceability (per result)*, factor 6 *Human review &
+  correction*; anchors 1–5 for factors 2, 3 and 6; explicit boundaries 2/3, 2/6, 6/13; the LLM
+  explanation counts only under 2. Values without public evidence are *unknown* (not plotted low),
+  documented minimums are marked "≥".
+- **Why.** The old wording rewarded audit trails twice (2 and 6) and could not express what
+  vendors document only partly.
+- **Disclosure.** Written by the author after building the feature the anchors reward.
+
 ## 2026-10 — Factor model v0.4: fifteen factors
 
 **D32: Material-group adaptation folded into customisability; back to 15 factors.**

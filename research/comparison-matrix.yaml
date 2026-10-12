@@ -22,16 +22,17 @@
 
 meta:
   title: Supplier risk management and performance evaluation approaches profiled on 15 success factors
-  model_version: "0.4"
+  model_version: "0.5"
   evidence_date: "2026-10"
   scale: {min: 1, max: 5}
   caption: >-
     Four approaches to supplier risk management and performance evaluation profiled on 15 success factors
-    (model v0.4).
+    (model v0.5).
     Illustrative, qualitative assessment by the author based on public information and code review
     (October 2026); expert judgement, not an empirical measurement;
     rationale and confidence for every value in research/comparison-matrix.md.
-    Proprietary SaaS plotted as the mean of Prewave and Sphera, with the spread marked where they differ.
+    Proprietary SaaS plotted as the mean of the known values of Prewave and Sphera, with the spread marked
+    where they differ. "?" marks an unknown value (no public evidence either way), which is not plotted as low.
     No weighting is applied and no total or ranking is derived.
 
 approaches:
@@ -95,40 +96,87 @@ factors:
 
   - id: 2
     key: traceability
-    label: Traceability & reproducibility
-    short_label: Traceability & reproducibility
+    label: Explainability & traceability (per result)
+    short_label: Explainability & traceability
     v01: [2, 8]
+    scope: >-
+      Result level: can a user see why one specific supplier got its score and class, and reproduce it?
+      Inputs with source and data date, missing data, rating rules, weights, contributions, rules that are not
+      additive, and a record of the result. Method documentation in general belongs to factor 3; human
+      decisions and corrections belong to factor 6.
+    anchors:
+      1: Only a score or class is shown; no reasons per supplier.
+      2: Main drivers or categories are named per supplier, but inputs and weights are not visible; the user
+        cannot reproduce the result.
+      3: Per supplier, the breakdown into components or criteria with their weights is visible; sources are
+        partly linked; reproduction needs the vendor or manual work.
+      4: Complete per-supplier trace of inputs, sources, rules and weights, a record of each result, and
+        recomputation from recorded inputs.
+      5: As 4, plus quantified contributions that add up to the result, separate explanation of non-additive
+        rules, explicit marking of missing data and sources, and explanations that cite trace entries.
     ratings:
       xls:
-        value: 2
+        value: 3
         confidence: M
         rationale: >-
-          Formulas are deterministic, but there is no per-result record and copy-paste / versioning errors are common.
+          A scorecard usually shows criterion ratings and weights per supplier row, so the breakdown is visible;
+          sources and data dates are rarely recorded, and there is no per-result record beyond file copies.
       saas:
-        value: 2.5
-        by_example: {Prewave: 3, Sphera: 2}
-        confidence: L
+        value: 3
+        by_example: {Prewave: 3, Sphera: null}
+        at_least: [Prewave]
+        confidence: M
         rationale: >-
-          Audit-ready due-diligence documentation is claimed (Prewave); audit-trail controls not found publicly (Sphera).
-          Continuously updated, partly NLP-based scores cannot be recomputed by the customer from documented inputs,
-          a design consequence of real-time monitoring rather than a flaw.
+          Prewave documents per supplier the 360° score split into components with fixed weights (peer 30 %,
+          alerts 40 %, self-assessment 20 %, external data 10 %), a 24-month score history filterable by alert,
+          and links from country risk to the underlying indices; the contribution of individual alerts and
+          explanations citing data were not found publicly (unknown, not absent). Sphera describes AI summaries
+          and "weighted risk scoring" at marketing level only; no per-result breakdown is documented, so the
+          value is unknown rather than low.
+        evidence:
+          - https://help.prewave.com/en/articles/246667-target-profile-overview
+          - https://help.prewave.com/en/articles/237277-how-is-the-prewave-score-generated
+          - https://sphera.com/company/news/sphera-launches-supplier-360-intelligence
       oss:
-        value: 2
-        confidence: H
-        rationale: History lists / tracing in some repos; 2 of 5 repos use LLM-judged scores.
-      lean:
-        value: 4
+        value: 2.5
         confidence: H
         rationale: >-
-          Pure scoring functions with automated tests; append-only audit trail per run; versioned weight files with
-          approver; model version on every result; timestamped assessment snapshots per view (local JSONL files).
-          Not 5: no central, access-controlled persistence of runs yet.
+          Two of five repos print a per-result breakdown (one with weights, contributions and the reasons of a
+          hard disqualification gate); the others return a tier or simulated text without reasons. No sources
+          or data dates; 2 of 5 use LLM-judged scores.
+        evidence:
+          - https://github.com/poshalanavateja/Vendor-Bid-Evaluation-Ai
+          - https://github.com/Bhardwaj-Saurabh/OmniSupply-AI-Multi-Agent-Supply-Chain-Intelligence-Platform
+      lean:
+        value: 4.5
+        confidence: H
+        rationale: >-
+          Deterministic scoring trace per supplier and view: inputs with source and data date (missing ones
+          flagged), rating rules generated from the engine's own constants, nominal and effective weights,
+          contributions that add up to the score (tested for all sample suppliers), escalation rules and the
+          completeness check explained separately; the optional LLM explanation must cite trace entry ids.
+          Model and weight version on every result; corrections and snapshots recorded. Not 5: run records are
+          local files, not a central, access-controlled store, and sources are only as good as the data entered.
+        evidence:
+          - src/supplier_risk_agent/tools/explain.py
+          - tests/test_explain_correct.py
+          - src/supplier_risk_agent/tools/ai_review.py
+          - docs/images/ui-explain-correct.png
 
   - id: 3
     key: transparency
     label: Methodological transparency
     short_label: Method transparency
     v01: [13]
+    scope: >-
+      Model level, before use: are the method, formulas, weights, rules and data sources documented and
+      checkable? Explaining an individual result is factor 2.
+    anchors:
+      1: The method is not disclosed.
+      2: Components are named, without weights or rules.
+      3: Components and their weights are published; rules, data handling or parts of the method stay closed.
+      4: Formulas, weights, thresholds and rules are documented; some parts (e.g. data processing) are closed.
+      5: The complete method (formulas, weights, thresholds, rules, data sources) is documented and testable.
     ratings:
       xls:
         value: 4
@@ -208,30 +256,68 @@ factors:
 
   - id: 6
     key: hitl
-    label: Human-in-the-loop & governance
-    short_label: Human-in-the-loop
+    label: Human review & correction
+    short_label: Human review & correction
     v01: [7]
+    scope: >-
+      What a person can do with a result: review and approve, challenge it, correct data or override a rating
+      with a reason, see the effect before applying it, and find the decision in a history; roles and
+      permissions. The system's own record of results is factor 2; the workflow architecture is factor 13.
+    anchors:
+      1: No structured review; changes happen silently in data or formulas.
+      2: Data or results can be edited, but without reasons, approval or history.
+      3: Defined review or approval points, or a channel to report wrong data, with recorded outcomes.
+      4: Review and approval workflow with recorded decisions, plus documented corrections or overrides with a
+        reason; roles or a before/after view.
+      5: Corrections and overrides kept apart with a mandatory reason, before/after recomputation before
+        confirmation, a channel to dispute results, a complete decision history, and roles with verified
+        identities.
     ratings:
       xls:
         value: 2
         confidence: M
-        rationale: Fully manual, but without structured review or approval points.
+        rationale: Cells can be changed at any time, but without reasons, approval or a decision history.
       saas:
-        value: 4
-        by_example: {Prewave: 4, Sphera: 4}
+        value: 3.5
+        by_example: {Prewave: 4, Sphera: 3}
+        at_least: [Prewave, Sphera]
         confidence: M
-        rationale: Incident management, ownership and approval workflows are described.
+        rationale: >-
+          Prewave documents alert reporting with reason categories (false data, irrelevant, duplicate, ...),
+          manual review by Prewave with defined outcomes, and suppliers answering alerts and filling in
+          self-assessments; incident ownership and approval workflows are described. Sphera documents
+          assessments that feed survey results into risk profiles, playbooks, ownership and measurable
+          closure. For both, overriding a score with a reason, a before/after view and the audit history are
+          unknown (not found publicly), so the values are documented minimums.
+        evidence:
+          - https://help.prewave.com/en/articles/423361-alert-reporting
+          - https://supplier.prewave.com/en/articles/589775-register-with-prewave
+          - https://sphera.com/risk-assessment
+          - https://sphera.com/solutions/supply-chain-risk-management/
       oss:
         value: 2
         confidence: H
-        rationale: One repo has a human-review exit.
+        rationale: >-
+          One repo ends the run with a human-review status and reasons; its override fields exist but are never
+          set (listed as a future improvement). No correction, dispute or decision history in the others.
+        evidence:
+          - https://github.com/poshalanavateja/Vendor-Bid-Evaluation-Ai
       lean:
-        value: 3.5
+        value: 4
         confidence: H
         rationale: >-
-          Graph-based review pause (interrupt / resume) for weight approval and class overrides with comment,
-          recorded with the reviewer, surviving re-scoring and snapshotted to the history; review also in the UI.
-          Below the platforms: no roles / permissions, in-memory pauses only.
+          Review pause in the graph for proposed weights and flagged suppliers (approve, override class with
+          comment, defer); calibrated weights need approval by default. Explain & correct separates data
+          corrections from expert overrides, requires a reason, recomputes both views and shows before/after
+          before confirmation, records old and new values with reason, time, model and weight version, and marks
+          an earlier AI explanation as outdated; disputes are recorded without changing scores or weights.
+          Not 5: no roles or permissions, names are typed in and not verified, and review state is per session.
+        evidence:
+          - src/supplier_risk_agent/tools/corrections.py
+          - src/supplier_risk_agent/tools/history.py
+          - src/supplier_risk_agent/agents/human_review.py
+          - tests/test_explain_correct.py
+          - tests/test_ui.py
 
   - id: 7
     key: signals
@@ -415,6 +501,10 @@ factors:
     label: Agentic orchestration & extensibility
     short_label: Agentic orchestration & extensibility
     v01: [15]
+    scope: >-
+      Architecture: specialised agents over a shared, inspectable state, bounded loops, a review pause as a
+      workflow element, extension points. What a person can do in that pause is factor 6; the explanation of
+      results, including an LLM explanation, is factor 2.
     ratings:
       xls:
         value: 1
@@ -441,8 +531,9 @@ factors:
         rationale: >-
           LangGraph supervisor over a typed shared state with specialised agents (data collection, scoring,
           calibration, recommendation, human review as graph interrupt); documented extension points (data
-          sources, data providers, rating sources, views, agents). All agents are deterministic Python nodes; no
-          language model is called. Not 5: rule-based supervisor, no LLM agents yet.
+          sources, data providers, rating sources, views, agents). Scoring, calibration, recommendation and routing
+          are deterministic Python nodes; one optional node calls a language model to explain results (counted
+          under factor 2, not here). Not 5: rule-based supervisor, no LLM-driven planning or tool use.
 
   - id: 14
     key: operations
@@ -528,7 +619,7 @@ narrative:
       approach, who thus rates their own work; the ratings are qualitative judgement, not measurement. Mitigations:
       factors where SaaS is stronger are included (v0.2), Lean Agentic is rated as implemented, every rating
       carries rationale and confidence. v0.3 adds a factor (risk and performance integration) on which the
-      proposed approach is strong, and re-rates five factors after practitioner feedback; both are disclosed. v0.4 folds material-group adaptation into customisability to remove a subset overlap; retained ratings and confidence are unchanged. Recommended: independent re-rating by 3-5 practitioners, reporting the spread.
+      proposed approach is strong, and re-rates five factors after practitioner feedback; both are disclosed. v0.4 folds material-group adaptation into customisability to remove a subset overlap; retained ratings and confidence are unchanged. v0.5 sharpens factors 2 and 6 and adds rating anchors after the author built the Explain & correct workflow; the anchors were written by the same person who built the feature they reward, which favours the demonstrator's design. Recommended: independent re-rating by 3-5 practitioners against the published anchors, reporting the spread.
     - "**The Excel profile is a stereotype.** Real spreadsheet practices vary widely."
     - >-
       **SaaS rated on public information only.** Hands-on evaluation could move several ratings, especially
@@ -537,3 +628,7 @@ narrative:
       **No factor measures predictive validity**, i.e. whether a score anticipates real disruptions
       (see research/success-factors.md).
     - "**Date dependency.** Products change; all SaaS ratings refer to public information as of October 2026."
+    - >-
+      **Unknown is not absent.** Where no public evidence was found, a value is marked unknown ("?") or as a
+      documented minimum ("≥"). Vendors may offer more than their public documentation shows; such values are
+      the most likely to change with a hands-on test.
