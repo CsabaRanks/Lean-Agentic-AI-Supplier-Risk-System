@@ -2,7 +2,7 @@
 
 ### Turning spreadsheet scorecards into transparent, expert-calibrated multi-agent systems: a benchmark of four approaches and an open-source demonstrator
 
-*Csaba Bakay · Working paper, draft v0.6 · October 2026*
+*Csaba Bakay · Working paper, draft v0.7 · October 2026*
 
 > **Draft status.** All sections (1–12) exist as a first, continuous draft. Remaining gaps are
 > marked in the text and summarised in [paper-outline.md](paper-outline.md). Markers in the text:
@@ -21,9 +21,15 @@
 > Draft v0.5 updates the benchmark to factor model v0.4 (Section 3.1) and puts the integration of
 > supplier risk management and performance evaluation at the centre of the positioning.
 > Draft v0.6 reconciles the text with the code and result files, states explicitly that no
-> language model is used in the current implementation, marks the benchmark as the author's
+> language model was used at that point, marks the benchmark as the author's
 > qualitative assessment and the experiments as synthetic-only, and softens comparative claims
 > about third-party products. No rating value and no experimental number was changed.
+> Draft v0.7 describes the one component that now uses a language model: an optional,
+> explicitly triggered Supplier Review Agent that interprets final results (Section 6.9). Scoring,
+> calibration, recommendations and routing remain deterministic and LLM-free. The review agent is
+> experimental and unevaluated (Section 10). The text also states that the risk template now
+> proposes accepted weights for approval by default. No rating value and no experimental number
+> was changed.
 
 ---
 
@@ -63,8 +69,10 @@ This paper makes three contributions.
    weights, classes and actions. The demonstrator is an agentic workflow in a narrow sense: an
    orchestrated multi-agent workflow of deterministic agents (Python nodes in a LangGraph state
    graph) over a shared state, including a calibration agent, routed by a rule-based supervisor and
-   paused for human review inside the graph. No language model is called in the current
-   implementation; "agentic" denotes orchestration, not autonomy. The approach starts from existing scorecard practice. Its scoring is deterministic and
+   paused for human review inside the graph. Scoring, calibration, recommendations and routing
+   use no language model. One optional component, triggered only on explicit request, uses a
+   language model to interpret a supplier's final results and cannot change scores, classes or
+   weights; it is experimental and unevaluated. "Agentic" denotes orchestration, not autonomy. The approach starts from existing scorecard practice. Its scoring is deterministic and
    configurable, with material-group-specific weights. Weights are calibrated against category
    managers' expert labels by constrained least squares. A human-in-the-loop step pauses the
    workflow for approval, and approved weights are versioned. The same criteria serve two views,
@@ -164,10 +172,12 @@ The argument proceeds in two steps.
 A note on terminology. "Agentic" is used here for an *orchestrated multi-agent workflow*:
 specialised agents (data collection, scoring, calibration, recommendation, human review) are
 deterministic Python functions that act as nodes of a LangGraph state graph, a rule-based
-supervisor routes between them, and the workflow pauses for human approval. No language model is
-called anywhere in the current implementation. Language-model roles (a narrating explanation
-agent, an LLM-based supervisor) are planned extensions only (Sections 8.5 and 11). The term does
-not imply autonomous, LLM-driven decision making.
+supervisor routes between them, and the workflow pauses for human approval. Scoring,
+calibration, recommendations and routing use no language model. The only exception is an
+optional *Supplier Review Agent*: on explicit request, it asks a language model to interpret one
+supplier's final results, and it cannot change scores, classes or weights (Section 6.9). Other
+language-model roles (document extraction, an LLM-based supervisor) are planned extensions only
+(Sections 8.5 and 11). The term does not imply autonomous, LLM-driven decision making.
 
 The demonstrator runs on synthetic data, and so do all experiments: no real expert labels and no
 field data were used. This is a deliberate constraint, and it has a cost, discussed in Section 10. It also has a benefit: because the expert labels in the
@@ -194,8 +204,7 @@ weighting is applied, and no total or ranking is derived.*
    agentic architecture. Its positioning rests on two features: the integration of risk management
    and performance evaluation, and calibration against expert labels inside an agentic workflow
    (Section 5).
-4. **An open-source demonstrator.** It is a LangGraph workflow of deterministic agents, without any
-   language model, with:
+4. **An open-source demonstrator.** It is a LangGraph workflow of deterministic agents, with:
    - deterministic, configurable scoring
    - material-group weights
    - constrained least-squares calibration
@@ -203,6 +212,8 @@ weighting is applied, and no total or ranking is derived.*
    - a versioned weight store
    - two views on one criteria catalogue: performance evaluation and risk management
    - an action framework and an assessment history
+   - an optional, experimental review agent that uses a language model to interpret final
+     results, without changing any number
    - an automated test suite (Section 6)
 5. **An explicit statement of what is not established**, and of the work that would close each gap
    (Sections 10–11).
@@ -356,7 +367,8 @@ The reviewed repositories show both patterns:
 - language-model arithmetic that does not add up
 
 The more mature designs among them compute numbers in code and reserve the language model for
-language. This paper adopts that division strictly.
+language. This paper adopts that division strictly: the one component that calls a language
+model (Section 6.9) only interprets numbers that code has already computed.
 
 ---
 
@@ -614,8 +626,9 @@ This closes the gap described in the introduction, where a risk platform and a s
 evaluation judge the same supplier separately. It does not replace the platform's signals; it can
 consume them as indicators (Section 8.2). The second pillar is that the method is run by an
 agentic workflow whose agents, including a calibration agent, share an inspectable state and stop
-for human approval inside the graph. The agents are deterministic code; no language model is
-involved (Section 2.5).
+for human approval inside the graph. The agents that score, calibrate, recommend and route are
+deterministic code without a language model (Section 2.5); an optional review agent uses one only
+to interpret final results (Section 6.9).
 
 ### 5.2 A synthesis of three traditions
 
@@ -669,7 +682,8 @@ from the methodology each time. The problem was found by a test, and the fix is 
 
 Calibrated weights are applied only if the *cross-validated* error falls by a minimum relative
 amount, so that a fit which merely reproduces label noise is rejected (Section 7.6). Depending on
-configuration, they are either applied automatically or proposed for approval. Old and new weights,
+configuration, they are either applied automatically or proposed for approval; the bundled risk
+template proposes by default, the performance template applies. Old and new weights,
 the error before and after, and the share of suppliers whose model class matches the class implied
 by the expert label are all reported. Formulation: Section 6.4.
 
@@ -679,8 +693,9 @@ accountable for it, while every weight remains explainable.
 
 **(3) Agentic orchestration.** The method runs as a graph of specialised agents (data collection,
 scoring, calibration, recommendation, human review) over one typed, inspectable state, coordinated
-by a rule-based supervisor with bounded loops. Each agent is a deterministic Python function; none
-calls a language model. The calibration agent proposes weights; the review is a pause in
+by a rule-based supervisor with bounded loops. Each of these agents is a deterministic Python
+function without a language model; only the optional review agent calls one, to interpret final
+results (Section 6.9). The calibration agent proposes weights; the review is a pause in
 the graph that resumes with a recorded decision. The commercial examples use AI for signal
 processing, summaries and, in one case, marketed "agentic" capabilities, but neither documents such
 a workflow publicly. The agents orchestrate; they do not decide (Section 8.5).
@@ -707,8 +722,8 @@ The decision is recorded, and manual classes survive re-scoring.
 
 **(7) Deterministic scoring.** Every number is produced by pure, tested functions. The same input
 always gives the same score, and every score can be recomputed by hand. Language models are kept
-out of the numbers entirely. Their planned roles are extraction from documents and narrative
-explanation.
+out of the numbers entirely. Their one implemented role is an optional, experimental
+interpretation of final results (Section 6.9); extraction from documents is planned.
 
 **(8) Governance by construction.** Several controls are built into the method rather than added
 around it:
@@ -742,7 +757,8 @@ This section summarises the demonstrator. Design details are in `docs/architectu
 ### 6.1 Workflow
 
 The demonstrator is a LangGraph state graph in hub-and-spoke form (Figure 3). A rule-based
-**supervisor** inspects the shared state and routes to one of five workers:
+**supervisor** inspects the shared state and routes to one of five workers, plus an optional
+sixth:
 - **data collection**: loads the suppliers in scope, optionally restricted to one material group,
   together with indicators and expert labels from a pluggable source. Optional data providers then
   fill missing indicators (Section 6.7)
@@ -752,11 +768,12 @@ The demonstrator is a LangGraph state graph in hub-and-spoke form (Figure 3). A 
 - **recommendation**: maps classes, elevated dimensions and factor levels to actions, owners and
   review cycles (Section 6.7)
 - **human review**
+- **AI review** (optional): the Supplier Review Agent, run only on explicit request (Section 6.9)
 
-Every worker returns control to the supervisor. All workers and the supervisor are deterministic
-Python code; no language model is called at any point of the workflow. The routing rules fit in
-one function, which is also the single, so far unused, extension point for a planned
-language-model-based supervisor.
+Every worker returns control to the supervisor. The supervisor and the five core workers are
+deterministic Python code without a language model; the AI review node is the only place that
+calls one. The routing rules fit in one function, which is also the single, so far unused,
+extension point for a planned language-model-based supervisor.
 
 ```mermaid
 flowchart TD
@@ -773,13 +790,18 @@ flowchart TD
     CA --> SUP
     RA --> SUP
     HR -->|decision| SUP
+    SUP -.->|explicit request| AR[AI review · LLM, optional]
+    AR -.-> SUP
     CA -. accepted & auto-applied .-> WS[(Versioned weight store)]
     HR -. approved .-> WS
 ```
 
 *Figure 3. Workflow of the demonstrator. Every worker returns to a rule-based supervisor; the
-calibration loop and the human-review loop each run at most once per run. All nodes are
-deterministic; no language model is called. (Rendered as a static figure in the typeset version.)*
+calibration loop and the human-review loop each run at most once per run. All nodes that score,
+calibrate, recommend and route are deterministic and call no language model. The optional AI
+review node (dashed) is entered only on an explicit request and interprets final results without
+changing them (Section 6.9).
+(Rendered as a static figure in the typeset version.)*
 
 ```
 collect_data → score → [calibrate → score] → recommend → [human_review ⏸ → score? → recommend] → end
@@ -958,7 +980,7 @@ history. All numbers come from the package; the interface only collects input an
 ### 6.8 Engineering properties
 
 These properties make the claims in Sections 5 and 6 checkable:
-- **Tests.** The demonstrator ships with 121 automated tests. They cover:
+- **Tests.** The demonstrator ships with 159 automated tests. They cover:
   - scoring and weights, in both views
   - calibration, including recovery of known weights from noise-free labels
   - the weight store and the human-review flow
@@ -966,10 +988,52 @@ These properties make the claims in Sections 5 and 6 checkable:
   - the spreadsheet interface
   - the consistency of the benchmark data
   - reproducibility of the synthetic datasets
+  - the optional review agent, with mocked language-model responses only (Section 6.9)
 - **CI.** Continuous integration runs linting and tests on two Python versions.
 - **Checkpoint types.** The checkpointer restores only explicitly allow-listed state types.
 - **Licence and data.** The code is MIT-licensed. All data is fictional or synthetic and labelled
   as such.
+
+### 6.9 Supplier Review Agent: optional, LLM-supported interpretation
+
+One node of the graph, `ai_review`, uses a language model. It is the only one, and it is outside
+the evaluation: it interprets results that the deterministic workflow has already produced.
+
+- **Trigger.** It runs only on an explicit user request (a "Generate AI Review" button in the
+  interface, or a command-line option with confirmation), as a one-shot follow-up step on an
+  existing run. The supervisor routes to it only when such a request is set. A pending human
+  review stays pending.
+- **Input.** One supplier's structured results from both views: per criterion the rating (or a
+  gap), weight and rating basis; dimension scores, overall score and class, the class before
+  escalation, fired escalation rules, data completeness, missing criteria and the rule-based
+  actions. Not sent: supplier name, country, spend, the raw indicator record and expert labels.
+  The payload is shown to the user before sending, and the node checks that it still matches the
+  run's results.
+- **Output.** Structured text only, with no numeric fields: a management summary, the main drivers
+  (criterion and view), differences between the views, prioritised action proposals and open
+  questions. Scores shown next to the review are copied from the deterministic results.
+- **Safeguards.** The whole answer is rejected if it refers to a criterion that is not in the
+  input, does not compare the views, or leaves missing data without an open question. Suggested
+  actions are labelled as proposals for human review. Each attempt is recorded in the audit trail
+  with a hash of the payload. Failures (timeout, authentication, rate limit, refusal, truncated or
+  invalid answer) are reported and leave the run usable.
+- **Provider.** Anthropic's Claude, configured through environment variables (model, API key,
+  timeout, retries, output length). Without a key the feature is unavailable, and everything else
+  works unchanged.
+
+*Deterministic evaluation and LLM-supported interpretation (unnumbered table).*
+
+| | Deterministic evaluation | LLM-supported interpretation |
+|---|---|---|
+| Nodes | Data collection, scoring, calibration, recommendation, human review, supervisor | Supplier Review Agent (`ai_review`) |
+| Runs | In every run | Only on explicit request, once per request |
+| Produces | Ratings, scores, classes, weights, rule-based actions | Summary, drivers, view differences, action proposals, open questions |
+| Can change numbers | Yes, by design and recomputably | No: text fields only; numbers are copied from the results |
+| Reproducible | Same input, same output | No; output can vary between requests |
+| Tested | Unit and flow tests (Section 6.8) | Mocked responses on synthetic suppliers only; quality not evaluated |
+
+The division follows Section 2.5: numbers are computed in code, language is left to the model.
+The review agent is experimental; its limitations are listed in Section 10.
 
 ---
 
@@ -1031,7 +1095,8 @@ On the full reference portfolio, the default configuration (λ = 0.05) gives:
 - **Error:** MSE between score and label falls from 37.8 to 13.3 score points².
 - **Class agreement:** 84 % → 88 %.
 - **Weights:** L1 distance to the hidden weighting falls from 0.345 to 0.138.
-- **Classes:** re-scoring changes the class of 2 of 36 suppliers.
+- **Classes:** re-scoring with the calibrated weights changes the class of 2 of 36 suppliers. (With the
+  current risk template, these weights are proposed and applied only after a reviewer approves them.)
 
 With the cross-validated acceptance rule (Section 7.6), the demonstrator accepts this calibration
 on the basis of an out-of-fold MSE of 37.8 → 22.8 (5 folds × 3 repeats).
@@ -1532,7 +1597,8 @@ both views.**
 - **Integrated:** risk management and performance evaluation from one criteria catalogue, each with
   its own logic.
 - **Agentic:** deterministic, specialised agents over a shared state, routed by a rule-based
-  supervisor, with a calibration agent and a review pause in the graph; no language model.
+  supervisor, with a calibration agent and a review pause in the graph; no language model in
+  scoring, calibration, recommendations or routing.
 - **Transparent and reproducible:** the scoring is deterministic, configurable and fully tested.
 - **Governed:** the human review is a real pause in the workflow, not a notification, and weights
   are versioned with their approver.
@@ -1629,8 +1695,9 @@ These costs are real and fall on the adopting organisation. The approach is lean
 
 ### 8.5 What the "agentic" part contributes, and what it does not
 
-The demonstrator is a multi-agent workflow, but its scoring, calibration and recommendations use
-no language model at all. This is deliberate (Section 2.5). It also raises a fair question: is the
+The demonstrator is a multi-agent workflow, but its scoring, calibration, recommendations and
+routing use no language model at all. This is deliberate (Section 2.5). The one language-model
+component, the optional review agent, interprets results after the fact (Section 6.9). It also raises a fair question: is the
 agent architecture necessary?
 
 **For the current scope, it is not strictly necessary.** The same logic could run as a plain
@@ -1643,7 +1710,8 @@ pipeline.
   than rewrites:
   - an external-signal agent
   - a document-extraction agent
-  - an explanation agent that writes a narrative from locked numbers
+  - an explanation agent that writes a narrative from locked numbers; the Supplier Review Agent
+    (Section 6.9) is a first, experimental instance, added as one node without changing the others
 - **Pausing and resuming.** The graph framework's checkpointing provides the interrupt-and-resume
   mechanism that human review needs.
 
@@ -1679,7 +1747,8 @@ Two principles follow from the method:
    calibration optimises agreement with average judgement, and floors exist precisely for cases
    that averages hide.
 2. **Calibration proposes, people decide.** For weights that drive supplier decisions, the
-   recommended setting is to propose rather than auto-apply (`auto_apply: false`). Approval then
+   recommended setting is to propose rather than auto-apply (`auto_apply: false`), which is the
+   default of the bundled risk template (the performance template still auto-applies). Approval then
    happens at the review pause. The approver sees the following, and the approval is recorded:
    - the number of labels
    - the cross-validated and in-sample error
@@ -1784,9 +1853,20 @@ already run:
   ratings (Section 6.2), and the factor-level actions. None of them was calibrated or validated.
 - **Second view not examined.** The performance view uses the same engine, but none of the
   experiments in Section 7 covers it. Calibration is disabled by default in both templates.
-- **No language model.** The "agentic" architecture is an orchestrated workflow of deterministic
-  agents with a rule-based supervisor. Language-model components (explanation, extraction, an
-  LLM-based supervisor) are planned, not implemented; nothing in this paper evaluates them.
+- **Orchestration, not language models.** The "agentic" architecture is an orchestrated workflow
+  of deterministic agents with a rule-based supervisor. Document extraction and an LLM-based
+  supervisor are planned, not implemented.
+- **Experimental, unevaluated review agent.** The optional Supplier Review Agent (Section 6.9) was
+  tested only with mocked model responses on synthetic suppliers; a smoke test against the real
+  API exists but has not been run. These tests check plumbing and validation, not content.
+  Nothing in this paper evaluates the quality, correctness or usefulness of the generated
+  reviews, and no claim of domain validity follows from them.
+  - **External provider.** When triggered, the payload (structured results, without name,
+    country or spend) is sent to an external provider, Anthropic. Whether that is acceptable
+    is an organisational decision.
+  - **Errors despite validation.** Validation checks references to criteria and views and the
+    handling of missing data, not every sentence. The text may still misread or overstate the
+    results, and it should be read as a draft for a human reviewer.
 - **Not production-hardened.** The demonstrator has:
   - no roles or permissions
   - review pauses held in memory only
@@ -1861,8 +1941,11 @@ value relative to effort.
    - a joint portfolio reading of performance and risk, for example a matrix of performance grade
      against risk class
    - calibration of the performance view against its own expert labels, with the same safeguards
-4. **Explanation agent.** A language model writes a short narrative per supplier from the locked,
-   computed numbers, and never changes them.
+4. **Evaluate the review agent with practitioners.** The Supplier Review Agent (Section 6.9) is
+   implemented as an experimental component, but unevaluated. Category managers should rate its
+   reviews on real or realistic cases for correctness, faithfulness to the results and
+   usefulness, and the result should decide whether it stays. Document extraction and an
+   LLM-based supervisor remain planned.
 5. **Roles and persistence.** A role model that enforces separation of duties (Section 9.2), a
    persistent checkpointer so that reviews can be decided in a later session, a central store for
    the assessment history, and tracking of actions to closure.
@@ -1894,7 +1977,9 @@ fill the method side of that gap and to close the second one:
 - evaluate risk and performance as two views on one criteria catalogue
 - start from existing scorecard practice
 - run the method as an agentic workflow of deterministic, specialised agents over a shared
-  state, with a rule-based supervisor and no language model
+  state, with a rule-based supervisor and no language model in scoring, calibration,
+  recommendations or routing; an optional, experimental review agent uses one only to interpret
+  final results
 - build on open agentic blueprints
 - keep every number deterministic
 - calibrate weights against expert labels under constraints, with a cross-validated acceptance

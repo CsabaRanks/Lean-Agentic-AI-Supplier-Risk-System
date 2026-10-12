@@ -9,7 +9,7 @@ weights calibrated against expert judgement, and human approval built into a Lan
 multi-agent workflow.** Runs locally, open source, all sample data fictional.
 
 📄 **Working paper:** [Lean Agentic AI for Supplier Risk Management and Performance Evaluation](docs/paper/paper.pdf)
-(PDF, draft v0.6; LaTeX and Markdown sources in [docs/paper/](docs/paper/))
+(PDF, draft v0.7; LaTeX and Markdown sources in [docs/paper/](docs/paper/))
 
 ![Risk view of the fictional sample portfolio in the spreadsheet-style UI](docs/images/ui-risk-view.png)
 
@@ -100,9 +100,10 @@ approved weights are stored as a new version with the reviewer's name.
 
 "Agentic" here means **an orchestrated multi-agent workflow**: specialised agents with a single
 responsibility, a shared typed state, a supervisor that routes between them, a bounded feedback
-loop and a human-in-the-loop pause. **No large language model is called in the current
-implementation.** All agents, including the supervisor, are deterministic Python; this is a design
-choice, so that every number is reproducible and auditable.
+loop and a human-in-the-loop pause. All agents that produce numbers, including the supervisor, are
+deterministic Python, so that every score is reproducible and auditable. **A language model is used
+in one place only: the optional Supplier Review Agent**, which interprets results that are already
+final (see [Optional AI review](#optional-ai-review)). Without an API key it is simply unavailable.
 
 | Component | What it does | How | Status |
 |---|---|---|---|
@@ -115,7 +116,8 @@ choice, so that every number is reproducible and auditable.
 | Weight store, history, audit trail | Versioned weights, snapshots, append-only log | YAML / JSONL files | Implemented |
 | WGI political stability | Country indicator | From your own World Bank CSV download | Implemented; `--wgi-mock` uses **fictional** values |
 | Live provider APIs (WGI online, ESG platform, ERP, credit agency) | External data | Interfaces raise `NotImplementedError` | Placeholder |
-| LLM supervisor, LLM narrative explanations, document extraction | Explain results, extract indicators | — | Planned, not implemented |
+| Supplier Review Agent (optional) | Summary, drivers, risk vs. performance, action proposals, open questions for one supplier | **LLM** (Claude via the Anthropic SDK), structured output, validated against the input; on explicit request only | Implemented; **experimental**, tested with mocked responses |
+| LLM supervisor, document extraction | Route steps, extract indicators from documents | — | Planned, not implemented |
 
 ### Architecture
 
@@ -127,11 +129,13 @@ flowchart TD
     SUP -. optional .-> CA[Calibration Agent]
     SUP --> RA[Actions & Recommendations]
     SUP -. if flagged .-> HR[Human Review · interrupt]
+    SUP -. explicit request .-> AI[Supplier Review Agent · LLM, optional]
     DC --> SUP
     SC --> SUP
     CA -- new weights → re-score once --> SUP
     RA --> SUP
     HR -- decision --> SUP
+    AI -- text only, no numbers --> SUP
     SUP --> END([end])
     CA -. accepted .-> WS[(Versioned weight store)]
     HR -. approved .-> WS
@@ -178,7 +182,8 @@ streamlit run ui/app.py      # http://localhost:8501
 ```
 
 Tabs: **Portfolio** · **Dashboard** · **Actions** · **History** · **Scoring run** ·
-**Calibration** · **Review & approval**, with the risk / performance switch on top. The app only
+**Calibration** · **Review & approval** · **AI review (optional)**, with the risk / performance
+switch on top. The app only
 collects input and displays results; every number comes from the package. **Empty template CSV**
 in the sidebar is the starting point for your own data (semicolon-separated files are accepted).
 
@@ -193,6 +198,48 @@ print(result.overall_score, result.risk_class)          # 84.0 critical
 for action in result.recommendations:
     print(action.priority, action.action)
 ```
+
+## Optional AI review
+
+The **Supplier Review Agent** sends one supplier's structured results from both views to a language
+model and returns a management summary, the main drivers (with references to the input criteria),
+an explanation of where risk and performance differ, prioritised action proposals and open
+questions for missing data.
+
+| Deterministic evaluation | LLM interpretation |
+|---|---|
+| Ratings, weights, scores, classes, escalation rules, completeness, rule-based actions, calibration | Summary, drivers, view differences, action proposals, open questions |
+| Same input → same result | Wording can differ between calls |
+| Always runs | Only when you press **Generate AI Review** or use `--ai-review` |
+
+Safeguards:
+
+- **Explicit trigger and preview.** Nothing is sent until you press the button (or confirm in the
+  CLI). The exact JSON is shown beforehand. It contains criteria, ratings, weights, scores,
+  classes, fired rules, data completeness and rule-based actions. Supplier name, country, spend,
+  the raw indicator record and expert labels are not sent. Use synthetic or approved data only.
+- **Validated output.** The answer must match a schema with text fields only, so the model cannot
+  return scores or weights. Every referenced criterion must exist in the input, both views must be
+  compared, and missing data must produce open questions. Otherwise the answer is rejected. Scores
+  shown next to the review are copied from the deterministic results.
+- **No invented facts.** The prompt restricts the model to the payload and withholds the supplier's
+  name. Validation can check references, but not every sentence; read the review as a draft.
+- **Proposals, not decisions.** Suggested actions are marked as proposals for human review.
+- **Bounded cost and failure.** Timeout and retry limit are configurable. A result is kept per
+  exact input, so app reruns never call the provider again. Errors (no key, timeout, rate limit,
+  invalid answer) are shown as messages, and the deterministic workflow continues unchanged.
+
+Setup:
+
+```bash
+pip install -e ".[llm]"
+cp .env.example .env          # then set ANTHROPIC_API_KEY (and optionally model, timeout, retries)
+supplier-risk --data data/sample_suppliers.json --ai-review SUP-003     # shows the payload, asks before sending
+streamlit run ui/app.py                                                 # tab "AI review (optional)"
+```
+
+The AI review is **experimental**. It is tested with mocked model responses on synthetic suppliers;
+those tests check the plumbing and the validation, not the quality or correctness of the advice.
 
 ## How this compares to other approaches
 
@@ -222,6 +269,8 @@ procurement team owns. Factor model: [research/success-factors.md](research/succ
   APIs are not implemented; indicators come from files.
 - **Single-user prototype.** Review state lives in memory per session; there are no roles,
   authentication or multi-user workflows.
+- **AI review is not validated.** Its usefulness for procurement decisions has not been evaluated;
+  it sends data to an external provider when you trigger it, and its text can contain errors.
 
 ## About the author
 

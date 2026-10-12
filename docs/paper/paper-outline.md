@@ -11,9 +11,9 @@ series), whose formal conventions are reused:
 - **Section order.** Limitations, then Future work, then Conclusion.
 
 Status: outline with bullet points. Sources: `research/` files, linked per section.
-**Draft text:** all sections 1–12 are drafted in [paper.md](paper.md) (working draft v0.6).
+**Draft text:** all sections 1–12 are drafted in [paper.md](paper.md) (working draft v0.7).
 
-### Remaining gaps (draft v0.6)
+### Remaining gaps (draft v0.7)
 
 - **[TBD-RESULT] Section 7:**
   - optional label-vs-score scatter
@@ -22,16 +22,21 @@ Status: outline with bullet points. Sources: `research/` files, linked per secti
 - Section 7.7: the level-offset, high-residual, knock-out-candidate and minimum-weight
   diagnostics are implemented and evaluated on E4 (E4b). Turning them into proposals is future
   work.
-- **Evidence status (v0.6):** the benchmark is the author's qualitative assessment; E1–E5 use
-  synthetic labels only; no language model is used in the demonstrator. These statements must
-  stay in abstract, Sections 1, 4, 6, 7 and 10 of both `paper.md` and `paper.tex`.
+- **Evidence status (v0.7):** the benchmark is the author's qualitative assessment; E1–E5 use
+  synthetic labels only; scoring, calibration, recommendations and routing use no language
+  model. The one LLM component, the optional Supplier Review Agent (Section 6.9), is explicitly
+  triggered, changes no number, and is experimental and unevaluated (mocked tests only; real API
+  smoke test not run). These statements must stay in abstract, Sections 1, 4, 6, 7 and 10 of
+  both `paper.md` and `paper.tex`.
+- **Calibration default:** the bundled risk template proposes accepted weights for approval
+  (`auto_apply: false`); the performance template still auto-applies (Sections 5.3, 9.1).
 - **Figure 3 (workflow):** rendered as a static TikZ figure in the typeset version (`paper.tex`,
   Figure 2 there); `paper.md` keeps the Mermaid version.
 - **Section 9, Table 9:** provider and data vintage are recorded per indicator; the source data
   itself is not versioned.
 - **References:** verify wording against full texts (read at abstract level).
 - **Typesetting:** done. `paper.tex` is a condensed version of `paper.md` in the two-column
-  template of the companion paper, built to `paper.pdf` (18 pages). The appendix table is generated
+  template of the companion paper, built to `paper.pdf` (19 pages). The appendix table is generated
   by `scripts/generate_spider.py`. Keep both files in step when the content changes.
 
 ---
@@ -179,7 +184,8 @@ with Open Agentic Workflows"*
 ## 6 Architecture of the demonstrator
 
 - **6.1 Workflow graph.**
-  - Supervisor with Data Collection, Scoring, Calibration, Recommendation and Human Review
+  - Supervisor with Data Collection, Scoring, Calibration, Recommendation and Human Review,
+    plus the optional AI review node (Section 6.9)
   - bounded feedback loops
   - **Figure 3:** graph (→ `docs/architecture.md`)
 - **6.2 Scoring model.**
@@ -204,6 +210,9 @@ with Open Agentic Workflows"*
   interface (political stability from WGI, tabular exports, API placeholders); timestamped
   snapshots; spreadsheet surface.
 - **6.8 Engineering quality.** Tests, CI, determinism, allow-listed checkpoint types.
+- **6.9 Supplier Review Agent.** Optional, explicitly triggered LLM node that interprets one
+  supplier's final results in both views; structured text output, post-validation, no numeric
+  fields; two-column table "deterministic evaluation vs. LLM-supported interpretation".
 
 ## 7 Demonstration on synthetic data
 
@@ -249,13 +258,16 @@ with Open Agentic Workflows"*
 - The demonstrator is not production-hardened: no roles or permissions, in-memory checkpoints, no
   external feeds.
 - The factor model is a working hypothesis.
+- The Supplier Review Agent is experimental and unevaluated; it sends data to an external
+  provider when triggered; validation checks references, not every sentence.
 
 ## 11 Future work
 
 - Field pilot with real expert labels (one or two material groups).
 - Cross-validated calibration; ordinal labels.
 - Independent multi-rater benchmark.
-- External signal agent (open data) and LLM explanation agent.
+- External signal agent (open data); practitioner evaluation of the Supplier Review Agent;
+  document extraction and an LLM-based supervisor remain planned.
 - Persistent checkpointer and role model.
 - Predictive validation against observed disruptions.
 
