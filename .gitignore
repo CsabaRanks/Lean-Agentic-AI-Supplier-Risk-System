@@ -11,7 +11,8 @@
 ~$*
 private/
 
-# OS / editor artefacts
+# OS / editor / local tool artefacts
+.claude/
 *:Zone.Identifier
 .DS_Store
 Thumbs.db
@@ -35,7 +36,8 @@ dist/
 .env.*
 !.env.example
 
-# Outputs (history may contain real supplier data)
+# Outputs (history and calibrated weights may contain real supplier data)
 data/history/
+data/weights/*/
 output/
 *.log

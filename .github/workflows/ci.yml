@@ -4,13 +4,19 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -22,10 +28,16 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - name: Install
-        run: pip install -e ".[dev,ui]"
+        # research extra (matplotlib) so the figure-generation test runs instead of being skipped
+        run: pip install -e ".[dev,ui,research]"
       - name: Lint
         run: ruff check src tests examples scripts ui
       - name: Test
         env:
           LANGGRAPH_STRICT_MSGPACK: "true"
         run: pytest -q
+      - name: CLI smoke test
+        run: |
+          supplier-risk --data data/sample_suppliers.json
+          supplier-risk --data data/sample_suppliers.json --view performance
+          supplier-risk --data data/calibration_portfolio.json --calibrate
