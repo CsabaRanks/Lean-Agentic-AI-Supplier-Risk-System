@@ -25,6 +25,10 @@ dependencies = [
     "scipy>=1.11",
 ]
 
+[project.urls]
+Repository = "https://github.com/CsabaRanks/lean-agentic-supplier-risk"
+Paper = "https://github.com/CsabaRanks/lean-agentic-supplier-risk/blob/main/docs/paper/paper.pdf"
+
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.5"]
 research = ["matplotlib>=3.8"]  # regenerate docs/images/spider-diagram.png

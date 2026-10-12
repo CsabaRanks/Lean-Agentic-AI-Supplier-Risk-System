@@ -14,7 +14,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 
 | Approach | What exactly is rated | Evidence base |
 |---|---|---|
-| **Excel / manual process** | A typical spreadsheet scorecard maintained by procurement (criteria sheet, weights, annual update). | The author's practitioner experience; assumption-based. |
+| **Simple Excel scorecard (manual)** | A simple, manually maintained spreadsheet scorecard (criteria sheet, weights, annual update). Elaborate spreadsheet solutions (macros, Power Query, shared data models) can do more and are not rated here. | The author's practitioner experience; assumption-based. |
 | **Proprietary SaaS (Prewave, Sphera)** | Prewave and Sphera Supply Chain Risk Management as examples of commercial SCRM platforms. | Public information only (vendor websites, help centre, press releases, vendor-commissioned studies), see research/saas-references.md. No hands-on test. |
 | **Open-source GitHub repos** | The five reviewed open-source blueprints. | Source code review, see research/github-references.md and research/comparison.md. |
 | **Lean Agentic (this repo)** | This repository as implemented (v0.1.0, October 2026), not the roadmap. | Code, tests and documentation in this repository. |
@@ -45,7 +45,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 
 ## Reading the profiles (without aggregation)
 
-- **Excel:** no licence, transparent and quick to start for a simple sheet; recurring manual effort, weak audit trail, no learning, no external signals, no extensibility. Risk and performance usually live in separate files.
+- **Simple Excel scorecard:** no licence, transparent and quick to start; recurring manual effort, weak audit trail, no learning, no external signals, no extensibility. Risk and performance usually live in separate files.
 - **Proprietary SaaS:** strongest on data coverage, scale, workflows, regulatory evidence and operational maturity; weaker on cost, self-determined customisation, recomputability by the user and, depending on the vendor, methodological transparency (Prewave publishes its score composition, Sphera does not). Both are risk platforms: supplier performance evaluation typically stays outside, often in Excel.
 - **Open repos:** strong architecture ideas and free, but demonstrators: scoring often absent, hard-coded or LLM-judged; unclear or copyleft licences; no tests.
 - **Lean Agentic:** strongest where the method itself matters (transparency, reproducibility, calibration, customisability including material-group weights), on agentic orchestration and on integrating risk management with performance evaluation; close to the platforms on actions and human review; partial on external signals (provider interface for open data and exports, live APIs still placeholders); weak today on regulatory evidence and operational maturity.
@@ -162,7 +162,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 
 ### 12. Scalability: Excel 2 · SaaS 5 · Open repos 2 · Lean Agentic 3
 
-- **Excel** *(M)*: Degrades beyond a few hundred suppliers.
+- **Excel** *(M)*: A simple manual scorecard becomes hard to maintain beyond a few hundred suppliers.
 - **SaaS** *(M)*: Large enterprise deployments; vendor claims of more than a million suppliers assessed (Prewave).
 - **Open repos** *(H)*: Demonstrators.
 - **Lean Agentic** *(L)*: Deterministic batch scoring is cheap, but untested at scale; in-memory checkpoints; no automated feeds.
@@ -171,7 +171,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 
 *Scope:* Architecture: specialised agents over a shared, inspectable state, bounded loops, a review pause as a workflow element, extension points. What a person can do in that pause is factor 6; the explanation of results, including an LLM explanation, is factor 2.
 
-- **Excel** *(H)*: None beyond macros.
+- **Excel** *(H)*: None in a simple scorecard; macros or scripts would be custom development.
 - **SaaS** *(M)*: Prewave: REST APIs, ERP write-back and connectors for external AI agents; Sphera: "agentic AI" capabilities marketed, workflow embedding stated, public API documentation not found. Neither documents a customer-inspectable multi-agent workflow (specialised agents over a shared state, calibration agent, graph-based review pause). Both closed.
 - **Open repos** *(H)*: Agent architectures are their main asset: specialised agents over a typed shared state, graph or supervisor orchestration; review pauses rare, no calibration agent.
 - **Lean Agentic** *(H)*: LangGraph supervisor over a typed shared state with specialised agents (data collection, scoring, calibration, recommendation, human review as graph interrupt); documented extension points (data sources, data providers, rating sources, views, agents). Scoring, calibration, recommendation and routing are deterministic Python nodes; one optional node calls a language model to explain results (counted under factor 2, not here). Not 5: rule-based supervisor, no LLM-driven planning or tool use.
@@ -185,7 +185,7 @@ Rates four approaches to supplier risk evaluation against the **15 success facto
 
 ### 15. Integration of risk management and performance evaluation: Excel 2 · SaaS 2 · Open repos 2 · Lean Agentic 4
 
-- **Excel** *(M)*: Both are often kept in spreadsheets, but as separate files with their own criteria, scales and update cycles; no shared criteria or data base. Common practice: risk on a platform, evaluation in Excel.
+- **Excel** *(M)*: Both are often kept in spreadsheets, but as separate files with their own criteria, scales and update cycles; no shared criteria or data base. A common pattern in the author's experience: risk on a platform, evaluation in Excel.
 - **SaaS** *(L)*: Risk platforms; supplier performance evaluation (delivery, quality, price, responsiveness with its own grades) is not documented as part of the platform in public sources. Performance data can enter as input.
 - **Open repos** *(H)*: Single repos cover either risk assessment or vendor / bid evaluation; none combines both.
 - **Lean Agentic** *(H)*: Two views on one shared criteria catalogue and one data sheet: performance (A/B/C) and risk (low-critical), each with its own weights, classes, actions, labels and review. Not 5: no joint portfolio reading (performance x risk) yet; performance view not calibrated in the template.

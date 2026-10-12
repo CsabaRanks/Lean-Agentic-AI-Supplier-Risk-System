@@ -8,7 +8,7 @@
 weights calibrated against expert judgement, and human approval built into a LangGraph
 multi-agent workflow.** Runs locally, open source, all sample data fictional.
 
-📄 **Working paper:** [Lean Agentic AI for Supplier Risk Management and Performance Evaluation](docs/paper/paper.pdf)
+📄 **Working paper:** [Lean Agentic AI for Supplier Risk Management and Performance Evaluation](https://github.com/CsabaRanks/lean-agentic-supplier-risk/blob/main/docs/paper/paper.pdf)
 (PDF, draft v0.8; LaTeX and Markdown sources in [docs/paper/](docs/paper/))
 
 ![Risk view of the fictional sample portfolio in the spreadsheet-style UI](docs/images/ui-risk-view.png)
@@ -312,7 +312,7 @@ actions), which led to stating the limits explicitly in the prompt.
 
 ## How this compares to other approaches
 
-![Radar chart: spreadsheets, risk platforms, open-source repos and this approach on 15 success factors](docs/images/spider-diagram.png)
+![Radar chart: simple spreadsheet scorecards, risk platforms, open-source repos and this approach on 15 success factors](docs/images/spider-diagram.png)
 
 The chart profiles four approaches on 15 success factors (model v0.5). **It is a qualitative
 assessment by the author, not a measurement**: based on public information and code review (October

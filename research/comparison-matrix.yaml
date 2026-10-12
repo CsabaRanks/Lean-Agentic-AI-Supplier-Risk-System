@@ -37,9 +37,11 @@ meta:
 
 approaches:
   - key: xls
-    label: Excel / manual process
+    label: Simple Excel scorecard (manual)
     short: Excel
-    rated: A typical spreadsheet scorecard maintained by procurement (criteria sheet, weights, annual update).
+    rated: >-
+      A simple, manually maintained spreadsheet scorecard (criteria sheet, weights, annual update). Elaborate
+      spreadsheet solutions (macros, Power Query, shared data models) can do more and are not rated here.
     evidence: The author's practitioner experience; assumption-based.
   - key: saas
     label: Proprietary SaaS (Prewave, Sphera)
@@ -486,7 +488,7 @@ factors:
       xls:
         value: 2
         confidence: M
-        rationale: Degrades beyond a few hundred suppliers.
+        rationale: A simple manual scorecard becomes hard to maintain beyond a few hundred suppliers.
       saas:
         value: 5
         by_example: {Prewave: 5, Sphera: 5}
@@ -514,7 +516,7 @@ factors:
       xls:
         value: 1
         confidence: H
-        rationale: None beyond macros.
+        rationale: None in a simple scorecard; macros or scripts would be custom development.
       saas:
         value: 2.5
         by_example: {Prewave: 3, Sphera: 2}
@@ -575,7 +577,8 @@ factors:
         confidence: M
         rationale: >-
           Both are often kept in spreadsheets, but as separate files with their own criteria, scales and update
-          cycles; no shared criteria or data base. Common practice: risk on a platform, evaluation in Excel.
+          cycles; no shared criteria or data base. A common pattern in the author's experience: risk on a platform,
+          evaluation in Excel.
       saas:
         value: 2
         by_example: {Prewave: 2, Sphera: 2}
@@ -598,7 +601,7 @@ factors:
 narrative:
   reading_profiles:
     - >-
-      **Excel:** no licence, transparent and quick to start for a simple sheet; recurring manual effort, weak
+      **Simple Excel scorecard:** no licence, transparent and quick to start; recurring manual effort, weak
       audit trail, no learning, no external signals, no extensibility. Risk and performance usually live in
       separate files.
     - >-

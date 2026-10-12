@@ -63,9 +63,10 @@ a benchmark of four approaches and an open-source demonstrator*
 Alternative: *"Owning the Method: Expert-Calibrated, Deterministic Supplier Risk Scoring
 with Open Agentic Workflows"*
 
-## Abstract (~250 words, write last)
+## Abstract (~250–300 words; draft v0.8 has about 300)
 
-- **Problem.** Supplier risk evaluation sits between error-prone spreadsheets and costly,
+- **Problem.** Supplier risk evaluation sits between simple, manually maintained spreadsheet
+  scorecards (error-prone as typically run) and costly,
   partly opaque platforms. Open-source agent projects show architectures, not methods.
 - **Contribution 1.** A set of 15 success factors (model v0.5) and a profile comparison of four
   approaches: spreadsheet practice; proprietary SCRM platforms, with Prewave and Sphera as named

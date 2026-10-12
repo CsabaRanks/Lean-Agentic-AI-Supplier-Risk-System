@@ -24,6 +24,7 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,calc}
 \usepackage[hidelinks]{hyperref}
+\usepackage{xurl}
 
 \definecolor{ink}{HTML}{14181B}
 \definecolor{ink2}{HTML}{3D474D}
@@ -49,6 +50,8 @@
 \renewcommand{\dbltopfraction}{0.92}
 \renewcommand{\dblfloatpagefraction}{0.70}
 \setcounter{topnumber}{3}
+% full-width float pages (e.g.\ the appendix matrix) start at the top, not centred
+\makeatletter\setlength{\@dblfptop}{0pt}\makeatother
 \setcounter{totalnumber}{5}
 \raggedbottom
 
@@ -70,62 +73,30 @@ multi-agent systems: a benchmark of four approaches and an open-source demonstra
 
 \begin{abstract}
 \noindent
-Procurement organisations evaluate their suppliers twice: \emph{supplier risk
-management} asks how exposed the company is if a supplier fails, \emph{supplier
-performance evaluation} how well the supplier delivers. In practice the two are often
-split: a commercial risk platform is licensed for risk, while performance evaluation stays
-in spreadsheets, so that one supplier is judged on two inconsistent bases. Spreadsheet
-scorecards are transparent but cannot learn, scale or keep an audit trail; risk platforms
-bring data coverage and workflows at a cost, with limited control over how scores are
-formed, and, according to their public documentation, do not cover performance
-evaluation. Open-source agent projects show how such systems could be built, but their
-focus is the agent architecture rather than the scoring method. Across all
-of them, the weights that turn criteria into a score are set once and never checked
-against the judgement of the people who know the suppliers.
-This paper makes three contributions. It proposes fifteen success factors, including
-the integration of risk management and performance evaluation, corrected in documented
-reviews. It profiles four approaches on them without aggregating them: spreadsheet
-practice, two commercial platforms, five open-source repositories and the approach
-proposed here; the profiles are the author's qualitative expert assessment from public
-information and code review (October 2026), not a measurement. And it presents
-\emph{Lean Agentic AI} with an open-source demonstrator whose main difference from pure
-risk platforms, as far as their public documentation shows, is the integration of both
-views: risk management and performance evaluation on one criteria catalogue, each with its
-own weights, classes and actions. The demonstrator is an agentic workflow in a narrow
-sense --- deterministic, specialised agents over a shared state in a LangGraph graph,
-including a calibration agent, routed by a rule-based supervisor and paused for human
-review; scoring, calibration, recommendations and routing use no language model, and one
-optional, explicitly triggered and so far unevaluated component uses one only to interpret
-final results, without changing scores, classes or weights --- with deterministic, material-group-specific scoring, weights calibrated
-against category managers' expert labels by constrained least squares, versioned
-weights, and concrete actions per factor.
-A central part of the demonstrator is an \emph{Explain \& correct} workflow: a
-deterministic scoring trace per supplier and view shows inputs with their source, rating
-rules, effective weights and criterion contributions that add up exactly to the score, with
-escalation rules explained separately; an optional language-model explanation must cite trace
-entries or is rejected; a wrong input or rating can be corrected with a mandatory reason, is
-re-scored deterministically in both views, shown before and after, applied only after human
-confirmation and recorded in a history. This workflow is verified technically (tests, exact
-additivity, schema validation, one real end-to-end run on a synthetic supplier) but not
-validated in the domain: no practitioners, no real supplier data, and no measurement of
-explanation quality, correction accuracy or false alarms.
-All experiments use synthetic data only, with labels from a hidden weighting plus noise
-or from constructed expert policies; no real expert labels were used and no field
-validation was performed. On these synthetic portfolios, calibration reduced the cross-validated error between score and label from 37.8 to
-20.6~\ptsq{}, close to the irreducible label noise of 18.1, and moved the weights about
-half-way towards the hidden weighting. Regularisation was essential with few labels.
-When the simulated experts judge non-additively, apply knock-outs, are uniformly
-stricter or disagree, calibration degrades in characteristic ways, each pointing to a
-design response other than calibration. The validation also exposed an acceptance rule
-that let harmful calibrations through; its replacement, a cross-validated rule that
-requires the improvement to exceed its own uncertainty, cut harmful acceptances from up
-to 50\,\% of runs to at most 4\,\%.
-The paper states what this does not establish: the labels are synthetic, the benchmark
-ratings are the author's own judgement (including of the author's own demonstrator),
-predictive validity against real disruptions is untested, Explain \& correct has not been
-validated with practitioners, and the demonstrator provides only
-partial external signal coverage, without live monitoring. No ranking of approaches is
-derived at any point.
+Procurement organisations evaluate suppliers twice: \emph{supplier risk management} asks
+how exposed the company is if a supplier fails, \emph{supplier performance evaluation} how
+well it delivers. The two are often split between a licensed risk platform and simple,
+manually maintained spreadsheet scorecards, so one supplier is judged on two inconsistent
+bases; the weights behind either score are rarely checked against the judgement of the
+category managers who know the suppliers. This paper proposes fifteen success factors and
+profiles four approaches without ranking: such spreadsheet scorecards, two commercial
+platforms, five open-source repositories and the approach proposed here. The profiles are
+the author's qualitative assessment from public information and code review (October
+2026), not a measurement. The paper then presents \emph{Lean Agentic AI} and an
+open-source demonstrator that scores risk and performance deterministically as two views
+on one criteria catalogue, with deterministic agents in a LangGraph workflow, a rule-based
+supervisor and a human review pause. Weights are calibrated against expert labels by
+constrained least squares, safeguarded by shrinkage towards prior weights, a
+cross-validated acceptance test and human approval. An \emph{Explain \& correct} workflow
+shows a deterministic scoring trace whose criterion contributions add up exactly to the
+score; an optional language-model explanation must cite trace entries; a correction
+requires a reason, is re-scored in both views, shown before and after, applied only after
+human confirmation and recorded in a history. All experiments use synthetic data.
+Calibration reduced the cross-validated error from 37.8 to 20.6~\ptsq{}, close to the
+label-noise floor of 18.1, and the acceptance test cut harmful acceptances from up to
+50\,\% of runs to at most 4\,\%. Explain \& correct is verified technically, not validated
+with practitioners. There is no field validation and no test of predictive validity;
+neither fewer false alarms nor superiority over the commercial platforms is claimed.
 \end{abstract}
 
 {\small\tableofcontents}
@@ -147,9 +118,10 @@ and procurement teams are asked to show not only \emph{which} suppliers are risk
 A common response is to extend the supplier scorecard: the criteria sheet gains columns
 for financial stability, supply-chain exposure and ESG, and a weighted average turns
 them into a score and a traffic light. Where budgets allow, a commercial platform
-supplies alerts and external data. Both responses leave a gap. The spreadsheet keeps the
-method in the procurement team's hands but does not keep a record: weights drift
-between versions, and no one can say afterwards why a supplier was rated as it was. The
+supplies alerts and external data. Both responses leave a gap. A simple, manually
+maintained spreadsheet scorecard keeps the method in the procurement team's hands but
+typically keeps no record: weights drift between versions, and afterwards it is often
+impossible to say why a supplier was rated as it was. The
 platform brings data coverage and workflows, but the method by which its score is formed
 is, depending on the vendor, partly or largely outside the customer's view. Open-source
 agent projects offer modern architecture but rarely a scoring method that would stand
@@ -476,7 +448,8 @@ profile is the mean of the known Prewave and Sphera values. All ratings live in 
 Figure~\ref{fig:profile} and Table~\ref{tab:matrix} are generated; a consistency check
 fails if the published table no longer matches the source. The evidence differs by
 approach, and this is disclosed (Table~\ref{tab:condensed}): spreadsheet practice is a
-stereotype based on the author's practitioner experience; Prewave and Sphera are rated separately on
+stereotype of a simple, manually maintained scorecard, based on the author's practitioner
+experience; Prewave and Sphera are rated separately on
 public information; the five repositories by source-code review; and the demonstrator
 \emph{as implemented}, not its roadmap.
 
@@ -499,12 +472,13 @@ public information; the five repositories by source-code review; and the demonst
 \end{table}
 
 \subsection{Reading the profiles}
-\textbf{Spreadsheet practice is strong where simplicity helps}: it keeps formulas
-visible and can be changed by the team itself. It costs no licence but a great deal of
-recurring manual work, and a governed scorecard takes weeks to build. It is weak wherever
-a system property is needed --- an audit trail, learning, external data, orchestration ---
-and risk and performance usually live in separate files. Real practices vary widely, and
-a well-governed workbook can do better than the stereotype.
+\textbf{The simple spreadsheet scorecard is strong where simplicity helps}: it keeps
+formulas visible and can be changed by the team itself. It costs no licence but a great
+deal of recurring manual work, and a governed scorecard takes weeks to build. As rated, it
+typically lacks the system properties --- an audit trail, learning, external data,
+orchestration --- and risk and performance usually live in separate files. This is a
+statement about the rated profile, not about spreadsheets in general: real practices vary
+widely, and a well-governed workbook can do better than the stereotype.
 \textbf{The commercial platforms are strongest on data, scale and operations}: external
 signals, regulatory evidence, scalability and operational maturity, with well-developed
 workflows. They are weaker on cost, self-determined customisation, recomputability by the
@@ -527,7 +501,7 @@ the integration of risk management and performance evaluation and agentic orches
 4, the same as the platforms (Prewave a documented minimum, Sphera uncertain): reasoned
 corrections, a before/after preview and a history exist, but roles and verified identities do
 not, where the platforms describe ownership and approval workflows. On
-actions it is close to the platforms (3.5 against 4); tracking to closure is missing. It is better than spreadsheets on cost of
+actions it is close to the platforms (3.5 against 4); tracking to closure is missing. It is better than the rated spreadsheet scorecard on cost of
 ownership and time-to-value, because scoring, actions and reports run automatically from
 a template. On external signals it reaches about half of the strongest platform (2.5
 against 5): the provider interface reads open data and system exports and records their
@@ -550,8 +524,8 @@ also built one of the rated approaches and thus rates their own work. The v0.2 c
 and confidence mark for every value reduce the bias but do not remove it. The v0.3
 review works in the other direction: it added a factor on which the proposed approach is
 strong and re-rated five factors after practitioner feedback, all of them in its favour
-(action framework, human-in-the-loop, time-to-value and external signals upwards; cost of
-spreadsheets and repositories downwards). The re-ratings are documented with their
+(action framework, human-in-the-loop, time-to-value and external signals upwards; cost of the
+spreadsheet scorecard and the repositories downwards). The re-ratings are documented with their
 rationale and rate the implementation, not the roadmap; expected upside, for example in
 signal processing, is named but not rated. The v0.5 review also favours the proposed
 approach: it sharpened factors 2 and 6 and added rating anchors after the author had built the
@@ -660,7 +634,8 @@ no real external data), not a regulatory compliance product, not production-hard
 roles, no central run store), and not empirically validated (calibration has been shown
 on synthetic labels only). The claim is narrower: the \emph{method layer} of supplier
 risk evaluation can be made transparent, reproducible, governed and able to learn at low
-cost --- a layer that platforms leave partly opaque and spreadsheets leave ungoverned.
+cost --- a layer that platforms leave partly opaque and that simple, manually maintained
+spreadsheet scorecards typically leave ungoverned.
 
 % ═══════════════════════════════════════════════════════════════════════
 \section{Architecture of the demonstrator}
@@ -1381,8 +1356,9 @@ about \textbf{predictive validity}.
 \label{sec:discussion}
 
 \subsection{What the benchmark and the demonstrator show together}
-The benchmark locates a gap rather than a winner. Spreadsheets keep the method in the
-procurement team's hands but cannot hold it to account; platforms bring data, scale and
+The benchmark locates a gap rather than a winner. Simple, manually maintained spreadsheet
+scorecards keep the method in the procurement team's hands but typically do not hold it to
+account; platforms bring data, scale and
 operational maturity but keep the method partly or largely outside the customer's view;
 open-source agent projects offer architecture, with little emphasis on a scoring method.
 In the author's qualitative assessment, no approach is strong both on \emph{data coverage}
@@ -1440,7 +1416,7 @@ review date --- is adequate for a small portfolio with stable risk drivers and n
 documentation duty. A \emph{commercial platform} is hard to replace where tier-N exposure,
 real-time monitoring or regulatory evidence dominate; building that coverage in-house is
 neither lean nor realistic. A \emph{Lean Agentic method layer} fits organisations that
-have outgrown the spreadsheet, want to own and justify their method, need material-group
+have outgrown a simple spreadsheet scorecard, want to own and justify their method, need material-group
 weighting and want their category managers' judgement to shape the model --- also
 alongside a platform. For a mid-sized procurement organisation, the most likely
 configuration is the combination.
@@ -1551,7 +1527,9 @@ re-rating. Where public documentation is silent, values are marked unknown or as
 minimums; the SaaS profile then averages only known values, and vendors may offer more. The
 platforms were rated on public information as of October 2026 --- whether they offer
 performance evaluation or agentic workflows beyond their public documentation is not
-known --- and the spreadsheet profile is a stereotype, not a survey.
+known --- and the spreadsheet profile is a stereotype of a simple, manually maintained
+scorecard, not a survey; its ratings describe that profile, not what spreadsheets can do in
+general.
 
 \paragraph{Method.} The default acceptance rule ($z\geq2$) is conservative --- it
 withholds half or more of all calibrations with 16 or fewer labels --- and its threshold
@@ -1648,8 +1626,9 @@ documented.
 \section{Conclusion}
 \label{sec:conclusion}
 
-Supplier risk evaluation in mid-sized organisations sits between a spreadsheet the team
-owns but cannot hold to account and a platform that brings data and scale but whose method
+Supplier risk evaluation in mid-sized organisations often sits between a simple, manually
+maintained spreadsheet scorecard that the team owns but that typically does not hold the
+method to account, and a platform that brings data and scale but whose method
 the team does not fully own; open-source agent projects offer architecture but rarely a
 method. Across all three, the weights that turn criteria into a score are usually set
 once and never tested against the judgement of the people who know the suppliers.
@@ -1792,36 +1771,74 @@ doi:10.1108/09600030410545445
 \end{thebibliography}
 
 \noindent{\small\textbf{Software, vendor and web sources.} \ev{[code]} source code
-reviewed; \ev{[doc]} documentation read; \ev{[web]} web page read. Open-source
-repositories: aniket-work, \emph{supply-chain-risk-intelligence} \ev{[code]};
-Bhardwaj-Saurabh, \emph{OmniSupply-AI} \ev{[code]}; chinmaynadgir,
-\emph{supplychain-ai-agent} \ev{[code]}; poshalanavateja, \emph{Vendor-Bid-Evaluation-Ai}
-\ev{[code]}; mergisi, \emph{awesome-openclaw-agents}, agent \code{vendor-evaluator}
-\ev{[code]} (all GitHub). Prewave, ``How is the Prewave Score generated?'',
-help.prewave.com \ev{[doc]}, and prewave.com \ev{[web]}. Sphera, \emph{Supply Chain Risk
-Management}, sphera.com \ev{[web]}, and white paper on the German supply-chain
-due-diligence act, 2023 \ev{[web]}. LangGraph documentation: state graphs, interrupts,
-checkpointers \ev{[doc]}. Academic sources were checked against Crossref or OpenAlex
-metadata and read at abstract level unless noted.}
+reviewed; \ev{[doc]} documentation read; \ev{[web]} web page read.
+\emph{Open-source repositories} (GitHub). The stated commits are the default-branch heads as
+cloned and re-checked on 12 October 2026; the earlier v0.2 code review (11 October 2026) was
+not pinned to a commit.
+aniket-work, \emph{supply-chain-risk-intelligence},
+\url{https://github.com/aniket-work/supply-chain-risk-intelligence}, commit 6f7de32
+(2025-12-30) \ev{[code]}.
+Bhardwaj-Saurabh, \emph{OmniSupply-AI Multi-Agent Supply Chain Intelligence Platform},
+GPL-3.0,
+\url{https://github.com/Bhardwaj-Saurabh/OmniSupply-AI-Multi-Agent-Supply-Chain-Intelligence-Platform},
+commit 0b486e3 (2025-12-06) \ev{[code]}.
+chinmaynadgir, \emph{supplychain-ai-agent},
+\url{https://github.com/chinmaynadgir/supplychain-ai-agent}, commit 0d91a53 (2025-10-11)
+\ev{[code]}.
+poshalanavateja, \emph{Vendor-Bid-Evaluation-Ai},
+\url{https://github.com/poshalanavateja/Vendor-Bid-Evaluation-Ai}, commit ff684f6
+(2026-03-08) \ev{[code]}.
+mergisi, \emph{awesome-openclaw-agents}, agent \code{vendor-evaluator}, MIT,
+\url{https://github.com/mergisi/awesome-openclaw-agents/tree/main/agents/supply-chain/vendor-evaluator},
+commit 05820c5 (2026-05-25) \ev{[code]}.
+\emph{Vendor pages}, accessed 12 October 2026. Prewave help centre:
+``Target profile overview'',
+\url{https://help.prewave.com/en/articles/246667-target-profile-overview};
+``How is the Prewave Score generated?'',
+\url{https://help.prewave.com/en/articles/237277-how-is-the-prewave-score-generated};
+``Alert reporting'', \url{https://help.prewave.com/en/articles/423361-alert-reporting};
+``Register with Prewave'' (supplier portal),
+\url{https://supplier.prewave.com/en/articles/589775-register-with-prewave} \ev{[doc]}.
+Sphera: ``Sphera launches Supplier 360 Intelligence'',
+\url{https://sphera.com/company/news/sphera-launches-supplier-360-intelligence};
+\emph{Supply Chain Risk Management},
+\url{https://sphera.com/solutions/supply-chain-risk-management/}; \emph{Risk assessment},
+\url{https://sphera.com/risk-assessment} \ev{[web]}.
+Further vendor sources, accessed October 2026: Prewave product website,
+\url{https://www.prewave.com/} \ev{[web]}; Sphera, white paper on the German supply-chain
+due-diligence act, 2023 \ev{[web]} (no stable URL was recorded).
+\emph{Software documentation}: LangGraph, \url{https://github.com/langchain-ai/langgraph},
+documentation on state graphs, interrupts and checkpointers \ev{[doc]}.
+Academic sources were checked against Crossref or OpenAlex metadata and read at abstract
+level unless noted.}
 
 % ═══════════════════════════════════════════════════════════════════════
 \appendix
 \section*{Appendix A: Full comparison matrix}
 \addcontentsline{toc}{section}{Appendix A: Full comparison matrix}
 
-\noindent\begin{minipage}{\columnwidth}
-  \captionof{table}{Ratings per success factor and approach on the scale 1--5, with confidence
-  (\textsc{h}, \textsc{m}, \textsc{l}); factor model v0.5. For SaaS, the mean of the known
-  Prewave and Sphera values, with both values in brackets where they differ; ``?'' = unknown
-  (no public evidence, not rated low). Documented minimums ($\geq$) and uncertain values (*) are marked
-  in \code{research/comparison-matrix.md}. Generated from
+\noindent Table~\ref{tab:matrix} lists every rating with its confidence and marks; the
+rationale and evidence for each cell are in \code{research/comparison-matrix.md}.
+
+\begin{table*}[!t]
+  \caption{Full comparison matrix (author's qualitative assessment, not a measurement):
+  ratings per success factor and approach on the scale 1--5, factor model v0.5. ``Excel''
+  denotes a simple, manually maintained spreadsheet scorecard. Superscripts give the
+  confidence: \textsuperscript{H} verified from code or primary documentation,
+  \textsuperscript{M} plausible and partly documented, \textsuperscript{L} assumption. For
+  SaaS, the value is the mean of the known Prewave (P) and Sphera (S) values; the per-vendor
+  values are shown in brackets where they differ or carry a mark. Marks: ``?'' unknown (no
+  public evidence; not rated low and left out of the mean); ``$\geq$'' documented minimum
+  (only the publicly documented part is rated); ``*'' uncertain (kept at the earlier level
+  because the evidence neither confirms nor contradicts the anchor). Example: 4 (P\,$\geq$4/S\,4*)
+  reads ``Prewave at least 4 on documented evidence, Sphera 4 but uncertain''. Generated from
   \code{research/comparison-matrix.yaml}; the rationale for every cell is in
   \code{research/comparison-matrix.md}.}
   \label{tab:matrix}
   \footnotesize
   \setlength{\tabcolsep}{3pt}
   \input{generated/comparison_matrix.tex}
-\end{minipage}
+\end{table*}
 
 \vspace{0.4em}
 \noindent{\footnotesize\textcolor{ink3}{\textbf{Data and reproducibility.} All data is
