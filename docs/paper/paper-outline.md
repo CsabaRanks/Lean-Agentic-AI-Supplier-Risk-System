@@ -11,9 +11,9 @@ series), whose formal conventions are reused:
 - **Section order.** Limitations, then Future work, then Conclusion.
 
 Status: outline with bullet points. Sources: `research/` files, linked per section.
-**Draft text:** all sections 1–12 are drafted in [paper.md](paper.md) (working draft v0.7).
+**Draft text:** all sections 1–12 are drafted in [paper.md](paper.md) (working draft v0.8).
 
-### Remaining gaps (draft v0.7)
+### Remaining gaps (draft v0.8)
 
 - **[TBD-RESULT] Section 7:**
   - optional label-vs-score scatter
@@ -22,21 +22,34 @@ Status: outline with bullet points. Sources: `research/` files, linked per secti
 - Section 7.7: the level-offset, high-residual, knock-out-candidate and minimum-weight
   diagnostics are implemented and evaluated on E4 (E4b). Turning them into proposals is future
   work.
-- **Evidence status (v0.7):** the benchmark is the author's qualitative assessment; E1–E5 use
+- **Evidence status (v0.8):** the benchmark is the author's qualitative assessment; E1–E5 use
   synthetic labels only; scoring, calibration, recommendations and routing use no language
   model. The one LLM component, the optional Supplier Review Agent (Section 6.9), is explicitly
-  triggered, changes no number, and is experimental and unevaluated (mocked tests only; real API
-  smoke test not run). These statements must stay in abstract, Sections 1, 4, 6, 7 and 10 of
-  both `paper.md` and `paper.tex`.
-- **Calibration default:** the bundled risk template proposes accepted weights for approval
-  (`auto_apply: false`); the performance template still auto-applies (Sections 5.3, 9.1).
+  triggered, changes no number, now explains the deterministic scoring trace and must cite trace
+  ids; it is experimental and unevaluated (mocked tests, real smoke tests, manual spot checks).
+  These statements must stay in abstract, Sections 1, 4, 6, 7 and 10 of both `paper.md` and
+  `paper.tex`.
+- **Explain & correct (v0.8):** central contribution (abstract, Sections 1, 5.3 (9), 6.10, 7.9,
+  8.1, 9.1, 10, 11, 12; Figure 8, `figures/fig08_explain_correct.png`, cropped from
+  `docs/images/ui-explain-correct.png`). Keep technical verification (tests, exact additivity,
+  schema and citation checks, one real end-to-end run) apart from domain validation, which has
+  not been done. No claim of fewer false alarms, better decisions or superiority over the
+  platforms.
+- **Tests:** full suite 198 passed, 1 skipped (the real-API smoke test, skipped without a key)
+  (Section 6.8).
+- **Benchmark model v0.5:** factors 2 (*explainability & traceability, per result*) and 6
+  (*human review & correction*) sharpened, anchors for 2, 3 and 6, unknown values not plotted as
+  low ("?", "S?", "≥"); disclosure that the anchors were written after building the feature they
+  reward (Sections 3.1, 4.4, 10).
+- **Calibration default:** both bundled templates propose accepted weights for approval
+  (`auto_apply: false`) (Sections 5.3, 9.1).
 - **Figure 3 (workflow):** rendered as a static TikZ figure in the typeset version (`paper.tex`,
   Figure 2 there); `paper.md` keeps the Mermaid version.
 - **Section 9, Table 9:** provider and data vintage are recorded per indicator; the source data
   itself is not versioned.
 - **References:** verify wording against full texts (read at abstract level).
 - **Typesetting:** done. `paper.tex` is a condensed version of `paper.md` in the two-column
-  template of the companion paper, built to `paper.pdf` (19 pages). The appendix table is generated
+  template of the companion paper, built to `paper.pdf` (23 pages). The appendix table is generated
   by `scripts/generate_spider.py`. Keep both files in step when the content changes.
 
 ---
@@ -54,7 +67,7 @@ with Open Agentic Workflows"*
 
 - **Problem.** Supplier risk evaluation sits between error-prone spreadsheets and costly,
   partly opaque platforms. Open-source agent projects show architectures, not methods.
-- **Contribution 1.** A set of 15 success factors (model v0.4) and a profile comparison of four
+- **Contribution 1.** A set of 15 success factors (model v0.5) and a profile comparison of four
   approaches: spreadsheet practice; proprietary SCRM platforms, with Prewave and Sphera as named
   examples; open-source agent repos; and the Lean Agentic approach (Fig. 1).
 - **Contribution 2.** The Lean Agentic approach and an open-source demonstrator:
@@ -62,6 +75,8 @@ with Open Agentic Workflows"*
   - calibration against expert labels (constrained least squares)
   - human-in-the-loop via graph interrupts
   - versioned weights
+  - Explain & correct: deterministic scoring trace, LLM explanation citing it, reasoned
+    correction with before/after preview, confirmation and history
 - **Results.** On synthetic data with labels generated from a hidden weighting:
   - cross-validated MSE 37.8 → 20.6 (in-sample 37.8 → 13.3)
   - class agreement 84 % → 88 %
@@ -118,14 +133,14 @@ with Open Agentic Workflows"*
 
 ## 3 Success dimensions for supplier risk evaluation
 
-- Fifteen success factors (**model v0.4**) as a **flat** list: definition and how to assess it
+- Fifteen success factors (**model v0.5**) as a **flat** list: definition and how to assess it
   (→ `research/success-factors.md`).
   1. Structured criteria & weights (objective + subjective)
-  2. Traceability & reproducibility
+  2. Explainability & traceability (per result)
   3. Methodological transparency
   4. Expert calibration / ability to learn
   5. Action framework
-  6. Human-in-the-loop & governance
+  6. Human review & correction
   7. External signals & data coverage
   8. Regulatory evidence
   9. Cost / total cost of ownership
@@ -136,13 +151,15 @@ with Open Agentic Workflows"*
   14. Operational maturity & support
   15. Integration of risk management and performance evaluation
 - **Table 1:** factor, short definition, assessable by.
-- **3.x How the model was derived.** From working model v0.1 to v0.4:
+- **3.x How the model was derived.** From working model v0.1 to v0.5:
   - means reframed as outcomes (open source → customisability; multi-agent → extensibility)
   - overlaps merged
   - two platform-strength factors added against home-field bias (regulatory evidence,
     operational maturity)
   - v0.3 adds risk/performance integration and sharpens orchestration and total cost of ownership
   - v0.4 folds material-group adaptation into customisability, retaining 15 axes and all remaining scores
+  - v0.5 sharpens factors 2 and 6, adds anchors and boundaries, marks unknown values; written after
+    the Explain & correct workflow was built (disclosed)
   - predictive validity deliberately not an axis, because nobody can rate it today
 
   This methodological self-correction is part of the contribution.
@@ -153,7 +170,8 @@ with Open Agentic Workflows"*
 - **Method.** Expert assessment on a 1–5 scale with rationale and confidence (H / M / L).
   - Evidence types: practitioner assumption, public information, code review, own implementation.
   - Prewave and Sphera are rated separately. The SaaS profile is their mean, and the spread is
-    shown (factors 2, 3, 8, 13).
+    shown (factors 3, 6, 8, 13); the SaaS mean uses known values only ("?" unknown, "≥" documented
+    minimum).
   - Lean Agentic is rated as implemented, not as planned.
 - **Table 2:** comparison matrix, generated from `research/comparison-matrix.yaml`
   (→ `research/comparison-matrix.md`). Single source of truth for table and figure.
@@ -213,6 +231,10 @@ with Open Agentic Workflows"*
 - **6.9 Supplier Review Agent.** Optional, explicitly triggered LLM node that interprets one
   supplier's final results in both views; structured text output, post-validation, no numeric
   fields; two-column table "deterministic evaluation vs. LLM-supported interpretation".
+- **6.10 Explain & correct.** Scoring trace (inputs with source, rating rule, origin, effective
+  weight, contribution; non-additive rules separately; citable ids); AI explanation citing the
+  trace; data correction vs. expert override with mandatory reason, preview in both views,
+  confirmation, history; disputes that change nothing.
 
 ## 7 Demonstration on synthetic data
 
@@ -228,6 +250,8 @@ with Open Agentic Workflows"*
   - re-calibration stability (no drift)
 - **Figure 4:** weights before and after calibration, next to the hidden weighting.
 - **Figure 5:** expert label vs. model score before and after.
+- **7.9 Explain & correct on SUP-004** (synthetic): 41.75 high → 35.75 medium after a reasoned
+  compliance correction; Figure 8; technical verification vs. domain validation.
 - **What the demonstration shows and does not show.** It shows that the method recovers a known
   weighting. It does not show real-world fit or predictive power.
 
@@ -260,6 +284,8 @@ with Open Agentic Workflows"*
 - The factor model is a working hypothesis.
 - The Supplier Review Agent is experimental and unevaluated; it sends data to an external
   provider when triggered; validation checks references, not every sentence.
+- Explain & correct is technically verified, not validated in the domain; identities not
+  verified; local files.
 
 ## 11 Future work
 
@@ -289,12 +315,13 @@ with Open Agentic Workflows"*
 
 | # | Content | Source | Status |
 |---|---|---|---|
-| Fig. 1 | Radar chart: 4 approaches × 15 factors (v0.4) | `docs/images/spider-diagram.png/.svg`, generated by `scripts/generate_spider.py` | **generated** |
+| Fig. 1 | Radar chart: 4 approaches × 15 factors (v0.5) | `docs/images/spider-diagram.png/.svg`, generated by `scripts/generate_spider.py` | **generated** |
 | Fig. 2 | Spreadsheet → agentic migration path | new | idea |
 | Fig. 3 | Workflow graph | `docs/architecture.md` (Mermaid) | exists as Mermaid |
 | Fig. 4 | Weights: default / calibrated / hidden | `examples/calibrate_weights.py` | data available |
 | Fig. 5 | Label vs. score scatter before/after | calibration run | data available |
-| Tab. 1 | Success factors v0.4 | `research/success-factors.md` | ready |
+| Tab. 1 | Success factors v0.5 | `research/success-factors.md` | ready |
+| Fig. 8 | Explain & correct for SUP-004: trace, correction preview, outdated marker | `docs/images/ui-explain-correct.png`, cropped to `figures/fig08_explain_correct.png` | **ready** |
 | Tab. 2 | Comparison matrix | `research/comparison-matrix.yaml` → `.md` | ready (generated) |
 | Tab. 3 | Default scoring template | `docs/scoring-model.md` | ready |
 

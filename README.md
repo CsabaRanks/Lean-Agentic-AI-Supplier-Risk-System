@@ -9,7 +9,7 @@ weights calibrated against expert judgement, and human approval built into a Lan
 multi-agent workflow.** Runs locally, open source, all sample data fictional.
 
 📄 **Working paper:** [Lean Agentic AI for Supplier Risk Management and Performance Evaluation](docs/paper/paper.pdf)
-(PDF, draft v0.7; LaTeX and Markdown sources in [docs/paper/](docs/paper/))
+(PDF, draft v0.8; LaTeX and Markdown sources in [docs/paper/](docs/paper/))
 
 ![Risk view of the fictional sample portfolio in the spreadsheet-style UI](docs/images/ui-risk-view.png)
 
@@ -24,6 +24,11 @@ and rarely checked against the judgement of the category managers who know the s
 
 ## What this project does
 
+- **Explain & correct.** For any supplier, a calculation trace shows why it got its rating: inputs and
+  their sources, missing data, rules, weights and each criterion's contribution in points. An optional
+  LLM explains the trace in plain language and must cite its entries. Wrong data or ratings can be
+  corrected with a reason, the effect is shown in both views before anything changes, and confirmed
+  corrections are recorded.
 - **One catalogue, two views.** Risk ("How exposed are we if this supplier fails?", low → critical)
   and performance ("How well does this supplier deliver?", A / B / C) are computed from the same
   data sheet. Each view has its own weights, classes, escalation rules and actions.
@@ -39,6 +44,54 @@ and rarely checked against the judgement of the category managers who know the s
 
 The method stays with procurement: criteria, weights, thresholds and actions live in readable YAML
 files, not in a vendor's black box.
+
+## Explain & correct: why this rating, and is it right?
+
+A category manager looks at a supplier, wants to know why it is rated the way it is, spots a wrong
+input, and corrects it in a controlled way. The tab **Explain & correct** walks through four steps:
+
+1. **How the score is calculated.** A trace generated from the scoring engine's own results, without
+   any API key. It shows per criterion the inputs with source and data date (or "missing"), the rating
+   rule, the rating and where it came from, the nominal and effective weight, and the contribution in
+   points; the contributions add up exactly to the score. Rules that do not add points are listed
+   separately: escalation rules that set a class floor, the data-completeness check, a reviewer's
+   class override.
+2. **AI explanation (optional).** A language model explains the trace for both views. Every summary,
+   driver, view difference and action must cite trace entries (e.g. `risk:rule:compliance_status`);
+   answers citing unknown entries are rejected. See [LLM explanation](#llm-explanation-optional).
+3. **Correct data or ratings.** A *data correction* fixes an input (e.g. a compliance status or a
+   credit score). An *expert override* replaces a rating that a rule derived from data. A reason is
+   required. Both views are recomputed deterministically and shown before and after: scores,
+   classes, changed criteria and rules. Nothing changes until you confirm. Weights and rules are not
+   editable here; they stay in calibration and approval.
+4. **Dispute assessment.** Records that you disagree with a criterion. It changes no score and does
+   not train weights.
+
+Confirmed corrections are written to `corrections.jsonl` in the history folder: old and new value,
+kind, reason, time, model and weight version, before and after per view, and the name you typed,
+marked as not verified. An existing AI explanation is then marked **Outdated**.
+
+**Example (fictional supplier SUP-004).** The risk score is 41.75, which would be "medium", but the
+class is "high": a critical compliance finding triggers an escalation rule. The trace shows this
+separately from the points (ESG rating 12.0 points, compliance status 8.0, …). A re-audit closed the
+finding, so the category manager corrects `compliance_status` from `critical_findings` to
+`minor_findings` with that reason. The preview shows risk 41.75 → 35.75, class high → medium, the
+escalation rule no longer triggered; performance 38.75 → 40.62, class C unchanged. After confirmation
+the correction is recorded and the earlier AI explanation is flagged as outdated.
+
+![Explain & correct for the fictional supplier SUP-004: trace and AI explanation, correction preview, result after confirmation with the outdated AI explanation flagged](docs/images/ui-explain-correct.png)
+
+*Real run on 12 October 2026 with fictional data; the AI explanation is a real answer of
+`claude-opus-5-5`.*
+
+What has and has not been shown:
+
+- **Technical verification:** tests check that contributions add up to the score for every sample
+  supplier and view, escalation effects, preview without adoption, confirmed correction and history,
+  disputes, and the outdated flag (198 tests pass; the real-API smoke test runs only with a key and
+  passed on 12 October 2026).
+- **Not validated in practice:** no category managers have used it, no real supplier data was
+  involved, and nothing here measures explanation quality, correction accuracy or false alarms.
 
 ## Two examples
 
@@ -102,8 +155,8 @@ approved weights are stored as a new version with the reviewer's name.
 responsibility, a shared typed state, a supervisor that routes between them, a bounded feedback
 loop and a human-in-the-loop pause. All agents that produce numbers, including the supervisor, are
 deterministic Python, so that every score is reproducible and auditable. **A language model is used
-in one place only: the optional Supplier Review Agent**, which interprets results that are already
-final (see [Optional AI review](#optional-ai-review)). Without an API key it is simply unavailable.
+in one place only: the optional Supplier Review Agent**, which explains results that are already
+final (see [LLM explanation](#llm-explanation-optional)). Without an API key it is simply unavailable.
 
 | Component | What it does | How | Status |
 |---|---|---|---|
@@ -113,10 +166,12 @@ final (see [Optional AI review](#optional-ai-review)). Without an API key it is 
 | Calibration Agent | Fits weights to expert judgements | Constrained ridge least squares (SciPy), cross-validated acceptance, diagnostics | Implemented; validated on **synthetic** labels only |
 | Action & Recommendation Agent | Actions per class, dimension and factor | Rule-based action framework from YAML | Implemented |
 | Human Review | Approve weights, override classes, defer | LangGraph `interrupt()`; CLI prompt or UI tab | Implemented (in-memory checkpointer; no persistence across sessions by default) |
-| Weight store, history, audit trail | Versioned weights, snapshots, append-only log | YAML / JSONL files | Implemented |
+| Weight store, history, audit trail | Versioned weights, snapshots, corrections, disputes, append-only log | YAML / JSONL files | Implemented |
+| Scoring trace | Why one supplier got its score and class | Derived from the engine's results; contributions add up to the score | Implemented |
+| Correction & dispute | Data corrections and expert overrides with reason, before/after, confirmation; disputes | Deterministic recomputation of both views | Implemented; single user, names not verified |
 | WGI political stability | Country indicator | From your own World Bank CSV download | Implemented; `--wgi-mock` uses **fictional** values |
 | Live provider APIs (WGI online, ESG platform, ERP, credit agency) | External data | Interfaces raise `NotImplementedError` | Placeholder |
-| Supplier Review Agent (optional) | Summary, drivers, risk vs. performance, action proposals, open questions for one supplier | **LLM** (Claude via the Anthropic SDK), structured output, validated against the input; on explicit request only | Implemented; **experimental**, tested with mocked responses plus a real smoke test |
+| Supplier Review Agent (optional) | Explains the trace: summary, drivers, risk vs. performance, action proposals, open questions, each citing trace entries | **LLM** (Claude via the Anthropic SDK), structured output, validated against the trace; on explicit request only | Implemented; **experimental**, tested with mocked responses plus a real smoke test |
 | LLM supervisor, document extraction | Route steps, extract indicators from documents | — | Planned, not implemented |
 
 ### Architecture
@@ -129,7 +184,7 @@ flowchart TD
     SUP -. optional .-> CA[Calibration Agent]
     SUP --> RA[Actions & Recommendations]
     SUP -. if flagged .-> HR[Human Review · interrupt]
-    SUP -. explicit request .-> AI[Supplier Review Agent · LLM, optional]
+    SUP -. explicit request .-> AI[Supplier Review Agent · explains trace · LLM, optional]
     DC --> SUP
     SC --> SUP
     CA -- new weights → re-score once --> SUP
@@ -182,7 +237,7 @@ streamlit run ui/app.py      # http://localhost:8501
 ```
 
 Tabs: **Portfolio** · **Dashboard** · **Actions** · **History** · **Scoring run** ·
-**Calibration** · **Review & approval** · **AI review (optional)**, with the risk / performance
+**Calibration** · **Review & approval** · **Explain & correct**, with the risk / performance
 switch on top. The app only
 collects input and displays results; every number comes from the package. **Empty template CSV**
 in the sidebar is the starting point for your own data (semicolon-separated files are accepted).
@@ -199,74 +254,69 @@ for action in result.recommendations:
     print(action.priority, action.action)
 ```
 
-## Optional AI review
+## LLM explanation (optional)
 
-The **Supplier Review Agent** sends one supplier's structured results from both views to a language
-model and returns a management summary, the main drivers (with references to the input criteria),
-an explanation of where risk and performance differ, prioritised action proposals and open
-questions for missing data.
+The **Supplier Review Agent** sends the calculation trace of one supplier (both views) to a language
+model and returns a management summary, the main drivers, where risk and performance differ,
+prioritised action proposals and open questions, each with references to trace entries.
 
-| Deterministic evaluation | LLM interpretation |
+| Deterministic evaluation | LLM explanation |
 |---|---|
-| Ratings, weights, scores, classes, escalation rules, completeness, rule-based actions, calibration | Summary, drivers, view differences, action proposals, open questions |
+| Ratings, weights, scores, classes, escalation rules, completeness, rule-based actions, calibration, the trace | Summary, drivers, view differences, action proposals, open questions |
 | Same input → same result | Wording can differ between calls |
-| Always runs | Only when you press **Generate AI Review** or use `--ai-review` |
+| Always runs; needs no key | Only when you press **Generate AI Review** or use `--ai-review` |
 
 Safeguards:
 
 - **Explicit trigger and preview.** Nothing is sent until you press the button (or confirm in the
-  CLI). The exact JSON is shown beforehand. It contains criteria, ratings, weights, scores,
-  classes, fired rules, data completeness and rule-based actions. Supplier name, country, spend,
-  the raw indicator record and expert labels are not sent. Use synthetic or approved data only.
-- **Results stay deterministic.** The agent writes only its review into the run; it cannot change
-  a score, class or weight. The scores shown next to the review are copied from the deterministic
-  results, not taken from the model's answer.
-- **Validated output, within limits.** The answer must match a fixed schema (summary, drivers,
-  view differences, actions, open questions). Every referenced criterion key must exist in the
-  input, both views must be compared, and missing data must produce at least one open question.
-  Otherwise the whole answer is rejected.
-- **What validation does not check.** The schema has no numeric fields, but the free text can still
-  contain numbers, and a misquoted score or weight is not detected. Validation also does not check
-  whether statements are supported by the payload, whether explanations and priorities are
-  sensible, or whether *every* missing criterion is addressed. The prompt restricts the model to the
-  payload and withholds the supplier's name, which reduces but does not rule out invented facts.
-  Read the review as a draft and check it against the deterministic results.
+  CLI). The exact JSON is shown beforehand: the trace with inputs, sources, rules, ratings, weights,
+  contributions and rule-based actions. Supplier name, country, spend and expert labels are not sent.
+  Use synthetic or approved data only.
+- **Results stay deterministic.** The agent writes only its explanation into the run; it cannot change
+  a score, class or weight. Scores shown next to it come from the deterministic results.
+- **Validated output, within limits.** The answer must match a fixed schema. The summary, every driver,
+  view difference and action must cite trace entries that exist; criterion keys must exist; both views
+  must be compared; missing data must produce at least one open question. Otherwise the whole answer
+  is rejected.
+- **What validation does not check.** The free text can still contain numbers, and a misquoted value
+  is not detected. Validation checks *that* an existing trace entry is cited, not *whether* it supports
+  the sentence, and not whether explanations and priorities are sensible or every gap is addressed.
+  The prompt restricts the model to the trace and withholds the supplier's name, which reduces but
+  does not rule out invented facts or reasons. Read it as a draft.
 - **Proposals, not decisions.** Suggested actions are marked as proposals for human review.
-- **Bounded cost and failure.** Timeout and retry limit are configurable. A result is kept per
-  exact input, so app reruns never call the provider again. Errors (no key, timeout, rate limit,
-  invalid answer) are shown as messages, and the deterministic workflow continues unchanged.
+- **Bounded cost and failure.** Timeout and retry limit are configurable. A result is kept per exact
+  input, so app reruns never call the provider again; after a correction the old explanation is
+  flagged as outdated, not silently replaced. Errors are shown as messages, and the deterministic
+  workflow continues unchanged.
 
 Setup:
 
 ```bash
 pip install -e ".[llm]"
 cp .env.example .env          # then set ANTHROPIC_API_KEY (and optionally model, timeout, retries)
-supplier-risk --data data/sample_suppliers.json --ai-review SUP-003     # shows the payload, asks before sending
-streamlit run ui/app.py                                                 # tab "AI review (optional)"
+supplier-risk --data data/sample_suppliers.json --ai-review SUP-004     # shows the payload, asks before sending
+streamlit run ui/app.py                                                 # tab "Explain & correct"
 ```
 
-![AI review tab: real answer of claude-opus-5-5 for the fictional supplier SUP-003](docs/images/ui-ai-review.png)
-
-*Real answer of `claude-opus-5-5` for the fictional supplier SUP-003 (12 October 2026). Shown as
-an example, not as validated advice.*
-
-The AI review is **experimental**. The automated tests use mocked model responses on synthetic
-suppliers; they check the plumbing and the validation, not the quality of the advice. A real smoke
-test with `claude-opus-5-5` passed on 12 October 2026. In a manual spot check of two synthetic
-suppliers, one with complete data and one with many gaps, all numbers in the text matched the input
-or sums of it, the actions built on the rule-based ones, and every data gap became an open
-question. Two answers are an example, not an evaluation. The first real call was rejected by
-validation (12 drivers, no actions), which led to stating the limits explicitly in the prompt.
+The LLM explanation is **experimental**. Automated tests use mocked responses; a real smoke test with
+`claude-opus-5-5` passed on 12 October 2026. In manual spot checks of three fictional suppliers (one
+with complete data, one with many gaps, one with an escalation rule), every number in the text was
+found in the input or was a sum of input values, and data gaps became open questions. Three answers
+are examples, not an evaluation. The first real call was rejected by validation (12 drivers, no
+actions), which led to stating the limits explicitly in the prompt.
 
 ## How this compares to other approaches
 
 ![Radar chart: spreadsheets, risk platforms, open-source repos and this approach on 15 success factors](docs/images/spider-diagram.png)
 
-The chart profiles four approaches on 15 success factors. **It is a qualitative assessment by the
-author, not a measurement**: based on public information and code review (October 2026), with a
-rationale and a confidence mark per value in [research/comparison-matrix.md](research/comparison-matrix.md).
-The author also built one of the rated approaches, so the ratings are not independent. No totals or
-rankings are derived.
+The chart profiles four approaches on 15 success factors (model v0.5). **It is a qualitative
+assessment by the author, not a measurement**: based on public information and code review (October
+2026), with a rationale, a confidence mark and sources per value in
+[research/comparison-matrix.md](research/comparison-matrix.md). Factors 2 (explainability &
+traceability), 3 (method transparency) and 6 (human review & correction) have written rating anchors.
+Where no public evidence was found, a value is marked unknown ("?"), not rated low; "≥" marks a
+documented minimum. The author also built one of the rated approaches and wrote the anchors after
+building Explain & correct, so the ratings are not independent. No totals or rankings are derived.
 
 The profiles differ in focus. Commercial risk platforms (Prewave and Sphera are used as public
 examples) are built around external signals, coverage, regulatory evidence and operational
@@ -286,8 +336,13 @@ procurement team owns. Factor model: [research/success-factors.md](research/succ
   APIs are not implemented; indicators come from files.
 - **Single-user prototype.** Review state lives in memory per session; there are no roles,
   authentication or multi-user workflows.
-- **AI review is not validated.** Its usefulness for procurement decisions has not been evaluated;
-  it sends data to an external provider when you trigger it, and its text can contain errors.
+- **Explain & correct is not validated in practice.** Its usefulness for category managers, the
+  quality of the explanations and the accuracy of corrections have not been evaluated, and no
+  reduction of false alarms is claimed. The LLM explanation sends data to an external provider when
+  you trigger it, and its text can contain errors.
+- **Corrections are single-user.** Names are typed in and not verified; there are no roles or
+  approval of corrections by a second person. Edits in the Portfolio input table are bulk data entry
+  and are not recorded as corrections; use Explain & correct for documented corrections.
 
 ## About the author
 

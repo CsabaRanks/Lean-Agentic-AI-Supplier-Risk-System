@@ -2,7 +2,7 @@
 
 ### Turning spreadsheet scorecards into transparent, expert-calibrated multi-agent systems: a benchmark of four approaches and an open-source demonstrator
 
-*Csaba Bakay · Working paper, draft v0.7 · October 2026*
+*Csaba Bakay · Working paper, draft v0.8 · October 2026*
 
 > **Draft status.** All sections (1–12) exist as a first, continuous draft. Remaining gaps are
 > marked in the text and summarised in [paper-outline.md](paper-outline.md). Markers in the text:
@@ -30,6 +30,14 @@
 > experimental and unevaluated (Section 10). The text also states that both bundled templates now
 > propose accepted weights for approval by default. No rating value and no experimental number
 > was changed.
+> Draft v0.8 adds the *Explain & correct* workflow as a central contribution (Sections 6.10 and
+> 7.9, Figure 8): a deterministic scoring trace per supplier and view, an LLM explanation that
+> must cite it, reasoned corrections with deterministic recomputation and a before/after preview,
+> human confirmation and a correction history. It separates technical verification from domain
+> validation, which has not been done. The benchmark moves to factor model v0.5 (factors 2 and 6
+> sharpened, rating anchors, unknown values no longer plotted as low); the ratings of factors 2
+> and 6 change accordingly (Section 3.1). The experimental numbers of Sections 7.2–7.8 are
+> unchanged.
 
 ---
 
@@ -79,6 +87,19 @@ This paper makes three contributions.
    supplier performance evaluation and supplier risk management, and results map to concrete
    actions per factor.
 
+A central part of the demonstrator is an *Explain & correct* workflow for the category manager.
+For every supplier and view, a deterministic scoring trace shows the inputs with their source,
+the rating rules, the effective weights and the contribution of each criterion, which add up
+exactly to the score; escalation rules and the data-completeness check are explained separately.
+An optional language-model explanation must cite entries of this trace, or it is rejected.
+A wrong input or rating can be corrected with a mandatory reason; the supplier is then re-scored
+deterministically in both views, the before/after effect is shown, and nothing is applied until a
+person confirms it. Confirmed corrections are recorded in a history. This workflow is verified
+technically (tests, exact additivity of contributions, schema validation, one real end-to-end
+run on a synthetic supplier). It has not been validated in the domain: no practitioner used it,
+no real supplier data was involved, and the quality of explanations, the accuracy of corrections
+and any effect on false alarms or decisions were not measured.
+
 All experimental results are on synthetic data only: portfolios whose "expert" labels were
 generated from a hidden weighting plus noise or, in the robustness experiments, from constructed
 expert policies. No real expert labels were used and no field validation was performed. On these
@@ -105,6 +126,7 @@ The paper states what this does not establish:
 - the benchmark ratings are the author's own judgement, including of the author's own demonstrator, and
   have not been independently re-rated
 - predictive validity against real disruptions is untested
+- Explain & correct is technically verified, not validated with practitioners or real data
 - the demonstrator provides partial external signal coverage, without live monitoring, at about
   half the level of the strongest platform
 
@@ -156,6 +178,8 @@ practice:
 - **transparent**, with method and weights documented and inspectable
 - **reproducible**, with every number recomputable from its inputs
 - **governed**, with human approval at the points where judgement is required
+- **explainable and correctable per result**, so that a category manager can see why one supplier
+  received its score and class, and correct a wrong input with a reason and a visible effect
 - **able to learn**, by systematically aligning weights with expert judgement
 
 It also asks whether this can be done at the cost profile of open-source software rather than an
@@ -174,8 +198,9 @@ specialised agents (data collection, scoring, calibration, recommendation, human
 deterministic Python functions that act as nodes of a LangGraph state graph, a rule-based
 supervisor routes between them, and the workflow pauses for human approval. Scoring,
 calibration, recommendations and routing use no language model. The only exception is an
-optional *Supplier Review Agent*: on explicit request, it asks a language model to interpret one
-supplier's final results, and it cannot change scores, classes or weights (Section 6.9). Other
+optional *Supplier Review Agent*: on explicit request, it asks a language model to explain one
+supplier's deterministic scoring trace, and it cannot change scores, classes or weights
+(Sections 6.9 and 6.10). Other
 language-model roles (document extraction, an LLM-based supervisor) are planned extensions only
 (Sections 8.5 and 11). The term does not imply autonomous, LLM-driven decision making.
 
@@ -187,9 +212,11 @@ calibration recovers that weighting, which no field dataset would allow.
 ![Figure 1](../images/spider-diagram.png)
 
 *Figure 1. Four approaches to supplier risk management and performance evaluation profiled on
-fifteen success factors (model v0.4); half points mark a profile between two levels. Illustrative, qualitative assessment by the author based on public information and code review (October 2026); expert judgement, not an empirical measurement. The author also built one of the rated approaches (Section 4.4).
-Proprietary SaaS is plotted as the mean of Prewave and Sphera; shaded bars mark where the two
-differ. Rationale and confidence for every value: Table 2 and `research/comparison-matrix.md`. No
+fifteen success factors (model v0.5); half points mark a profile between two levels. Illustrative, qualitative assessment by the author based on public information and code review (October 2026); expert judgement, not an empirical measurement. The author also built one of the rated approaches and wrote the v0.5 rating anchors after building the feature they reward (Section 4.4).
+Proprietary SaaS is plotted as the mean of the known Prewave and Sphera values; shaded bars mark
+where the two differ. Unknown values (no public evidence) are not plotted as low: "?" marks an
+unknown value, "S?" a point where Sphera is unknown and only Prewave is shown, and "≥" a documented
+minimum. Rationale and confidence for every value: Table 2 and `research/comparison-matrix.md`. No
 weighting is applied, and no total or ranking is derived.*
 
 **Contributions.**
@@ -215,7 +242,14 @@ weighting is applied, and no total or ranking is derived.*
    - an optional, experimental review agent that uses a language model to interpret final
      results, without changing any number
    - an automated test suite (Section 6)
-5. **An explicit statement of what is not established**, and of the work that would close each gap
+5. **Explain & correct**, a workflow that makes each result explainable and correctable
+   (Sections 6.10 and 7.9): a deterministic scoring trace whose criterion contributions add up
+   exactly to the score; an optional language-model explanation that must cite trace entries;
+   corrections of data or ratings with a mandatory reason, kept apart from expert overrides;
+   deterministic recomputation of both views with a before/after comparison; and human
+   confirmation with a correction history. It is verified technically, not validated in the
+   domain.
+6. **An explicit statement of what is not established**, and of the work that would close each gap
    (Sections 10–11).
 
 ---
@@ -384,16 +418,16 @@ combined into a total. An approach is read as a **profile** across all fifteen. 
 strong on twelve factors and absent on one is a different proposition from one that is uniformly
 adequate. A single figure would treat the two alike.
 
-**Table 1. Success factors for supplier risk management and performance evaluation (model v0.4).**
+**Table 1. Success factors for supplier risk management and performance evaluation (model v0.5).**
 
 | # | Factor | What it means | Assessable by |
 |---|---|---|---|
 | 1 | Structured criteria & weights (objective + subjective) | Explicit criteria, scales and weights combining measurable indicators and structured expert assessment | Criteria with definition and scale; explicit weights; both input types with provenance |
-| 2 | Traceability & reproducibility | Every result can be reconstructed afterwards and recomputed from documented inputs | Per-result record; change history; recomputation possible; tests |
+| 2 | Explainability & traceability (per result) | For one specific supplier, a user can see why it got its score and class, and the result can be reproduced | Inputs with source and data date; missing data marked; rules, weights and contributions per criterion; non-additive rules explained separately; per-result record; recomputation; explanations citing the trace; no LLM-generated numbers |
 | 3 | Methodological transparency | The method is documented and checkable *before* use | Published formula, weights, sources, rules |
 | 4 | Expert calibration / ability to learn | Parameters are systematically fitted to expert judgement, with approval | Procedure; fit metric; logged old/new parameters; approval |
 | 5 | Action framework | Results map to defined actions, review cycles and owners | Actions per class and driver; tracking to closure |
-| 6 | Human-in-the-loop & governance | Defined review and approval points, recorded decisions, roles | Approval steps; recorded overrides; roles |
+| 6 | Human review & correction | People can review, challenge and correct results in a controlled way, and their decisions are recorded | Review and approval points; corrections and overrides with a mandatory reason; before/after effect before confirmation; dispute channel; decision history; roles and permissions |
 | 7 | External signals & data coverage | Current external data and breadth of supplier coverage | Sources, update frequency, languages, Tier-N |
 | 8 | Regulatory evidence | Support for due-diligence documentation duties | Regulation-specific workflows and reports |
 | 9 | Cost / TCO | Total cost of use, including recurring internal effort, and access barriers | Licence model, prices, implementation effort, manual effort per cycle |
@@ -406,7 +440,7 @@ adequate. A single figure would treat the two alike.
 
 ### 3.1 How the factor model was derived, and corrected
 
-The fifteen factors are the fourth version of a working model. The first version (v0.1) was drawn
+The fifteen factors are the fifth version of a working model. The first version (v0.1) was drawn
 up from the requirements of the proposed approach. A critical review identified four problems.
 Each was corrected, and the corrections are documented because they bear on how far the benchmark
 can be trusted.
@@ -469,6 +503,31 @@ independent dimensions: the 4 × 15 rating matrix has rank at most four, or thre
 The model remains a hypothesis requiring independent validation. The platform strengths keep
 their scores (now factors 7, 8, 12 and 14). See `research/success-factors.md` for the overlap review.
 
+**A fourth review (v0.5)** keeps fifteen factors and sharpens two of them, so that ratings can be
+checked against a written standard.
+- **Factor 2** becomes *explainability & traceability (per result)*: can a user see why one
+  specific supplier got its score and class (inputs, sources and data dates, missing data, rules,
+  weights, contributions, non-additive rules, explanations citing them), and reproduce it?
+- **Factor 6** becomes *human review & correction*: what can a person do with a result (review
+  and approve, dispute, correct data or override a rating with a reason, see the effect before
+  confirming, find the decision again)?
+- **Anchors.** Levels 1–5 are described in writing for factors 2, 3 and 6
+  (`research/comparison-matrix.md`).
+- **Boundaries**, so that one capability is rewarded once: factor 3 is the method before use,
+  factor 2 the reasons for one result; factor 2 is what the system records and explains, factor 6
+  what people decide and change; factor 13 is the review pause as architecture, factor 6 what a
+  reviewer can do in it. A language-model explanation counts under factor 2 only.
+- **Unknown is not absent.** A value without public evidence is marked unknown and not plotted as
+  low; a value covering only what is publicly documented is marked as a documented minimum (≥).
+
+The re-rated values are: factor 2, Excel 3 (was 2), SaaS 3 (Prewave ≥ 3, Sphera unknown; was 2.5),
+open repos 2.5 (was 2), Lean Agentic 4.5 (was 4); factor 6, Excel 2, SaaS 3.5 (Prewave ≥ 4, Sphera
+≥ 3; was 4), open repos 2, Lean Agentic 4 (was 3.5). Platform sources were re-checked on 12 October
+2026 (Prewave help centre: score components with weights, alert reporting with reasons reviewed by
+Prewave, supplier portal; Sphera: AI summaries at marketing level only), and the repositories in
+code. v0.5 and its anchors were written by the author *after* building the Explain & correct
+workflow that they reward (Section 4.4).
+
 ---
 
 ## 4 Benchmark: four approaches profiled
@@ -483,6 +542,10 @@ product. Each rating carries a short rationale and a confidence mark:
 - **H**: verified from code or primary documentation
 - **M**: plausible, partly documented
 - **L**: assumption
+
+Where no public evidence was found, a value is marked *unknown* rather than rated low, and a value
+that covers only the publicly documented part is marked as a documented minimum (≥). The SaaS
+profile is the mean of the known Prewave and Sphera values.
 
 All ratings live in one machine-readable file, `research/comparison-matrix.yaml`. Table 2 and
 Figure 1 are generated from it by a script that also validates the file. A consistency check fails
@@ -502,10 +565,10 @@ Appendix A.
 
 | Approach | Strongest (4–5) | Weakest (1) | Also low (2) |
 |---|---|---|---|
-| Excel / manual | Method transparency; customisability | Expert calibration; external signals; agentic orchestration | Traceability; action framework; human-in-the-loop; regulatory evidence; scalability; risk & performance integration |
-| Proprietary SaaS (Prewave, Sphera) | External signals & coverage; scalability; operational maturity; regulatory evidence; criteria & weights; action framework; human-in-the-loop | — | Cost; customisability & data sovereignty; expert calibration; risk & performance integration |
-| Open-source repos | Cost; agentic orchestration | Expert calibration; regulatory evidence; operational maturity | Most other factors (criteria & weights, traceability, actions, human-in-the-loop, external signals, time-to-value, scalability, integration) |
-| Lean Agentic (this work) | Method transparency; customisability; risk & performance integration; expert calibration; agentic orchestration; traceability & reproducibility; criteria & weights; cost; time-to-value | — | Regulatory evidence; operational maturity |
+| Excel / manual | Method transparency; customisability | Expert calibration; external signals; agentic orchestration | Action framework; human review & correction; regulatory evidence; scalability; risk & performance integration |
+| Proprietary SaaS (Prewave, Sphera) | External signals & coverage; scalability; operational maturity; regulatory evidence; criteria & weights; action framework | — | Cost; customisability & data sovereignty; expert calibration; risk & performance integration |
+| Open-source repos | Cost; agentic orchestration | Expert calibration; regulatory evidence; operational maturity | Most other factors (criteria & weights, actions, human review & correction, external signals, time-to-value, scalability, integration) |
+| Lean Agentic (this work) | Method transparency; customisability; explainability & traceability; risk & performance integration; expert calibration; agentic orchestration; human review & correction; criteria & weights; cost; time-to-value | — | Regulatory evidence; operational maturity |
 
 ### 4.2 Reading the profiles
 
@@ -534,7 +597,10 @@ They are also well developed on workflows and review steps. They are weaker on f
 - for one of the two, methodological transparency
 
 The spread between them is largest exactly there. Prewave publishes its score composition; Sphera
-does not. Both are risk platforms: performance evaluation is not part of their documented scope,
+does not. On explanation per result and on human review, the public evidence is incomplete: Prewave
+documents score components with weights and a channel to report alerts with reasons, which is a
+documented minimum, and for Sphera no per-result breakdown was found, so that value is unknown
+rather than low. Both are risk platforms: performance evaluation is not part of their documented scope,
 and their AI is not exposed as an inspectable multi-agent workflow.
 
 **The open-source repositories are blueprints.** They are free to license but demo-grade, and
@@ -544,15 +610,16 @@ failed attempt at a scoring method.
 
 **The Lean Agentic demonstrator is strongest where the method itself matters:**
 - methodological transparency
-- traceability and reproducibility
+- explainability and traceability of each result (4.5), through the scoring trace of Section 6.10
 - expert calibration
 - customisability, including material-group configuration
 
 It is also strong on the two factors that set it apart from pure risk platforms: the integration
 of risk management and performance evaluation, and agentic orchestration (both 4, against 2 and
-2.5 for the platforms). It is close to the platforms on actions and human review (3.5 against 4):
-the action framework and the graph-based review pause exist, but tracking to closure and roles do
-not. It is better than spreadsheets on cost of ownership and time-to-value, because scoring,
+2.5 for the platforms). On human review and correction it is rated 4, against 3.5 for the
+platforms, whose values are documented minimums: corrections with a reason, a before/after preview
+and a history exist, but roles and verified identities do not. On actions it is close to the
+platforms (3.5 against 4): tracking to closure is missing. It is better than spreadsheets on cost of ownership and time-to-value, because scoring,
 actions and reports run automatically from a template.
 
 On external signals it reaches about half of the strongest platform (2.5 against 5). The provider
@@ -587,12 +654,17 @@ Section 8.2 develops this hybrid reading.
   practitioner feedback, all of them in its favour: action framework, human-in-the-loop,
   time-to-value and external signals upwards; the cost of spreadsheets and repositories downwards.
   The re-ratings are documented with their rationale and rate the implementation, not the
-  roadmap; expected upside, for example in signal processing, is named but not rated. An
-  independent re-rating by three to five practitioners, reporting the spread of their ratings, is left to
-  future work (Section 11).
+  roadmap; expected upside, for example in signal processing, is named but not rated. The v0.5
+  review also favours the proposed approach: it sharpened factors 2 and 6 and added rating anchors
+  after the author had built the Explain & correct workflow, so the anchors were written by the
+  person who built the feature they reward, and they fit its design. They make the ratings
+  checkable against a written standard; they do not make them independent. An
+  independent re-rating by three to five practitioners against the published anchors, reporting
+  the spread of their ratings, is left to future work (Section 11).
 - **Public information only for the platforms.** Hands-on evaluation could move several ratings,
-  especially those on traceability, customisability (including material-group configuration),
-  workflows and time-to-value.
+  especially those on explainability, human review, customisability (including material-group
+  configuration), workflows and time-to-value. Values marked unknown or ≥ are the most likely to
+  change; vendors may offer more than their public documentation shows.
 - **Date dependency.** Products change. All platform ratings refer to public information as of
   October 2026.
 - **Ordinal scale.** Ratings are ordinal judgements. Differences of one point should not be read as
@@ -658,7 +730,7 @@ numbers are computed in code, and language models are reserved for language.
 
 ### 5.3 Distinguishing features
 
-Eight features distinguish the approach. The first three carry its positioning.
+Nine features distinguish the approach. The first three carry its positioning.
 
 **(1) Integration of risk management and performance evaluation.** Each criterion is defined once,
 with its meaning and rating source, and shared where both views need it (for example credit risk or
@@ -732,6 +804,14 @@ around it:
 - A data-completeness check flags results that rest on too little data.
 - The audit trail is append-only.
 - Every feedback loop is bounded.
+
+**(9) Explain & correct.** Every result can be taken apart and, where an input is wrong, corrected
+under control. A deterministic scoring trace lists, per criterion, the inputs with their source,
+the rating rule, the effective weight and the contribution, which add up exactly to the score;
+rules that do not add points are explained separately. A correction needs a reason, is re-scored
+deterministically in both views and shown as before/after, and is applied only after a person
+confirms it. Weights, thresholds and rules cannot be changed this way; they remain subject to
+calibration and approval (Section 6.10).
 
 ### 5.4 What the approach is not
 
@@ -980,7 +1060,8 @@ history. All numbers come from the package; the interface only collects input an
 ### 6.8 Engineering properties
 
 These properties make the claims in Sections 5 and 6 checkable:
-- **Tests.** The demonstrator ships with 159 automated tests. They cover:
+- **Tests.** The full suite has 199 automated tests: 198 pass and one, a smoke test against the
+  real language-model API, is skipped without an API key. They cover:
   - scoring and weights, in both views
   - calibration, including recovery of known weights from noise-free labels
   - the weight store and the human-review flow
@@ -988,7 +1069,13 @@ These properties make the claims in Sections 5 and 6 checkable:
   - the spreadsheet interface
   - the consistency of the benchmark data
   - reproducibility of the synthetic datasets
-  - the optional review agent, with mocked language-model responses only (Section 6.9)
+  - the optional review agent, with mocked language-model responses (Section 6.9)
+  - Explain & correct (Section 6.10): contributions that add up to the score for all twelve
+    supplier-view pairs of the sample data, the contribution formula and its redistribution for
+    missing data, input sources, escalation effects, trace ids, correction kinds, mandatory
+    reasons, rejection of invalid corrections, a preview that changes nothing, recorded
+    corrections, disputes that change nothing, and the outdated marker on AI explanations, both
+    in the package and in the interface
 - **CI.** Continuous integration runs linting and tests on two Python versions.
 - **Checkpoint types.** The checkpointer restores only explicitly allow-listed state types.
 - **Licence and data.** The code is MIT-licensed. All data is fictional or synthetic and labelled
@@ -1003,20 +1090,24 @@ the evaluation: it interprets results that the deterministic workflow has alread
   interface, or a command-line option with confirmation), as a one-shot follow-up step on an
   existing run. The supervisor routes to it only when such a request is set. A pending human
   review stays pending.
-- **Input.** One supplier's structured results from both views: per criterion the rating (or a
-  gap), weight and rating basis; dimension scores, overall score and class, the class before
-  escalation, fired escalation rules, data completeness, missing criteria and the rule-based
-  actions. Not sent: supplier name, country, spend, the raw indicator record and expert labels.
+- **Input.** One supplier's deterministic scoring trace from both views (Section 6.10): per
+  criterion the inputs and their source, rating rule, rating and origin, nominal and effective
+  weight and contribution; dimension scores, overall score and class, the class before
+  escalation, the non-additive rules with their effect, data completeness, missing criteria and
+  the rule-based actions, each with a citable id. Not sent: supplier name, country, spend, the raw indicator record and expert labels.
   The payload is shown to the user before sending, and the node checks that it still matches the
   run's results.
 - **Output.** A structured answer without numeric fields: a management summary, the main drivers
   (criterion and view), differences between the views, prioritised action proposals and open
-  questions. The node writes only this review into the run; it cannot change scores, classes or
+  questions. The summary, every driver, every view difference and every action must cite the
+  trace entries it relies on (`summary_refs`, `trace_refs`). The node writes only this review into the run; it cannot change scores, classes or
   weights. Scores shown next to the review are copied from the deterministic results.
 - **Safeguards.** The whole answer is rejected if it refers to a criterion that is not in the
-  input, does not compare the views, or leaves missing data without an open question.
+  input, does not compare the views, leaves missing data without an open question, or contains a
+  summary, driver, view difference or action that cites no trace entry or an unknown trace id.
 - **Limits of validation.** The free text can still contain numbers, and a misquoted score or
-  weight is not detected. Validation does not check whether statements are supported by the
+  weight is not detected. Validation checks that cited trace ids exist, not that a cited entry
+  supports the sentence that cites it. It does not check whether statements are supported by the
   payload, whether explanations and priorities are sensible, or whether every missing criterion is
   addressed. The prompt and the withheld supplier name reduce, but do not rule out, invented facts. Suggested
   actions are labelled as proposals for human review. Each attempt is recorded in the audit trail
@@ -1035,16 +1126,76 @@ the evaluation: it interprets results that the deterministic workflow has alread
 | Produces | Ratings, scores, classes, weights, rule-based actions | Summary, drivers, view differences, action proposals, open questions |
 | Changes results | Yes, by design and recomputably | No: writes only its review; the scores shown are copied from the results. Its text can quote numbers, which are not checked |
 | Reproducible | Same input, same output | No; output can vary between requests |
-| Tested | Unit and flow tests (Section 6.8) | Mocked responses on synthetic suppliers only; quality not evaluated |
+| Tested | Unit and flow tests (Section 6.8) | Mocked responses on synthetic suppliers; real smoke tests; quality not evaluated |
 
 The division follows Section 2.5: numbers are computed in code, language is left to the model.
 The review agent is experimental; its limitations are listed in Section 10.
+
+### 6.10 Explain & correct: scoring trace, explanation and controlled correction
+
+A category manager who receives a score asks two questions: *why this result?* and *what if an
+input is wrong?* The *Explain & correct* workflow answers both without giving up determinism. It
+has four parts, each a tab section of the interface.
+
+**1. Scoring trace (deterministic).** For each supplier and view, a trace is derived from the
+engine's own results (`tools/explain.py`); it needs no API key. Per criterion it lists:
+- the inputs with their source and data date. A missing input is flagged as *missing: no value
+  and no source*; a value without provenance as *entered by hand (no source or data date
+  recorded)*
+- the rating rule, as text generated from the same band constants the rating functions use, so
+  that the description cannot drift from the code
+- the rating and its origin: expert assessment, expert override of a derived rating, derived
+  from input data by rule, or missing
+- the nominal weight θ_f, the effective weight and the contribution
+
+With *W_d* the weight of dimension *d* and *r_f* the 1–5 rating, the effective weight and the
+contribution in internal points (0 = favourable … 100 = unfavourable) are
+
+  *e_f* = θ_f / Σ(θ of rated criteria in *d*) · *W_d* / Σ(*W* of dimensions with data)
+
+  *c_f* = *e_f* · (*r_f* − 1) / 4 · 100
+
+The contributions add up exactly to the internal score; this is tested for all six sample
+suppliers in both views. Missing data is handled by the same redistribution as in scoring
+(Section 6.2), so a missing criterion has no effective weight. Rules that do not add points are
+listed separately: escalation rules, with their effect ("raised the class from *X* to at least
+*Y*", "triggered, no effect" or "not evaluable"), the data-completeness check and a class set by a
+reviewer. Every entry has a citable id, such as `risk:credit_risk`, `risk:rule:compliance_status`
+or `performance:dim:delivery`.
+
+**2. AI explanation (optional).** The Supplier Review Agent of Section 6.9 receives this trace as
+its payload and must cite trace ids for its summary, drivers, view differences and actions. It
+explains; it computes nothing.
+
+**3. Controlled correction.** Two kinds of correction are kept apart (`tools/corrections.py`):
+- a *data correction* changes an input value, or the expert rating of an expert-assessed
+  criterion
+- an *expert override* replaces a rating derived by rule with an expert 1–5 rating
+
+A reason is mandatory. Weights, thresholds and rules cannot be changed here; they remain subject
+to calibration and approval (Sections 6.4 and 9). A preview re-scores the supplier
+deterministically in both views and shows before and after: score, class, class from score, data
+completeness, review flag, the changed criteria with rating, origin and contribution, and the
+rules now or no longer triggered. Nothing is applied until the correction is confirmed. A confirmed
+correction is appended to a history (`corrections.jsonl`) with old and new values, kind, reason,
+time, the name as typed (`identity_verified: false`), model and weight version, and before/after
+per view. An existing AI explanation is then marked *outdated*, because its input hash no longer
+matches, and is not regenerated automatically.
+
+**4. Dispute.** A user who disagrees with an assessment without having a corrected value can
+record an objection (criterion, reason, status *open*; `objections.jsonl`). An objection changes
+no score and trains no weights.
+
+The workflow separates three things that a single editable cell would mix: explaining a result,
+correcting its inputs, and changing the method. Only the first two happen here, and both leave a
+record. Section 7.9 shows one end-to-end case.
 
 ---
 
 ## 7 Demonstration on synthetic data
 
-All numbers in this section are produced by deterministic scripts, run on commit `6bb05b9`:
+All numbers in Sections 7.1–7.8 are produced by deterministic scripts, run on commit `6bb05b9`
+(Section 7.9 reports one interface run on commit `b8a08b5`):
 - `examples/calibrate_weights.py`: the reference run
 - `scripts/validate_calibration.py`: experiments E1–E3
 - `scripts/robustness_calibration.py`: experiment E4 (Section 7.7)
@@ -1057,7 +1208,7 @@ The tables behind every figure are in `docs/paper/results/` (`calibration-valida
 generated by a constructed expert policy; no real category manager provided labels, and no result
 has been validated in the field. The experiments therefore show how the calibration procedure
 behaves under known conditions, not how well it works in practice. What that does and does not
-allow is discussed in Sections 7.9 and 10.
+allow is discussed in Sections 7.10 and 10.
 
 ### 7.1 Design
 
@@ -1548,7 +1699,71 @@ means:
 A rule that sometimes forgoes an improvement is the right failure mode for weights that drive
 supplier decisions. A rule that sometimes makes them worse is not.
 
-### 7.9 What the demonstration shows, and what it does not
+### 7.9 Explain & correct on one synthetic supplier
+
+This case was run end to end in the interface on 12 October 2026 (commit `b8a08b5`), on the
+fictional supplier SUP-004 "Delta Fibre Media" of the sample data. All its inputs are entered by
+hand without source or data date, and the trace says so. Figure 8 shows the three stages.
+
+![Figure 8](figures/fig08_explain_correct.png)
+
+*Figure 8. Explain & correct for the fictional supplier SUP-004 (screenshots, synthetic data).
+(a) Scoring trace of the risk view before the correction: rating, contribution in points, nominal
+and effective weight and rating origin per criterion; the points add up to the internal score of
+41.75 (inputs and rule columns are cut off on the right). The escalation rule is listed
+separately as a rule that adds no points. (b) Data correction with a mandatory reason and its preview: both views
+re-scored, nothing applied yet. (c) After confirmation, the earlier AI explanation is marked
+outdated and not regenerated.*
+
+**Before.** The risk score is 41.75, which falls in the band *medium*; the final class is *high*
+because the escalation rule `risk:rule:compliance_status` fired (compliance status
+*critical_findings*, rating 5). The largest contributions are the ESG rating with 12.0 points (ESG
+score 22, rating 5), compliance status 8.0, change complexity 5.25 (an expert override) and
+sourcing strategy 4.38; all contributions sum to 41.75. In the performance view the score is 38.75
+(internal 61.25), class C, driven by on-time delivery and delivered quality with 22.5 internal points
+each. The compliance escalation also fired there but had no effect, because the class was
+already C.
+
+**AI explanation.** A real explanation (model `claude-opus-5-5`) passed validation. In a manual
+spot check, the author found all 64 numbers in its text in the trace. It explained the
+escalation separately from the score, named the hand-entered inputs without source, and asked open
+questions for the three missing inputs (time to exit, political stability, intercontinental
+transport). Its action "suspend new business until resolved" was checked against the trace and is
+one of the rule-based actions.
+
+**Correction.** A data correction set compliance status from *critical_findings* to
+*minor_findings*, with the reason "Re-audit on 30 Sep 2026 closed the critical finding; two minor
+findings remain (synthetic example)", entered by "Category manager (example)" (not verified).
+
+**Preview and confirmation.** The preview is summarised in the table below. After confirmation, the correction was
+recorded in `corrections.jsonl` with these values, the model version
+(`generic-supplier-risk-template@0.1.0` and the performance template) and the weight version
+(`global/default`). The AI explanation was marked outdated; no new language-model call was made.
+
+*Preview of the correction for SUP-004 (unnumbered table; synthetic data). Performance scores as
+displayed (higher is better); contributions in internal points.*
+
+| | Risk view | Performance view |
+|---|---|---|
+| Score | 41.75 → 35.75 | 38.75 → 40.62 |
+| Class | high → medium | C → C |
+| Compliance status: rating | 5 → 2 | 5 → 2 |
+| Compliance status: contribution | 8.0 → 2.0 | 2.5 → 0.62 |
+| Escalation `compliance_status` | no longer triggered | no longer triggered |
+
+**What the case shows, and what it does not.** It shows that the parts work together as designed
+on one synthetic supplier: the trace accounts for the score exactly and keeps the class floor
+apart from it, the correction removes the escalation and lowers the risk class, the effect is
+visible before anything is applied, and the record and the outdated marker follow confirmation.
+Together with the tests (Section 6.8), this is **technical verification**: the arithmetic adds up,
+the schema and citation checks reject non-conforming answers, and the real API path works. It is
+not **domain validation**, which has not been done. No practitioner has used the workflow, no
+real supplier data was involved, and neither the quality of the explanations, nor the accuracy of
+corrections, nor their effect on false alarms or decisions was measured. Whether the re-audit
+justified the correction is exactly the judgement the workflow leaves to a person; the system
+only makes it explicit and recorded.
+
+### 7.10 What the demonstration shows, and what it does not
 
 **It shows that, under controlled conditions,** the calibration procedure:
 - generalises: the cross-validated error approaches the noise floor
@@ -1607,6 +1822,10 @@ both views.**
 - **Transparent and reproducible:** the scoring is deterministic, configurable and fully tested.
 - **Governed:** the human review is a real pause in the workflow, not a notification, and weights
   are versioned with their approver.
+- **Explainable and correctable:** each result comes with a deterministic trace whose
+  contributions add up to the score; corrections need a reason, are previewed in both views and
+  recorded after confirmation (Sections 6.10 and 7.9). This is verified technically; whether it
+  helps category managers is untested.
 - **Able to learn:** weights are fitted to expert judgement under constraints, with a
   cross-validated acceptance test.
 - **At open-source cost:** the code base is small and MIT-licensed: about 3,600 lines of Python
@@ -1622,6 +1841,8 @@ On synthetic data only, the calibration:
   what happens if they do not.
 - that calibrated scores predict disruptions
 - that the approach scales operationally to an enterprise portfolio
+- that the scoring trace and its explanations are understood and useful in practice, or that
+  corrections reduce false alarms or improve decisions
 
 These are empirical questions for future work (Section 11), not conclusions of this paper.
 
@@ -1744,6 +1965,8 @@ demonstrator does not enforce roles (Section 10).
 | Holistic expert labels for calibration | **Category managers**, collected blind to the model score | Annual or periodic labelling round | Supplier record (`expert_risk_score`) |
 | Calibrated weights | **Approver** distinct from the label providers (four-eyes, recommended) | Approval at the human-review pause | Versioned weight store, with approver, metrics and timestamp |
 | Manual class overrides | **Decision owner** for the supplier | Review decision, with mandatory comment | Assessment (`manual_override`, `review_comment`); audit trail |
+| Data corrections and expert overrides of derived ratings | **Category manager** for the supplier | Explain & correct, with mandatory reason, confirmed after a before/after preview (Section 6.10) | Correction history (`corrections.jsonl`) with old and new values, reason, name as typed (not verified), model and weight version |
+| Disputes of an assessment | Anyone reviewing the result | Objection with reason; changes no score | Objection log (`objections.jsonl`), status *open* |
 | Indicators from external sources | **Data owner** per source | Data refresh | Indicator provenance: provider and data vintage per indicator (Section 6.7); the source data itself is not versioned |
 
 Two principles follow from the method:
@@ -1825,8 +2048,13 @@ already run:
   also built one of the rated approaches and thus rates their own work. Rationales, confidence marks and the v0.2 correction reduce this bias but do not
   remove it. The v0.3 review added a factor on which the proposed approach is strong (risk and
   performance integration), sharpened another towards agentic orchestration, and re-rated five
-  factors in its favour after practitioner feedback. These changes are documented, but they
-  increase the need for independent re-rating, which is future work.
+  factors in its favour after practitioner feedback. The v0.5 review sharpened factors 2 and 6 and
+  wrote rating anchors after the author had built the Explain & correct workflow; the anchors fit
+  the demonstrator's design, and they raised its ratings on both factors. These changes are
+  documented, but they increase the need for independent re-rating, which is future work.
+- **Unknown values.** Where public documentation is silent, values are marked unknown or as a
+  documented minimum (≥). The SaaS profile then averages only the known values, and vendors may
+  offer more than their documentation shows.
 - **Platform evidence.** The commercial platforms were rated on public information only, as of
   October 2026. Whether they offer performance evaluation or agentic workflows beyond their public
   documentation is not known.
@@ -1861,17 +2089,30 @@ already run:
 - **Orchestration, not language models.** The "agentic" architecture is an orchestrated workflow
   of deterministic agents with a rule-based supervisor. Document extraction and an LLM-based
   supervisor are planned, not implemented.
+- **Explain & correct: technically verified, not validated in the domain.** Technical
+  verification covers the exact additivity of contributions, the correction and history logic,
+  the schema and citation checks, and one real end-to-end run on a synthetic supplier (Sections
+  6.8, 7.9). Domain validation has not been done: no practitioner has used the workflow, no real
+  supplier data was involved, and neither the quality of explanations, nor the accuracy of
+  corrections, nor false alarms or decision quality were measured. No such benefit is claimed,
+  and no superiority over the commercial platforms follows from it. Further limits:
+  - the trace is only as good as the data entered; in the sample data, all inputs lack a source
+  - names in the correction history are typed in and not verified; there are no roles
+  - corrections and objections are local files without access control
+  - objections are recorded but have no resolution workflow
 - **Experimental, unevaluated review agent.** The optional Supplier Review Agent (Section 6.9) was
-  tested with mocked model responses on synthetic suppliers, plus one real smoke test and a manual
-  spot check of two synthetic suppliers (one complete, one with many data gaps). These check
-  plumbing, validation and traceability of numbers in two answers, not quality in general.
+  tested with mocked model responses on synthetic suppliers, plus real smoke tests and manual spot
+  checks of three synthetic suppliers (one complete, one with many data gaps, and SUP-004 with the
+  trace payload, Section 7.9). These check plumbing, validation and traceability of numbers in
+  three answers, not quality in general.
   Nothing in this paper evaluates the quality, correctness or usefulness of the generated
   reviews, and no claim of domain validity follows from them.
   - **External provider.** When triggered, the payload (structured results, without name,
     country or spend) is sent to an external provider, Anthropic. Whether that is acceptable
     is an organisational decision.
-  - **Errors despite validation.** Validation checks references to criteria and views and the
-    handling of missing data, not every sentence. The text may still misread or overstate the
+  - **Errors despite validation.** Validation checks references to criteria, views and trace
+    ids and the handling of missing data, not every sentence, and not whether a cited trace entry
+    supports the sentence citing it. The text may still misread or overstate the
     results, and it should be read as a draft for a human reviewer.
 - **Not production-hardened.** The demonstrator has:
   - no roles or permissions
@@ -1921,9 +2162,10 @@ value relative to effort.
    the model score, and a pre-registered comparison of cross-validated error with and without
    calibration.
 2. **Independent re-rating of the benchmark.** Three to five practitioners rate the comparison
-   matrix independently, and the spread is reported as bands in Figure 1. This applies in
-   particular to the v0.3 additions and v0.4 consolidation, including integration (now factor 15), ideally with hands-on evaluation of the
-   platforms.
+   matrix independently against the published anchors, and the spread is reported as bands in
+   Figure 1. This applies in particular to the v0.3 additions, the v0.4 consolidation and the v0.5
+   anchors for factors 2 and 6, which the author wrote after building the feature they reward,
+   ideally with hands-on evaluation of the platforms.
 3. **Predictive validation.** Link scores to observed supplier incidents (delivery failures,
    insolvencies, compliance findings) over time. This needs incident data and a longitudinal
    design. It is the only route to the question this paper explicitly leaves open: whether
@@ -1952,10 +2194,17 @@ value relative to effort.
    reviews on real or realistic cases for correctness, faithfulness to the results and
    usefulness, and the result should decide whether it stays. Document extraction and an
    LLM-based supervisor remain planned.
-5. **Roles and persistence.** A role model that enforces separation of duties (Section 9.2), a
+5. **Evaluate Explain & correct with practitioners.** Category managers should work with the
+   trace and the correction workflow on real or realistic cases. Measures would include whether
+   users can state why a supplier got its class, whether cited trace entries support the
+   explanation's sentences, how often corrections are justified on later review, and whether
+   flagged suppliers that turn out to be false alarms are resolved faster. A check that cited
+   entries support their sentences could also be automated.
+6. **Roles and persistence.** A role model that enforces separation of duties (Section 9.2), verified
+   identities in the correction history, a resolution workflow for objections, a
    persistent checkpointer so that reviews can be decided in a later session, a central store for
    the assessment history, and tracking of actions to closure.
-6. **Platform integration pattern.** A documented adapter that turns a platform score into a
+7. **Platform integration pattern.** A documented adapter that turns a platform score into a
    rating source, including handling of overlapping factors (Section 8.2).
 
 **Benchmark maintenance.**
@@ -1991,6 +2240,10 @@ fill the method side of that gap and to close the second one:
 - calibrate weights against expert labels under constraints, with a cross-validated acceptance
   test
 - pause for human approval wherever judgement is required
+- make every result explainable and correctable: a deterministic trace whose contributions add
+  up to the score, an optional language-model explanation that must cite it, corrections with a
+  reason that are recomputed deterministically, previewed before and after, confirmed by a person
+  and recorded
 
 On synthetic data, the calibration generalises close to the noise floor and recovers substantial
 weight differences. With few labels it needs both regularisation and an out-of-sample acceptance
@@ -2001,6 +2254,7 @@ What remains open is stated as plainly:
 - The labels were synthetic, generated by the fitted model family or by constructed expert
   policies; no real expert labels were used and nothing was validated in the field.
 - The benchmark is the author's qualitative assessment, not a measurement.
+- Explain & correct is verified technically, not validated with practitioners or real data.
 - Agreement with experts is not predictive validity.
 - The approach supplies external signals only in part.
 
