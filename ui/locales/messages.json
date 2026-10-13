@@ -1,0 +1,2554 @@
+{
+  "Note for this snapshot": {
+    "de": "Notiz zu diesem Stand",
+    "en": "Note for this snapshot"
+  },
+  "e.g. annual review 2026": {
+    "de": "z. B. Jahresprüfung 2026",
+    "en": "e.g. annual review 2026"
+  },
+  "📌 Save snapshot": {
+    "de": "📌 Stand speichern",
+    "en": "📌 Save snapshot"
+  },
+  "Supplier inputs": {
+    "de": "Lieferantendaten",
+    "en": "Supplier inputs"
+  },
+  "One sheet for both views: shared criteria appear once. Add new suppliers at the bottom (or import a CSV in the sidebar) and press **Recalculate**. Changes to suppliers that already have a result are not applied directly: they need a reason, a preview and your confirmation, and are recorded in the history. Expert ratings: 1 (favourable) – 5 (unfavourable). Empty cells mean “no data”.": {
+    "de": "Eine Tabelle für beide Perspektiven: Gemeinsame Kriterien erscheinen einmal. Neue Lieferanten unten hinzufügen oder eine CSV unter Daten & Import laden, dann **Neu berechnen** wählen. Änderungen an bereits bewerteten Lieferanten erfordern Begründung, Vorschau und Bestätigung und werden protokolliert. Expertenurteile: 1 (günstig) – 5 (ungünstig). Leere Zellen bedeuten „keine Daten“.",
+    "en": "One sheet for both views: shared criteria appear once. Add new suppliers at the bottom (or import a CSV in the sidebar) and press **Recalculate**. Changes to suppliers that already have a result are not applied directly: they need a reason, a preview and your confirmation, and are recorded in the history. Expert ratings: 1 (favourable) – 5 (unfavourable). Empty cells mean “no data”."
+  },
+  "Scope": {
+    "de": "Geltungsbereich",
+    "en": "Scope"
+  },
+  "▶️ Recalculate": {
+    "de": "▶️ Neu berechnen",
+    "en": "▶️ Recalculate"
+  },
+  "Expert labels — {v0} view": {
+    "de": "Expertenbewertungen — Perspektive {v0}",
+    "en": "Expert labels — {v0} view"
+  },
+  "Give a holistic {v0} (0–100, {v1}) for suppliers you know well — ideally before looking at the model score. Calibration fits this view's weights to these labels; safeguards decide whether the result is trustworthy. Approval happens in **✅ Review & approval**.": {
+    "de": "Vergeben Sie einen ganzheitlichen {v0} (0–100, {v1}) für gut bekannte Lieferanten, möglichst bevor Sie den Modellwert ansehen. Die Kalibrierung passt die Gewichte an diese Bewertungen an; Qualitätsprüfungen sichern das Ergebnis ab. Die Bestätigung erfolgt unter **Freigaben**.",
+    "en": "Give a holistic {v0} (0–100, {v1}) for suppliers you know well — ideally before looking at the model score. Calibration fits this view's weights to these labels; safeguards decide whether the result is trustworthy. Approval happens in **✅ Review & approval**."
+  },
+  "Import labels CSV (columns supplier_id, {v0})": {
+    "de": "Bewertungen als CSV importieren (Spalten supplier_id, {v0})",
+    "en": "Import labels CSV (columns supplier_id, {v0})"
+  },
+  "Calibrate for": {
+    "de": "Kalibrieren für",
+    "en": "Calibrate for"
+  },
+  "🎯 Calibrate": {
+    "de": "🎯 Kalibrieren",
+    "en": "🎯 Calibrate"
+  },
+  "{v0} supplier(s) labelled for this view. Roughly 30 or more consistent labels per scope are needed before calibration is usually accepted.": {
+    "de": "{v0} Lieferanten mit Expertenbewertung in dieser Perspektive. Für eine akzeptierte Kalibrierung sind meist mindestens 30 konsistente Bewertungen pro Geltungsbereich nötig.",
+    "en": "{v0} supplier(s) labelled for this view. Roughly 30 or more consistent labels per scope are needed before calibration is usually accepted."
+  },
+  "**Management summary**": {
+    "de": "**Zusammenfassung**",
+    "en": "**Management summary**"
+  },
+  "Based on: ": {
+    "de": "Grundlage: ",
+    "en": "Based on: "
+  },
+  "**Main drivers**": {
+    "de": "**Wichtigste Einflussfaktoren**",
+    "en": "**Main drivers**"
+  },
+  "**Suggested actions** — proposals for human review, not decisions": {
+    "de": "**Empfohlene Maßnahmen** — Vorschläge zur fachlichen Prüfung, keine Entscheidungen",
+    "en": "**Suggested actions** — proposals for human review, not decisions"
+  },
+  "{v0} / {v1} · {v2} · input SHA-256 {v3}…": {
+    "de": "{v0} / {v1} · {v2} · Eingabe SHA-256 {v3}…",
+    "en": "{v0} / {v1} · {v2} · input SHA-256 {v3}…"
+  },
+  "**{v0}** · {v1} **{v2}** · class **{v3}** · data {v4} · model `{v5}` · weights `{v6}`": {
+    "de": "**{v0}** · {v1} **{v2}** · Klasse **{v3}** · Datenbasis {v4} · Modell `{v5}` · Gewichte `{v6}`",
+    "en": "**{v0}** · {v1} **{v2}** · class **{v3}** · data {v4} · model `{v5}` · weights `{v6}`"
+  },
+  ". Sum of contributions: {v0} = internal score {v1}.": {
+    "de": ". Summe der Beiträge: {v0} = interner Wert {v1}.",
+    "en": ". Sum of contributions: {v0} = internal score {v1}."
+  },
+  "Rules that do not add points: ": {
+    "de": "Regeln ohne zusätzliche Punkte: ",
+    "en": "Rules that do not add points: "
+  },
+  "none triggered.": {
+    "de": "keine ausgelöst.",
+    "en": "none triggered."
+  },
+  "Zurück zum Portfolio": {
+    "de": "Zurück zum Portfolio",
+    "en": "Back to portfolio"
+  },
+  "SUPPLIER WORKSPACE / LIEFERANTENDETAIL": {
+    "de": "SUPPLIER WORKSPACE / LIEFERANTENDETAIL",
+    "en": "SUPPLIER WORKSPACE / SUPPLIER DETAIL"
+  },
+  "SUPPLIER WORKSPACE / WILLKOMMEN": {
+    "de": "SUPPLIER WORKSPACE / WILLKOMMEN",
+    "en": "SUPPLIER WORKSPACE / WELCOME"
+  },
+  "Gute Entscheidungen beginnen\nmit einem klaren Überblick.": {
+    "de": "Gute Entscheidungen beginnen\nmit einem klaren Überblick.",
+    "en": "Good decisions begin\nwith a clear overview."
+  },
+  "Risiken erkennen. Leistung verstehen. Bewertungen gemeinsam verbessern.": {
+    "de": "Risiken erkennen. Leistung verstehen. Bewertungen gemeinsam verbessern.",
+    "en": "Identify risks. Understand performance. Improve assessments together."
+  },
+  "Mit eigenen Daten starten": {
+    "de": "Mit eigenen Daten starten",
+    "en": "Start with your own data"
+  },
+  "CSV importieren oder Lieferanten erfassen. Bewertungen werden auf Anfrage berechnet.": {
+    "de": "CSV importieren oder Lieferanten erfassen. Bewertungen werden auf Anfrage berechnet.",
+    "en": "Import a CSV or enter suppliers. Assessments are calculated on request."
+  },
+  "SUPPLIER WORKSPACE / PORTFOLIO": {
+    "de": "SUPPLIER WORKSPACE / PORTFOLIO",
+    "en": "SUPPLIER WORKSPACE / PORTFOLIO"
+  },
+  "Lieferantenportfolio": {
+    "de": "Lieferantenportfolio",
+    "en": "Supplier portfolio"
+  },
+  "Risiko und Performance. Alle Lieferanten im Blick.": {
+    "de": "Risiko und Performance. Alle Lieferanten im Blick.",
+    "en": "Risk and performance. All suppliers at a glance."
+  },
+  "Neu berechnen": {
+    "de": "Neu berechnen",
+    "en": "Recalculate"
+  },
+  "Daten & Import": {
+    "de": "Daten & Import",
+    "en": "Data & import"
+  },
+  "Lieferanten erfassen, Beispieldaten laden oder eine eigene CSV importieren.": {
+    "de": "Lieferanten erfassen, Beispieldaten laden oder eine eigene CSV importieren.",
+    "en": "Enter suppliers, load sample data or import your own CSV."
+  },
+  "Beispieldaten": {
+    "de": "Beispieldaten",
+    "en": "Sample data"
+  },
+  "Beispieldaten laden": {
+    "de": "Beispieldaten laden",
+    "en": "Load sample data"
+  },
+  "CSV importieren": {
+    "de": "CSV importieren",
+    "en": "Import CSV"
+  },
+  "Eingabedaten exportieren": {
+    "de": "Eingabedaten exportieren",
+    "en": "Export input data"
+  },
+  "CSV-Vorlage herunterladen": {
+    "de": "CSV-Vorlage herunterladen",
+    "en": "Download CSV template"
+  },
+  "Einstellungen": {
+    "de": "Einstellungen",
+    "en": "Settings"
+  },
+  "Store approved weights (versioned)": {
+    "de": "Freigegebene Gewichte speichern (versioniert)",
+    "en": "Store approved weights (versioned)"
+  },
+  "Weight store folder": {
+    "de": "Ordner für Gewichte",
+    "en": "Weight store folder"
+  },
+  "Political stability from World Bank WGI (MOCK)": {
+    "de": "Politische Stabilität: World Bank WGI (Demodaten)",
+    "en": "Political stability from World Bank WGI (MOCK)"
+  },
+  "History folder": {
+    "de": "Ordner für Historie",
+    "en": "History folder"
+  },
+  "Mock-Daten sind fiktiv. Nach Änderungen im Portfolio neu berechnen.": {
+    "de": "Mock-Daten sind fiktiv. Nach Änderungen im Portfolio neu berechnen.",
+    "en": "Mock data is fictional. Recalculate the portfolio after changes."
+  },
+  "Die optionale KI-Erklärung wird nur im Lieferantendetail ausdrücklich angefordert. API-Zugang über die lokale .env-Datei konfigurieren.": {
+    "de": "Die optionale KI-Erklärung wird nur im Lieferantendetail ausdrücklich angefordert. API-Zugang über die lokale .env-Datei konfigurieren.",
+    "en": "Optional AI explanations are requested explicitly in the supplier detail. Configure API access in the local .env file."
+  },
+  "### :material/view_quilt: Supplier Workspace": {
+    "de": "### :material/view_quilt: Supplier Workspace",
+    "en": "### :material/view_quilt: Supplier Workspace"
+  },
+  "PROCUREMENT · RISK & PERFORMANCE": {
+    "de": "EINKAUF · RISIKO & PERFORMANCE",
+    "en": "PROCUREMENT · RISK & PERFORMANCE"
+  },
+  "ARBEITSBEREICH": {
+    "de": "ARBEITSBEREICH",
+    "en": "WORKSPACE"
+  },
+  "{v0} Lieferanten · lokal": {
+    "de": "{v0} Lieferanten · lokal",
+    "en": "{v0} suppliers · local"
+  },
+  "Nachvollziehbare Bewertungen. Entscheidungen bleiben bei Ihnen.": {
+    "de": "Nachvollziehbare Bewertungen. Entscheidungen bleiben bei Ihnen.",
+    "en": "Transparent assessments. Decisions remain yours."
+  },
+  "Bewertungsperspektive": {
+    "de": "Bewertungsperspektive",
+    "en": "Assessment perspective"
+  },
+  "Eingabedaten prüfen: {v0}": {
+    "de": "Eingabedaten prüfen: {v0}",
+    "en": "Check input data: {v0}"
+  },
+  "Laden Sie zunächst Lieferantendaten oder starten Sie die Demo.": {
+    "de": "Laden Sie zunächst Lieferantendaten oder starten Sie die Demo.",
+    "en": "Load supplier data or try the demo first."
+  },
+  "Zum Einstieg": {
+    "de": "Zum Einstieg",
+    "en": "Go to start"
+  },
+  "Alle Auswirkungen der Korrektur": {
+    "de": "Alle Auswirkungen der Korrektur",
+    "en": "All effects of the correction"
+  },
+  "No criterion rating changes.": {
+    "de": "Keine Änderungen an Kriterienbewertungen.",
+    "en": "No criterion rating changes."
+  },
+  "No results yet.": {
+    "de": "Noch keine Ergebnisse.",
+    "en": "No results yet."
+  },
+  "Material group": {
+    "de": "Warengruppe",
+    "en": "Material group"
+  },
+  "Suppliers": {
+    "de": "Lieferanten",
+    "en": "Suppliers"
+  },
+  "Mean {v0}": {
+    "de": "Durchschnitt {v0}",
+    "en": "Mean {v0}"
+  },
+  "Share {v0}": {
+    "de": "Anteil {v0}",
+    "en": "Share {v0}"
+  },
+  "Need review": {
+    "de": "Prüfung erforderlich",
+    "en": "Need review"
+  },
+  "Raised by escalation rule": {
+    "de": "Durch Eskalationsregel erhöht",
+    "en": "Raised by escalation rule"
+  },
+  "**All material groups**": {
+    "de": "**Alle Warengruppen**",
+    "en": "**All material groups**"
+  },
+  "No actions.": {
+    "de": "Keine Maßnahmen.",
+    "en": "No actions."
+  },
+  "Action framework: measures per risk class, per elevated dimension and per factor level. Defined in the view's YAML (`actions`, `dimension_triggers`, `factor_actions`).": {
+    "de": "Maßnahmen nach Risikoklasse, erhöhter Dimension und Kriterienbewertung. Definiert im YAML der Perspektive (`actions`, `dimension_triggers`, `factor_actions`).",
+    "en": "Action framework: measures per risk class, per elevated dimension and per factor level. Defined in the view's YAML (`actions`, `dimension_triggers`, `factor_actions`)."
+  },
+  "Class": {
+    "de": "Klasse",
+    "en": "Class"
+  },
+  "Level": {
+    "de": "Ebene",
+    "en": "Level"
+  },
+  "Owner": {
+    "de": "Verantwortlich",
+    "en": "Owner"
+  },
+  "Export action plan CSV": {
+    "de": "Maßnahmenplan als CSV exportieren",
+    "en": "Export action plan CSV"
+  },
+  "Saved {v0} rows to {v1}/{v2}.jsonl": {
+    "de": "{v0} Zeilen in {v1}/{v2}.jsonl gespeichert",
+    "en": "Saved {v0} rows to {v1}/{v2}.jsonl"
+  },
+  "No snapshots yet for this view. Save one above; approved reviews are saved automatically.": {
+    "de": "Noch keine gespeicherten Stände für diese Perspektive. Oben speichern; freigegebene Bewertungen werden automatisch gespeichert.",
+    "en": "No snapshots yet for this view. Save one above; approved reviews are saved automatically."
+  },
+  "{v0} snapshot(s) for the {v1} view.": {
+    "de": "{v0} gespeicherte Stände für die Perspektive {v1}.",
+    "en": "{v0} snapshot(s) for the {v1} view."
+  },
+  "Supplier ID": {
+    "de": "Lieferanten-ID",
+    "en": "Supplier ID"
+  },
+  "Annual spend": {
+    "de": "Jährliches Einkaufsvolumen",
+    "en": "Annual spend"
+  },
+  "Transport": {
+    "de": "Transport",
+    "en": "Transport"
+  },
+  "Intercontinental": {
+    "de": "Interkontinental",
+    "en": "Intercontinental"
+  },
+  "On-time %": {
+    "de": "Termintreue %",
+    "en": "On-time %"
+  },
+  "PPM": {
+    "de": "PPM",
+    "en": "PPM"
+  },
+  "Compliance": {
+    "de": "Compliance",
+    "en": "Compliance"
+  },
+  "Changes to suppliers that already have a result are **not applied yet**. Give a reason, preview the effect in both views and confirm; the correction is then recorded in the history. New suppliers can still be entered directly.": {
+    "de": "Änderungen an bereits bewerteten Lieferanten sind **noch nicht übernommen**. Begründen Sie die Änderung, prüfen Sie beide Perspektiven in der Vorschau und bestätigen Sie. Die Korrektur wird protokolliert. Neue Lieferanten können weiterhin direkt erfasst werden.",
+    "en": "Changes to suppliers that already have a result are **not applied yet**. Give a reason, preview the effect in both views and confirm; the correction is then recorded in the history. New suppliers can still be entered directly."
+  },
+  "Inputs changed since the last run — recalculate to update the results.": {
+    "de": "Eingaben seit der letzten Berechnung geändert — neu berechnen, um Ergebnisse zu aktualisieren.",
+    "en": "Inputs changed since the last run — recalculate to update the results."
+  },
+  "Result": {
+    "de": "Ergebnis",
+    "en": "Result"
+  },
+  "Labels used": {
+    "de": "Verwendete Bewertungen",
+    "en": "Labels used"
+  },
+  "Waiting for your decision — {v0} view": {
+    "de": "Ihre Entscheidung ist gefragt — Perspektive {v0}",
+    "en": "Waiting for your decision — {v0} view"
+  },
+  "Outdated: this AI explanation was generated before {v0}. The numbers above are current; generate a new explanation to match them.": {
+    "de": "Veraltet: Diese KI-Erklärung entstand vor {v0}. Die Werte oben sind aktuell; erzeugen Sie eine neue Erklärung für diese Werte.",
+    "en": "Outdated: this AI explanation was generated before {v0}. The numbers above are current; generate a new explanation to match them."
+  },
+  "**Risk vs. performance**": {
+    "de": "**Risiko und Performance im Vergleich**",
+    "en": "**Risk vs. performance**"
+  },
+  "**Open questions**": {
+    "de": "**Offene Fragen**",
+    "en": "**Open questions**"
+  },
+  "Noch keine Bewertungen. Starten Sie die Demo oder importieren Sie Lieferantendaten.": {
+    "de": "Noch keine Bewertungen. Starten Sie die Demo oder importieren Sie Lieferantendaten.",
+    "en": "No assessments yet. Try the demo or import supplier data."
+  },
+  "Lieferant": {
+    "de": "Lieferant",
+    "en": "Supplier"
+  },
+  "{v0} · {v1} · {v2}": {
+    "de": "{v0} · {v1} · {v2}",
+    "en": "{v0} · {v1} · {v2}"
+  },
+  "Ihr Lieferantenportfolio. Zwei Perspektiven.": {
+    "de": "Ihr Lieferantenportfolio. Zwei Perspektiven.",
+    "en": "Your supplier portfolio. Two perspectives."
+  },
+  "Erkunden Sie sechs fiktive Lieferanten und sehen Sie, warum gute Performance nicht automatisch geringes Risiko bedeutet.": {
+    "de": "Erkunden Sie sechs fiktive Lieferanten und sehen Sie, warum gute Performance nicht automatisch geringes Risiko bedeutet.",
+    "en": "Explore six fictional suppliers and see why good performance does not automatically mean low risk."
+  },
+  "Demo ausprobieren": {
+    "de": "Demo ausprobieren",
+    "en": "Try the demo"
+  },
+  "Synthetische Daten · Kein API-Key nötig · Keine automatische KI-Anfrage": {
+    "de": "Synthetische Daten · Kein API-Key nötig · Keine automatische KI-Anfrage",
+    "en": "Synthetic data · No API key needed · No automatic AI requests"
+  },
+  "Noch keine Bewertungen. Importieren Sie eine CSV oder starten Sie die Demo.": {
+    "de": "Noch keine Bewertungen. Importieren Sie eine CSV oder starten Sie die Demo.",
+    "en": "No assessments yet. Import a CSV or try the demo."
+  },
+  "Zur Demo": {
+    "de": "Zur Demo",
+    "en": "Go to demo"
+  },
+  "Daten erfassen": {
+    "de": "Daten erfassen",
+    "en": "Enter data"
+  },
+  "Lieferanten suchen": {
+    "de": "Lieferanten suchen",
+    "en": "Search suppliers"
+  },
+  "Name oder Lieferanten-ID …": {
+    "de": "Name oder Lieferanten-ID …",
+    "en": "Name or supplier ID …"
+  },
+  "Warengruppe": {
+    "de": "Warengruppe",
+    "en": "Material group"
+  },
+  "Risikoklasse": {
+    "de": "Risikoklasse",
+    "en": "Risk class"
+  },
+  "Performance": {
+    "de": "Performance",
+    "en": "Performance"
+  },
+  "Nur Lieferanten mit Prüfbedarf": {
+    "de": "Nur Lieferanten mit Prüfbedarf",
+    "en": "Only suppliers requiring review"
+  },
+  "{v0} von {v1} Lieferanten · Zeile auswählen, um die Bewertung zu öffnen": {
+    "de": "{v0} von {v1} Lieferanten · Zeile auswählen, um die Bewertung zu öffnen",
+    "en": "{v0} of {v1} suppliers · Select a row to open the assessment"
+  },
+  "Risk: niedriger ist besser · Performance: höher ist besser · Skala 0–100. Eskalationsregeln können die Klasse unabhängig vom Score erhöhen.": {
+    "de": "Risiko: niedriger ist besser · Performance: höher ist besser · Skala 0–100. Eskalationsregeln können die Klasse unabhängig vom Wert erhöhen.",
+    "en": "Risk: lower is better · Performance: higher is better · Scale 0–100. Escalation rules can raise the class independently of the score."
+  },
+  "Tabelle exportieren": {
+    "de": "Tabelle exportieren",
+    "en": "Export table"
+  },
+  "Laden Sie Beispieldaten oder importieren Sie zunächst eine CSV-Vorlage.": {
+    "de": "Laden Sie Beispieldaten oder importieren Sie zunächst eine CSV-Vorlage.",
+    "en": "Load sample data or import a CSV template first."
+  },
+  "Verwaltung & Analyse": {
+    "de": "Verwaltung & Analyse",
+    "en": "Administration & analysis"
+  },
+  "Demo · synthetische Daten": {
+    "de": "Demo · synthetische Daten",
+    "en": "Demo · synthetic data"
+  },
+  "**Risiko**": {
+    "de": "**Risiko**",
+    "en": "**Risk**"
+  },
+  "**Performance**": {
+    "de": "**Performance**",
+    "en": "**Performance**"
+  },
+  "Vorher → Nachher": {
+    "de": "Vorher → Nachher",
+    "en": "Before → After"
+  },
+  "{v0} → {v1}": {
+    "de": "{v0} → {v1}",
+    "en": "{v0} → {v1}"
+  },
+  "**Top risks — {v0}**": {
+    "de": "**Höchste Risiken — {v0}**",
+    "en": "**Top risks — {v0}**"
+  },
+  "Supplier": {
+    "de": "Lieferant",
+    "en": "Supplier"
+  },
+  "Reason for the change (required)": {
+    "de": "Begründung der Änderung (erforderlich)",
+    "en": "Reason for the change (required)"
+  },
+  "Your name (optional, not verified)": {
+    "de": "Ihr Name (optional, ungeprüft)",
+    "en": "Your name (optional, not verified)"
+  },
+  "Preview table changes": {
+    "de": "Tabellenänderungen prüfen",
+    "en": "Preview table changes"
+  },
+  "**Preview — nothing is applied yet**": {
+    "de": "**Vorschau — noch nicht übernommen**",
+    "en": "**Preview — nothing is applied yet**"
+  },
+  "✅ Confirm table changes": {
+    "de": "✅ Tabellenänderungen bestätigen",
+    "en": "✅ Confirm table changes"
+  },
+  "Discard table changes": {
+    "de": "Tabellenänderungen verwerfen",
+    "en": "Discard table changes"
+  },
+  "Error before → after (cross-validated)": {
+    "de": "Fehler vorher → nachher (Kreuzvalidierung)",
+    "en": "Error before → after (cross-validated)"
+  },
+  "Clarity z (≥ 2 needed)": {
+    "de": "Eindeutigkeit z (≥ 2 erforderlich)",
+    "en": "Clarity z (≥ 2 needed)"
+  },
+  "Regularisation λ": {
+    "de": "Regularisierung λ",
+    "en": "Regularisation λ"
+  },
+  "Mean label − model (internal scale)": {
+    "de": "Durchschnitt Bewertung − Modell (interne Skala)",
+    "en": "Mean label − model (internal scale)"
+  },
+  "Review {v0} by {v1}.": {
+    "de": "Prüfung {v0} durch {v1}.",
+    "en": "Review {v0} by {v1}."
+  },
+  "Nothing to review. Runs pause here when data is insufficient or calibrated weights are proposed.": {
+    "de": "Keine Prüfung offen. Läufe warten hier bei unzureichenden Daten oder vorgeschlagenen kalibrierten Gewichten.",
+    "en": "Nothing to review. Runs pause here when data is insufficient or calibrated weights are proposed."
+  },
+  "**Proposed weights** for scope *{v0}* from {v1} labels — cross-validated error {v2} → {v3} (z = {v4}). Details in **🎯 Calibration**.": {
+    "de": "**Vorgeschlagene Gewichte** für *{v0}* aus {v1} Bewertungen — Fehler in der Kreuzvalidierung {v2} → {v3} (z = {v4}). Details unter **Kalibrierung**.",
+    "en": "**Proposed weights** for scope *{v0}* from {v1} labels — cross-validated error {v2} → {v3} (z = {v4}). Details in **🎯 Calibration**."
+  },
+  "**Suppliers flagged for review** — optionally set a class manually (with a comment).": {
+    "de": "**Lieferanten mit Prüfbedarf** — optional eine Klasse manuell festlegen (mit Kommentar).",
+    "en": "**Suppliers flagged for review** — optionally set a class manually (with a comment)."
+  },
+  "Reviewer": {
+    "de": "Prüfende Person",
+    "en": "Reviewer"
+  },
+  "Your name": {
+    "de": "Ihr Name",
+    "en": "Your name"
+  },
+  "Approve proposed weights": {
+    "de": "Vorgeschlagene Gewichte freigeben",
+    "en": "Approve proposed weights"
+  },
+  "✅ Submit decision": {
+    "de": "✅ Entscheidung bestätigen",
+    "en": "✅ Submit decision"
+  },
+  "Defer": {
+    "de": "Zurückstellen",
+    "en": "Defer"
+  },
+  "Messages": {
+    "de": "Meldungen",
+    "en": "Messages"
+  },
+  "- **{v0}** — {v1} `{v2}`": {
+    "de": "- **{v0}** — {v1} `{v2}`",
+    "en": "- **{v0}** — {v1} `{v2}`"
+  },
+  "- {v0} `{v1}`": {
+    "de": "- {v0} `{v1}`",
+    "en": "- {v0} `{v1}`"
+  },
+  "Missing data in the input (determined by the tool, not by the LLM): ": {
+    "de": "Fehlende Eingabedaten (vom Werkzeug ermittelt, nicht von der KI): ",
+    "en": "Missing data in the input (determined by the tool, not by the LLM): "
+  },
+  "Korrektur bestätigt. Beide Bewertungen wurden aktualisiert und die Änderung protokolliert.": {
+    "de": "Korrektur bestätigt. Beide Bewertungen wurden aktualisiert und die Änderung protokolliert.",
+    "en": "Correction confirmed. Both assessments have been updated and the change recorded."
+  },
+  "Bewertung nachvollziehen & korrigieren": {
+    "de": "Bewertung nachvollziehen & korrigieren",
+    "en": "Understand & correct the assessment"
+  },
+  "1  Verstehen   →   2  Korrektur begründen   →   3  Wirkung prüfen   →   4  Bestätigen": {
+    "de": "1  Verstehen   →   2  Korrektur begründen   →   3  Wirkung prüfen   →   4  Bestätigen",
+    "en": "1  Understand   →   2  Explain the correction   →   3  Preview the effect   →   4  Confirm"
+  },
+  "Korrektur begründen": {
+    "de": "Korrektur begründen",
+    "en": "Explain the correction"
+  },
+  "Korrigieren Sie einen Eingabewert oder ersetzen Sie eine abgeleitete Bewertung durch ein Expertenurteil (1–5). Begründen Sie die Änderung. Gewichte und Regeln werden separat kalibriert und freigegeben.": {
+    "de": "Korrigieren Sie einen Eingabewert oder ersetzen Sie eine abgeleitete Bewertung durch ein Expertenurteil (1–5). Begründen Sie die Änderung. Gewichte und Regeln werden separat kalibriert und freigegeben.",
+    "en": "Correct an input or replace a derived rating with an expert assessment (1–5). Give a reason for the change. Weights and rules are calibrated and approved separately."
+  },
+  "**{v0}**": {
+    "de": "**{v0}**",
+    "en": "**{v0}**"
+  },
+  "Keine Lieferanten gefunden. Passen Sie den Suchbegriff oder die Filter an.": {
+    "de": "Keine Lieferanten gefunden. Passen Sie den Suchbegriff oder die Filter an.",
+    "en": "No suppliers found. Adjust the search term or filters."
+  },
+  "Filter zurücksetzen": {
+    "de": "Filter zurücksetzen",
+    "en": "Reset filters"
+  },
+  "Lieferanten direkt öffnen": {
+    "de": "Lieferanten direkt öffnen",
+    "en": "Open a supplier directly"
+  },
+  "Lieferant auswählen": {
+    "de": "Lieferant auswählen",
+    "en": "Select supplier"
+  },
+  "Bewertung öffnen": {
+    "de": "Bewertung öffnen",
+    "en": "Open assessment"
+  },
+  "Regel entfällt: ": {
+    "de": "Regel entfällt: ",
+    "en": "Rule no longer triggered: "
+  },
+  "Neue Regel: ": {
+    "de": "Neue Regel: ",
+    "en": "New rule: "
+  },
+  "`{v0}`": {
+    "de": "`{v0}`",
+    "en": "`{v0}`"
+  },
+  "Changes applied and recorded": {
+    "de": "Änderungen übernommen und protokolliert",
+    "en": "Changes applied and recorded"
+  },
+  "Expert label (0–100, {v0})": {
+    "de": "Expertenbewertung (0–100, {v0})",
+    "en": "Expert label (0–100, {v0})"
+  },
+  "Model {v0}": {
+    "de": "Modell: {v0}",
+    "en": "Model {v0}"
+  },
+  "Weights as a table": {
+    "de": "Gewichte als Tabelle",
+    "en": "Weights as a table"
+  },
+  "Export weights CSV": {
+    "de": "Gewichte als CSV exportieren",
+    "en": "Export weights CSV"
+  },
+  "Approved weights stored as `{v0}`": {
+    "de": "Freigegebene Gewichte gespeichert als `{v0}`",
+    "en": "Approved weights stored as `{v0}`"
+  },
+  "Weight": {
+    "de": "Gewicht",
+    "en": "Weight"
+  },
+  "Effective weight": {
+    "de": "Effektives Gewicht",
+    "en": "Effective weight"
+  },
+  "Points": {
+    "de": "Punkte",
+    "en": "Points"
+  },
+  "Both views are needed: {v0}": {
+    "de": "Beide Perspektiven werden benötigt: {v0}",
+    "en": "Both views are needed: {v0}"
+  },
+  "Unvollständige Datenbasis: Diese Bewertung erfordert eine fachliche Prüfung.": {
+    "de": "Unvollständige Datenbasis: Diese Bewertung erfordert eine fachliche Prüfung.",
+    "en": "Incomplete data: this assessment requires a specialist review."
+  },
+  "Warum diese Bewertung?": {
+    "de": "Warum diese Bewertung?",
+    "en": "Why this assessment?"
+  },
+  "Empfohlene Maßnahmen": {
+    "de": "Empfohlene Maßnahmen",
+    "en": "Recommended actions"
+  },
+  "Alle korrigierbaren Felder und aktuellen Werte": {
+    "de": "Alle korrigierbaren Felder und aktuellen Werte",
+    "en": "All correctable fields and current values"
+  },
+  "Feld": {
+    "de": "Feld",
+    "en": "Field"
+  },
+  "Neuer Wert ('none' leert das Feld)": {
+    "de": "Neuer Wert ('none' leert das Feld)",
+    "en": "New value ('none' clears the field)"
+  },
+  "Begründung (erforderlich)": {
+    "de": "Begründung (erforderlich)",
+    "en": "Reason (required)"
+  },
+  "Ihr Name (optional, ungeprüft)": {
+    "de": "Ihr Name (optional, ungeprüft)",
+    "en": "Your name (optional, not verified)"
+  },
+  "Vorher/Nachher prüfen": {
+    "de": "Vorher/Nachher prüfen",
+    "en": "Preview before/after"
+  },
+  "**Vorschau — noch nicht übernommen**": {
+    "de": "**Vorschau — noch nicht übernommen**",
+    "en": "**Preview — not applied yet**"
+  },
+  "**Begründung dieser Vorschau:** ": {
+    "de": "**Begründung dieser Vorschau:** ",
+    "en": "**Reason for this preview:** "
+  },
+  "Korrektur bestätigen": {
+    "de": "Korrektur bestätigen",
+    "en": "Confirm correction"
+  },
+  "Vorschau verwerfen": {
+    "de": "Vorschau verwerfen",
+    "en": "Discard preview"
+  },
+  "KI-Erklärung · optional": {
+    "de": "KI-Erklärung · optional",
+    "en": "AI explanation · optional"
+  },
+  "Generate AI Review": {
+    "de": "KI-Erklärung erstellen",
+    "en": "Generate AI Review"
+  },
+  "One paid API call. The result is kept for this exact input; reruns of the app do not call the provider again.": {
+    "de": "Ein kostenpflichtiger API-Aufruf. Das Ergebnis bleibt für diese Eingabe erhalten; erneutes Anzeigen löst keinen weiteren Aufruf aus.",
+    "en": "One paid API call. The result is kept for this exact input; reruns of the app do not call the provider again."
+  },
+  "Bewertung beanstanden": {
+    "de": "Bewertung beanstanden",
+    "en": "Dispute assessment"
+  },
+  "Records that you disagree with a criterion. It changes no score and does not train weights; it is a note for the next review.": {
+    "de": "Hält Ihren Widerspruch zu einem Kriterium fest. Ändert keine Werte oder Gewichte und dient als Notiz für die nächste Prüfung.",
+    "en": "Records that you disagree with a criterion. It changes no score and does not train weights; it is a note for the next review."
+  },
+  "Demo wird vorbereitet …": {
+    "de": "Demo wird vorbereitet …",
+    "en": "Preparing the demo …"
+  },
+  "Risiko und Performance werden berechnet …": {
+    "de": "Risiko und Performance werden berechnet …",
+    "en": "Calculating risk and performance …"
+  },
+  "Import nicht möglich: {v0}. Prüfen Sie die CSV-Vorlage und versuchen Sie es erneut.": {
+    "de": "Import nicht möglich: {v0}. Prüfen Sie die CSV-Vorlage und versuchen Sie es erneut.",
+    "en": "Import failed: {v0}. Check the CSV template and try again."
+  },
+  "Correction not possible: {v0}": {
+    "de": "Korrektur nicht möglich: {v0}",
+    "en": "Correction not possible: {v0}"
+  },
+  "**RISIKO**": {
+    "de": "**RISIKO**",
+    "en": "**RISK**"
+  },
+  "**PERFORMANCE**": {
+    "de": "**PERFORMANCE**",
+    "en": "**PERFORMANCE**"
+  },
+  "Risiko bei Ausfall": {
+    "de": "Risiko bei Ausfall",
+    "en": "Risk of supplier failure"
+  },
+  "Leistung des Lieferanten": {
+    "de": "Leistung des Lieferanten",
+    "en": "Supplier performance"
+  },
+  "Niedriger ist besser": {
+    "de": "Niedriger ist besser",
+    "en": "Lower is better"
+  },
+  "Höher ist besser": {
+    "de": "Höher ist besser",
+    "en": "Higher is better"
+  },
+  "Datenbasis: {v0}": {
+    "de": "Datenbasis: {v0}",
+    "en": "Data completeness: {v0}"
+  },
+  "{v0}: {v1} → {v2}": {
+    "de": "{v0}: {v1} → {v2}",
+    "en": "{v0}: {v1} → {v2}"
+  },
+  "Korrektur gespeichert": {
+    "de": "Korrektur gespeichert",
+    "en": "Correction saved"
+  },
+  "Korrekturhistorie ({v0})": {
+    "de": "Korrekturhistorie ({v0})",
+    "en": "Correction history ({v0})"
+  },
+  "AI explanation not available: {v0} The calculation above is complete without it.": {
+    "de": "KI-Erklärung nicht verfügbar: {v0} Die obige Berechnung ist auch ohne KI vollständig.",
+    "en": "AI explanation not available: {v0} The calculation above is complete without it."
+  },
+  "Provider: **{v0}** · timeout {v1} s per attempt · up to {v2} retries": {
+    "de": "Anbieter: **{v0}** · Zeitlimit {v1} s pro Versuch · bis zu {v2} Wiederholungen",
+    "en": "Provider: **{v0}** · timeout {v1} s per attempt · up to {v2} retries"
+  },
+  "Data sent to the provider (exactly this JSON)": {
+    "de": "An den Anbieter übertragene Daten (exaktes JSON)",
+    "en": "Data sent to the provider (exactly this JSON)"
+  },
+  "The scoring trace of both views. Not sent: supplier name, country, annual spend and expert labels. Use synthetic or approved data only.": {
+    "de": "Berechnungsspur beider Perspektiven. Nicht enthalten: Lieferantenname, Land, Einkaufsvolumen und Expertenbewertungen. Verwenden Sie synthetische oder freigegebene Daten.",
+    "en": "The scoring trace of both views. Not sent: supplier name, country, annual spend and expert labels. Use synthetic or approved data only."
+  },
+  "Discard explanation": {
+    "de": "Erklärung verwerfen",
+    "en": "Discard explanation"
+  },
+  "AI explanation failed: {v0}": {
+    "de": "KI-Erklärung fehlgeschlagen: {v0}",
+    "en": "AI explanation failed: {v0}"
+  },
+  "View": {
+    "de": "Perspektive",
+    "en": "View"
+  },
+  "Criterion": {
+    "de": "Kriterium",
+    "en": "Criterion"
+  },
+  "Why is the assessment wrong? (required)": {
+    "de": "Warum ist die Bewertung falsch? (erforderlich)",
+    "en": "Why is the assessment wrong? (required)"
+  },
+  "Record objection": {
+    "de": "Beanstandung speichern",
+    "en": "Record objection"
+  },
+  "Risk ↓": {
+    "de": "Risiko ↓",
+    "en": "Risk ↓"
+  },
+  "Performance ↑": {
+    "de": "Performance ↑",
+    "en": "Performance ↑"
+  },
+  "Datenbasis": {
+    "de": "Datenbasis",
+    "en": "Data completeness"
+  },
+  "New class": {
+    "de": "Neue Klasse",
+    "en": "New class"
+  },
+  "Klasse aus Score: {v0}. Eine Eskalation oder Freigabe verändert die endgültige Klasse.": {
+    "de": "Klasse aus Score: {v0}. Eine Eskalation oder Freigabe verändert die endgültige Klasse.",
+    "en": "Class from score: {v0}. An escalation or approval changes the final class."
+  },
+  "**Risiko: wichtigste Beiträge**": {
+    "de": "**Risiko: wichtigste Beiträge**",
+    "en": "**Risk: main contributions**"
+  },
+  "**Performance: größte Abzüge**": {
+    "de": "**Performance: größte Abzüge**",
+    "en": "**Performance: largest deductions**"
+  },
+  "Daten, Quellen & Berechnung · ": {
+    "de": "Daten, Quellen & Berechnung · ",
+    "en": "Data, sources & calculation · "
+  },
+  "Risiko": {
+    "de": "Risiko",
+    "en": "Risk"
+  },
+  "Korrektur nicht möglich: {v0}": {
+    "de": "Korrektur nicht möglich: {v0}",
+    "en": "Correction not possible: {v0}"
+  },
+  "Waiting for {v0} …": {
+    "de": "Warten auf {v0} …",
+    "en": "Waiting for {v0} …"
+  },
+  "Objections ({v0})": {
+    "de": "Beanstandungen ({v0})",
+    "en": "Objections ({v0})"
+  },
+  "{v0} · {v1} Punkte": {
+    "de": "{v0} · {v1} Punkte",
+    "en": "{v0} · {v1} points"
+  },
+  "Performance = 100 − interne Belastungspunkte.": {
+    "de": "Performance = 100 − interne Belastungspunkte.",
+    "en": "Performance = 100 − internal burden points."
+  },
+  "{v0} · {v1}": {
+    "de": "{v0} · {v1}",
+    "en": "{v0} · {v1}"
+  },
+  "Objection recorded. Scores are unchanged.": {
+    "de": "Beanstandung gespeichert. Bewertungen bleiben unverändert.",
+    "en": "Objection recorded. Scores are unchanged."
+  },
+  "{v0} ({v1})": {
+    "de": "{v0} ({v1})",
+    "en": "{v0} ({v1})"
+  },
+  "Start": {
+    "de": "Start",
+    "en": "Home"
+  },
+  "Portfolio": {
+    "de": "Portfolio",
+    "en": "Portfolio"
+  },
+  "Lieferantendetail": {
+    "de": "Lieferantendetail",
+    "en": "Supplier detail"
+  },
+  "Dashboard": {
+    "de": "Dashboard",
+    "en": "Dashboard"
+  },
+  "Maßnahmen": {
+    "de": "Maßnahmen",
+    "en": "Actions"
+  },
+  "Historie": {
+    "de": "Historie",
+    "en": "History"
+  },
+  "Kalibrierung": {
+    "de": "Kalibrierung",
+    "en": "Calibration"
+  },
+  "Freigaben": {
+    "de": "Freigaben",
+    "en": "Approvals"
+  },
+  "Sample portfolio (6 suppliers)": {
+    "de": "Beispielportfolio (6 Lieferanten)",
+    "en": "Sample portfolio (6 suppliers)"
+  },
+  "Calibration demo (36 suppliers, synthetic expert labels)": {
+    "de": "Kalibrierungsdemo (36 Lieferanten, synthetische Expertenbewertungen)",
+    "en": "Calibration demo (36 suppliers, synthetic expert labels)"
+  },
+  "Noch keine Daten geladen": {
+    "de": "Noch keine Daten geladen",
+    "en": "No data loaded yet"
+  },
+  "01  Überblick gewinnen": {
+    "de": "01  Überblick gewinnen",
+    "en": "01  Get an overview"
+  },
+  "02  Bewertung verstehen": {
+    "de": "02  Bewertung verstehen",
+    "en": "02  Understand the assessment"
+  },
+  "03  Begründet korrigieren": {
+    "de": "03  Begründet korrigieren",
+    "en": "03  Correct with a reason"
+  },
+  "Risiko und Performance in einer gemeinsamen Tabelle vergleichen.": {
+    "de": "Risiko und Performance in einer gemeinsamen Tabelle vergleichen.",
+    "en": "Compare risk and performance in one table."
+  },
+  "Von der Bewertung bis zu Daten, Regeln und Quellen navigieren.": {
+    "de": "Von der Bewertung bis zu Daten, Regeln und Quellen navigieren.",
+    "en": "Explore the data, rules and sources behind the assessment."
+  },
+  "Die Wirkung prüfen und Änderungen bewusst bestätigen.": {
+    "de": "Die Wirkung prüfen und Änderungen bewusst bestätigen.",
+    "en": "Preview the effect and confirm your changes."
+  },
+  "Lieferanten": {
+    "de": "Lieferanten",
+    "en": "Suppliers"
+  },
+  "Erhöhtes Risiko": {
+    "de": "Erhöhtes Risiko",
+    "en": "Elevated risk"
+  },
+  "Prüfung erforderlich": {
+    "de": "Prüfung erforderlich",
+    "en": "Review required"
+  },
+  "im Portfolio": {
+    "de": "im Portfolio",
+    "en": "in the portfolio"
+  },
+  "hoch oder kritisch": {
+    "de": "hoch oder kritisch",
+    "en": "high or critical"
+  },
+  "leistungsstarke Partner": {
+    "de": "leistungsstarke Partner",
+    "en": "strong performers"
+  },
+  "Daten oder Bewertung prüfen": {
+    "de": "Daten oder Bewertung prüfen",
+    "en": "check data or assessment"
+  },
+  "Prüfen": {
+    "de": "Prüfen",
+    "en": "Review"
+  },
+  "Prüfbedarf": {
+    "de": "Prüfbedarf",
+    "en": "Review required"
+  },
+  "Klasse": {
+    "de": "Klasse",
+    "en": "Class"
+  },
+  "Nicht bewertet": {
+    "de": "Nicht bewertet",
+    "en": "Not assessed"
+  },
+  "Ohne Warengruppe": {
+    "de": "Ohne Warengruppe",
+    "en": "No material group"
+  },
+  "Land nicht angegeben": {
+    "de": "Land nicht angegeben",
+    "en": "Country not provided"
+  },
+  "low": {
+    "de": "Niedrig",
+    "en": "Low"
+  },
+  "medium": {
+    "de": "Mittel",
+    "en": "Medium"
+  },
+  "high": {
+    "de": "Hoch",
+    "en": "High"
+  },
+  "critical": {
+    "de": "Kritisch",
+    "en": "Critical"
+  },
+  "Niedrig": {
+    "de": "Niedrig",
+    "en": "Low"
+  },
+  "Mittel": {
+    "de": "Mittel",
+    "en": "Medium"
+  },
+  "Hoch": {
+    "de": "Hoch",
+    "en": "High"
+  },
+  "Kritisch": {
+    "de": "Kritisch",
+    "en": "Critical"
+  },
+  "risk": {
+    "de": "Risiko",
+    "en": "Risk"
+  },
+  "performance": {
+    "de": "Performance",
+    "en": "Performance"
+  },
+  "Risk": {
+    "de": "Risiko",
+    "en": "Risk"
+  },
+  "Risk score": {
+    "de": "Risikowert",
+    "en": "Risk score"
+  },
+  "Performance score": {
+    "de": "Performance-Wert",
+    "en": "Performance score"
+  },
+  "risk score": {
+    "de": "Risikowert",
+    "en": "Risk score"
+  },
+  "performance score": {
+    "de": "Performance-Wert",
+    "en": "Performance score"
+  },
+  "Yes": {
+    "de": "Ja",
+    "en": "Yes"
+  },
+  "No": {
+    "de": "Nein",
+    "en": "No"
+  },
+  "higher = better": {
+    "de": "höher = besser",
+    "en": "higher = better"
+  },
+  "higher = riskier": {
+    "de": "höher = riskanter",
+    "en": "higher = riskier"
+  },
+  "All material groups": {
+    "de": "Alle Warengruppen",
+    "en": "All material groups"
+  },
+  "All material groups (global)": {
+    "de": "Alle Warengruppen (global)",
+    "en": "All material groups (global)"
+  },
+  "(all)": {
+    "de": "Alle Warengruppen",
+    "en": "All material groups"
+  },
+  "(none)": {
+    "de": "Ohne Warengruppe",
+    "en": "No material group"
+  },
+  "completed": {
+    "de": "abgeschlossen",
+    "en": "completed"
+  },
+  "pending": {
+    "de": "ausstehend",
+    "en": "pending"
+  },
+  "deferred": {
+    "de": "zurückgestellt",
+    "en": "deferred"
+  },
+  "open": {
+    "de": "offen",
+    "en": "open"
+  },
+  "current": {
+    "de": "Aktuell",
+    "en": "Current"
+  },
+  "proposed": {
+    "de": "Vorschlag",
+    "en": "Proposed"
+  },
+  "change": {
+    "de": "Änderung",
+    "en": "Change"
+  },
+  "current %": {
+    "de": "Aktuell %",
+    "en": "Current %"
+  },
+  "proposed %": {
+    "de": "Vorschlag %",
+    "en": "Proposed %"
+  },
+  "view": {
+    "de": "Perspektive",
+    "en": "View"
+  },
+  "score": {
+    "de": "Wert",
+    "en": "Score"
+  },
+  "class": {
+    "de": "Klasse",
+    "en": "Class"
+  },
+  "data": {
+    "de": "Datenbasis",
+    "en": "Data completeness"
+  },
+  "needs review": {
+    "de": "Prüfbedarf",
+    "en": "Review required"
+  },
+  "rules now triggered": {
+    "de": "Neue Regeln",
+    "en": "New rules"
+  },
+  "rules no longer triggered": {
+    "de": "Entfallene Regeln",
+    "en": "Rules no longer triggered"
+  },
+  "criterion": {
+    "de": "Kriterium",
+    "en": "Criterion"
+  },
+  "rating": {
+    "de": "Bewertung",
+    "en": "Rating"
+  },
+  "origin": {
+    "de": "Herkunft",
+    "en": "Origin"
+  },
+  "points": {
+    "de": "Punkte",
+    "en": "Points"
+  },
+  "id": {
+    "de": "ID",
+    "en": "ID"
+  },
+  "name": {
+    "de": "Lieferant",
+    "en": "Supplier"
+  },
+  "supplier": {
+    "de": "Lieferant",
+    "en": "Supplier"
+  },
+  "supplier_id": {
+    "de": "Lieferanten-ID",
+    "en": "Supplier ID"
+  },
+  "material_group": {
+    "de": "Warengruppe",
+    "en": "Material group"
+  },
+  "annual_spend": {
+    "de": "Jährliches Einkaufsvolumen",
+    "en": "Annual spend"
+  },
+  "country": {
+    "de": "Land",
+    "en": "Country"
+  },
+  "risk_class": {
+    "de": "Risikoklasse",
+    "en": "Risk class"
+  },
+  "performance_class": {
+    "de": "Performance-Klasse",
+    "en": "Performance class"
+  },
+  "review": {
+    "de": "Prüfbedarf",
+    "en": "Review required"
+  },
+  "factor": {
+    "de": "Kriterium",
+    "en": "Criterion"
+  },
+  "level": {
+    "de": "Ebene",
+    "en": "Level"
+  },
+  "priority": {
+    "de": "Priorität",
+    "en": "Priority"
+  },
+  "action": {
+    "de": "Maßnahme",
+    "en": "Action"
+  },
+  "owner": {
+    "de": "Verantwortlich",
+    "en": "Owner"
+  },
+  "review_cycle": {
+    "de": "Prüfintervall",
+    "en": "Review cycle"
+  },
+  "trigger": {
+    "de": "Auslöser",
+    "en": "Trigger"
+  },
+  "recorded_at": {
+    "de": "Erfasst am",
+    "en": "Recorded at"
+  },
+  "time": {
+    "de": "Zeitpunkt",
+    "en": "Time"
+  },
+  "weights": {
+    "de": "Gewichte",
+    "en": "Weights"
+  },
+  "approved_by": {
+    "de": "Freigegeben durch",
+    "en": "Approved by"
+  },
+  "note": {
+    "de": "Notiz",
+    "en": "Note"
+  },
+  "suppliers": {
+    "de": "Lieferanten",
+    "en": "Suppliers"
+  },
+  "mean_score": {
+    "de": "Durchschnittswert",
+    "en": "Mean score"
+  },
+  "share_top_two_classes": {
+    "de": "Anteil erhöhter Klassen",
+    "en": "Share of elevated classes"
+  },
+  "needs_review": {
+    "de": "Prüfbedarf",
+    "en": "Review required"
+  },
+  "escalated": {
+    "de": "Eskaliert",
+    "en": "Escalated"
+  },
+  "most_concerning": {
+    "de": "Größtes Risiko",
+    "en": "Most concerning"
+  },
+  "classes": {
+    "de": "Klassen",
+    "en": "Classes"
+  },
+  "field": {
+    "de": "Feld",
+    "en": "Field"
+  },
+  "kind": {
+    "de": "Art",
+    "en": "Kind"
+  },
+  "reason": {
+    "de": "Begründung",
+    "en": "Reason"
+  },
+  "reasons": {
+    "de": "Prüfgründe",
+    "en": "Review reasons"
+  },
+  "new_class": {
+    "de": "Neue Klasse",
+    "en": "New class"
+  },
+  "comment": {
+    "de": "Kommentar",
+    "en": "Comment"
+  },
+  "weight": {
+    "de": "Gewicht",
+    "en": "Weight"
+  },
+  "effective weight": {
+    "de": "Effektives Gewicht",
+    "en": "Effective weight"
+  },
+  "inputs (source)": {
+    "de": "Eingaben (Quelle)",
+    "en": "Inputs (source)"
+  },
+  "rule": {
+    "de": "Regel",
+    "en": "Rule"
+  },
+  "used by": {
+    "de": "Verwendet von",
+    "en": "Used by"
+  },
+  "expects": {
+    "de": "Erwarteter Wert",
+    "en": "Expected value"
+  },
+  "changes": {
+    "de": "Änderungen",
+    "en": "Changes"
+  },
+  "entered by (not verified)": {
+    "de": "Erfasst durch (ungeprüft)",
+    "en": "Entered by (not verified)"
+  },
+  "entered_by": {
+    "de": "Erfasst durch",
+    "en": "Entered by"
+  },
+  "status": {
+    "de": "Status",
+    "en": "Status"
+  },
+  "explanation": {
+    "de": "Erklärung",
+    "en": "Explanation"
+  },
+  "trace_refs": {
+    "de": "Berechnungsreferenzen",
+    "en": "Trace references"
+  },
+  "criteria": {
+    "de": "Kriterien",
+    "en": "Criteria"
+  },
+  "rationale": {
+    "de": "Begründung",
+    "en": "Rationale"
+  },
+  "main_drivers": {
+    "de": "Wichtigste Beiträge",
+    "en": "Main drivers"
+  },
+  "Main drivers (points)": {
+    "de": "Wichtigste Beiträge (Punkte)",
+    "en": "Main drivers (points)"
+  },
+  "Review": {
+    "de": "Prüfung",
+    "en": "Review"
+  },
+  "Escalated": {
+    "de": "Eskaliert",
+    "en": "Escalated"
+  },
+  "Most concerning": {
+    "de": "Größtes Risiko",
+    "en": "Most concerning"
+  },
+  "Factor": {
+    "de": "Kriterium",
+    "en": "Criterion"
+  },
+  "Action": {
+    "de": "Maßnahme",
+    "en": "Action"
+  },
+  "Review cycle": {
+    "de": "Prüfintervall",
+    "en": "Review cycle"
+  },
+  "Why": {
+    "de": "Begründung",
+    "en": "Why"
+  },
+  "Why it matters": {
+    "de": "Bedeutung",
+    "en": "Why it matters"
+  },
+  "Trace entries": {
+    "de": "Berechnungsreferenzen",
+    "en": "Trace entries"
+  },
+  "Priority": {
+    "de": "Priorität",
+    "en": "Priority"
+  },
+  "Rationale": {
+    "de": "Begründung",
+    "en": "Rationale"
+  },
+  "Criteria": {
+    "de": "Kriterien",
+    "en": "Criteria"
+  },
+  "{label} · {field} · current: {current}": {
+    "de": "{label} · {field} · aktuell: {current}",
+    "en": "{label} · {field} · current: {current}"
+  },
+  "Original explanation · {lang}. A language change does not request a new explanation.": {
+    "de": "Originalerklärung · {lang}. Ein Sprachwechsel fordert keine neue Erklärung an.",
+    "en": "Original explanation · {lang}. A language change does not request a new explanation."
+  },
+  "German": {
+    "de": "Deutsch",
+    "en": "German"
+  },
+  "English": {
+    "de": "Englisch",
+    "en": "English"
+  },
+  "New explanations are generated in {lang}.": {
+    "de": "Neue Erklärungen werden auf {lang} erstellt.",
+    "en": "New explanations are generated in {lang}."
+  },
+  "Invalid value ({code}).": {
+    "de": "Ungültiger Wert ({code}).",
+    "en": "Invalid value ({code})."
+  },
+  "The operation could not be completed. Check the input and configuration.": {
+    "de": "Der Vorgang konnte nicht abgeschlossen werden. Prüfen Sie Eingaben und Konfiguration.",
+    "en": "The operation could not be completed. Check the input and configuration."
+  },
+  "a reason for the change is required": {
+    "de": "Eine Begründung für die Änderung ist erforderlich.",
+    "en": "A reason for the change is required."
+  },
+  "a reason for the objection is required": {
+    "de": "Eine Begründung für die Beanstandung ist erforderlich.",
+    "en": "A reason for the objection is required."
+  },
+  "the proposed values equal the current values": {
+    "de": "Die vorgeschlagenen Werte entsprechen den aktuellen Werten.",
+    "en": "The proposed values equal the current values."
+  },
+  "'{field}' expects a whole number from 1 to 5, got {value}": {
+    "de": "„{field}“ erfordert eine ganze Zahl von 1 bis 5; eingegeben: {value}",
+    "en": "'{field}' expects a whole number from 1 to 5, got {value}"
+  },
+  "unknown supplier '{sid}'": {
+    "de": "Unbekannter Lieferant „{sid}“",
+    "en": "Unknown supplier '{sid}'"
+  },
+  "'{field}' cannot be corrected here (weights and rules go through calibration)": {
+    "de": "„{field}“ kann hier nicht korrigiert werden (Gewichte und Regeln werden kalibriert).",
+    "en": "'{field}' cannot be corrected here (weights and rules go through calibration)"
+  },
+  "every row needs a supplier_id": {
+    "de": "Jede Zeile benötigt eine supplier_id.",
+    "en": "Every row needs a supplier_id."
+  },
+  "Die Datei enthält keine Lieferanten.": {
+    "de": "Die Datei enthält keine Lieferanten.",
+    "en": "The file contains no suppliers."
+  },
+  "No API key configured. Set ANTHROPIC_API_KEY (see .env.example) to enable the AI review.": {
+    "de": "Kein API-Key konfiguriert. Setzen Sie ANTHROPIC_API_KEY (siehe .env.example), um KI-Erklärungen zu aktivieren.",
+    "en": "No API key configured. Set ANTHROPIC_API_KEY (see .env.example) to enable the AI review."
+  },
+  "The API key was rejected. Check ANTHROPIC_API_KEY.": {
+    "de": "Der API-Key wurde abgelehnt. Prüfen Sie ANTHROPIC_API_KEY.",
+    "en": "The API key was rejected. Check ANTHROPIC_API_KEY."
+  },
+  "The API key is not allowed to use this model or feature.": {
+    "de": "Der API-Key ist für dieses Modell oder diese Funktion nicht freigegeben.",
+    "en": "The API key is not allowed to use this model or feature."
+  },
+  "Could not reach the provider. Check the network connection or proxy.": {
+    "de": "Der Anbieter ist nicht erreichbar. Prüfen Sie Netzwerkverbindung oder Proxy.",
+    "en": "Could not reach the provider. Check the network connection or proxy."
+  },
+  "The answer did not match the expected review format.": {
+    "de": "Die Antwort entspricht nicht dem erwarteten Format.",
+    "en": "The answer did not match the expected review format."
+  },
+  "The model declined to answer this request.": {
+    "de": "Das Modell hat die Anfrage abgelehnt.",
+    "en": "The model declined to answer this request."
+  },
+  "The answer was cut off (max_tokens reached). Raise SRA_LLM_MAX_TOKENS.": {
+    "de": "Die Antwort wurde abgeschnitten (max_tokens erreicht). Erhöhen Sie SRA_LLM_MAX_TOKENS.",
+    "en": "The answer was cut off (max_tokens reached). Raise SRA_LLM_MAX_TOKENS."
+  },
+  "The previewed data no longer matches the current results. Recalculate and retry.": {
+    "de": "Die Vorschau entspricht nicht mehr den aktuellen Ergebnissen. Berechnen Sie neu und versuchen Sie es erneut.",
+    "en": "The previewed data no longer matches the current results. Recalculate and retry."
+  },
+  "the data changed": {
+    "de": "der Datenänderung",
+    "en": "the data changed"
+  },
+  "the correction of {time} ({reason})": {
+    "de": "der Korrektur vom {time} ({reason})",
+    "en": "the correction of {time} ({reason})"
+  },
+  "data_correction": {
+    "de": "Datenkorrektur",
+    "en": "Data correction"
+  },
+  "expert_override": {
+    "de": "Expertenkorrektur",
+    "en": "Expert override"
+  },
+  "data correction": {
+    "de": "Datenkorrektur",
+    "en": "Data correction"
+  },
+  "expert override": {
+    "de": "Expertenkorrektur",
+    "en": "Expert override"
+  },
+  "expert rating 1..5": {
+    "de": "Expertenbewertung 1–5",
+    "en": "Expert rating 1–5"
+  },
+  "input value": {
+    "de": "Eingabewert",
+    "en": "Input value"
+  },
+  "expert rating 1..5 replacing the derived rating": {
+    "de": "Expertenbewertung 1–5 statt abgeleiteter Bewertung",
+    "en": "Expert rating 1–5 replacing the derived rating"
+  },
+  "missing": {
+    "de": "Fehlend",
+    "en": "Missing"
+  },
+  "expert assessment": {
+    "de": "Expertenbewertung",
+    "en": "Expert assessment"
+  },
+  "expert override of a derived rating": {
+    "de": "Expertenurteil ersetzt abgeleitete Bewertung",
+    "en": "Expert override of a derived rating"
+  },
+  "derived from input data by rule": {
+    "de": "Aus Eingabedaten nach Regel abgeleitet",
+    "en": "Derived from input data by rule"
+  },
+  "expert rating (entered by hand)": {
+    "de": "Expertenbewertung (manuell erfasst)",
+    "en": "Expert rating (entered by hand)"
+  },
+  "missing: expert rating not entered": {
+    "de": "Fehlend: keine Expertenbewertung erfasst",
+    "en": "Missing: expert rating not entered"
+  },
+  "missing: no value and no source": {
+    "de": "Fehlend: weder Wert noch Quelle vorhanden",
+    "en": "Missing: no value and no source"
+  },
+  "entered by hand (no source or data date recorded)": {
+    "de": "Manuell erfasst (ohne Quelle oder Datenstand)",
+    "en": "Entered by hand (no source or data date recorded)"
+  },
+  "not evaluable: criterion has no data": {
+    "de": "Nicht auswertbar: keine Daten zum Kriterium",
+    "en": "Not evaluable: criterion has no data"
+  },
+  "not triggered": {
+    "de": "Nicht ausgelöst",
+    "en": "Not triggered"
+  },
+  "raised the class from '{before}' to at least '{after}'": {
+    "de": "Klasse von „{before}“ auf mindestens „{after}“ erhöht",
+    "en": "Raised the class from '{before}' to at least '{after}'"
+  },
+  "triggered, no effect: class '{class}' is already at or above the floor": {
+    "de": "Ausgelöst, ohne Wirkung: Klasse „{class}“ liegt bereits an oder über der Mindestklasse",
+    "en": "Triggered, no effect: class '{class}' is already at or above the floor"
+  },
+  "flags the supplier for human review; the score uses only the rated criteria": {
+    "de": "Fachliche Prüfung erforderlich; der Wert nutzt nur bewertete Kriterien",
+    "en": "Flags the supplier for human review; the score uses only the rated criteria"
+  },
+  "passed": {
+    "de": "Bestanden",
+    "en": "Passed"
+  },
+  "class set to '{class}'": {
+    "de": "Klasse auf „{class}“ gesetzt",
+    "en": "Class set to '{class}'"
+  },
+  "internal scale: 0 = favourable ... 100 = unfavourable; contributions are internal points": {
+    "de": "Interne Skala: 0 = günstig ... 100 = ungünstig; Beiträge sind interne Punkte",
+    "en": "Internal scale: 0 = favourable ... 100 = unfavourable; contributions are internal points"
+  },
+  "internal scale: 0 = favourable ... 100 = unfavourable; contributions are internal points; the displayed performance score is 100 minus the internal score": {
+    "de": "Interne Skala: 0 = günstig ... 100 = ungünstig; Beiträge sind interne Punkte; der angezeigte Performance-Wert ist 100 minus interner Wert",
+    "en": "Internal scale: 0 = favourable ... 100 = unfavourable; contributions are internal points; the displayed performance score is 100 minus the internal score"
+  },
+  "road": {
+    "de": "Straße",
+    "en": "Road"
+  },
+  "rail": {
+    "de": "Schiene",
+    "en": "Rail"
+  },
+  "air": {
+    "de": "Luft",
+    "en": "Air"
+  },
+  "sea": {
+    "de": "See",
+    "en": "Sea"
+  },
+  "compliant": {
+    "de": "Konform",
+    "en": "Compliant"
+  },
+  "minor_findings": {
+    "de": "Geringfügige Befunde",
+    "en": "Minor findings"
+  },
+  "open_findings": {
+    "de": "Offene Befunde",
+    "en": "Open findings"
+  },
+  "major_findings": {
+    "de": "Schwerwiegende Befunde",
+    "en": "Major findings"
+  },
+  "critical_findings": {
+    "de": "Kritische Befunde",
+    "en": "Critical findings"
+  },
+  "Availability of alternatives": {
+    "en": "Availability of alternatives",
+    "de": "Verfügbarkeit von Alternativen"
+  },
+  "Change complexity (time to exit)": {
+    "en": "Change complexity (time to exit)",
+    "de": "Wechselkomplexität (Ausstiegsdauer)"
+  },
+  "Business consequence": {
+    "en": "Business consequence",
+    "de": "Auswirkung auf das Geschäft"
+  },
+  "Credit risk": {
+    "en": "Credit risk",
+    "de": "Bonitätsrisiko"
+  },
+  "Insolvency / distress signals": {
+    "en": "Insolvency / distress signals",
+    "de": "Insolvenz- und Krisensignale"
+  },
+  "Country risk (political stability)": {
+    "en": "Country risk (political stability)",
+    "de": "Länderrisiko (politische Stabilität)"
+  },
+  "Sourcing strategy": {
+    "en": "Sourcing strategy",
+    "de": "Beschaffungsstrategie"
+  },
+  "Transport dependency": {
+    "en": "Transport dependency",
+    "de": "Transportabhängigkeit"
+  },
+  "ESG rating": {
+    "en": "ESG rating",
+    "de": "ESG-Bewertung"
+  },
+  "Compliance status": {
+    "en": "Compliance status",
+    "de": "Compliance-Status"
+  },
+  "On-time delivery": {
+    "en": "On-time delivery",
+    "de": "Termintreue"
+  },
+  "Quality (PPM)": {
+    "en": "Quality (PPM)",
+    "de": "Qualität (PPM)"
+  },
+  "Price competitiveness": {
+    "en": "Price competitiveness",
+    "de": "Preiswettbewerbsfähigkeit"
+  },
+  "Responsiveness & cooperation": {
+    "en": "Responsiveness & cooperation",
+    "de": "Reaktionsfähigkeit & Zusammenarbeit"
+  },
+  "Severity Index": {
+    "en": "Severity Index",
+    "de": "Schweregrad"
+  },
+  "Financial Stability": {
+    "en": "Financial Stability",
+    "de": "Finanzielle Stabilität"
+  },
+  "Supply Chain Risk": {
+    "en": "Supply Chain Risk",
+    "de": "Lieferkettenrisiko"
+  },
+  "ESG & Compliance": {
+    "en": "ESG & Compliance",
+    "de": "ESG & Compliance"
+  },
+  "Delivery": {
+    "en": "Delivery",
+    "de": "Lieferung"
+  },
+  "Quality": {
+    "en": "Quality",
+    "de": "Qualität"
+  },
+  "Commercial": {
+    "en": "Commercial",
+    "de": "Kaufmännisch"
+  },
+  "Cooperation": {
+    "en": "Cooperation",
+    "de": "Zusammenarbeit"
+  },
+  "Stability & Compliance": {
+    "en": "Stability & Compliance",
+    "de": "Stabilität & Compliance"
+  },
+  "Keep in standard annual supplier evaluation.": {
+    "en": "Keep in standard annual supplier evaluation.",
+    "de": "In der regulären jährlichen Lieferantenbewertung belassen."
+  },
+  "Monitor key indicators between reviews.": {
+    "en": "Monitor key indicators between reviews.",
+    "de": "Wichtige Kennzahlen zwischen den Prüfungen überwachen."
+  },
+  "Discuss identified weak points in the next supplier meeting.": {
+    "en": "Discuss identified weak points in the next supplier meeting.",
+    "de": "Erkannte Schwachstellen im nächsten Lieferantengespräch besprechen."
+  },
+  "Agree a documented risk mitigation plan with the supplier.": {
+    "en": "Agree a documented risk mitigation plan with the supplier.",
+    "de": "Einen dokumentierten Plan zur Risikominderung mit dem Lieferanten vereinbaren."
+  },
+  "Assess alternative sources or a dual-sourcing strategy.": {
+    "en": "Assess alternative sources or a dual-sourcing strategy.",
+    "de": "Alternative Bezugsquellen oder eine Zwei-Lieferanten-Strategie prüfen."
+  },
+  "Review safety stock for affected items.": {
+    "en": "Review safety stock for affected items.",
+    "de": "Sicherheitsbestände der betroffenen Artikel prüfen."
+  },
+  "Escalate to category and supply chain management.": {
+    "en": "Escalate to category and supply chain management.",
+    "de": "An Warengruppen- und Lieferkettenmanagement eskalieren."
+  },
+  "Start immediate mitigation (alternative source qualification, buffer stock).": {
+    "en": "Start immediate mitigation (alternative source qualification, buffer stock).",
+    "de": "Sofortmaßnahmen einleiten (alternative Bezugsquelle qualifizieren, Pufferbestand aufbauen)."
+  },
+  "Define contingency plan and owner with a due date.": {
+    "en": "Define contingency plan and owner with a due date.",
+    "de": "Notfallplan mit Verantwortlichen und Frist festlegen."
+  },
+  "Increase financial monitoring frequency and review payment terms and exposure.": {
+    "en": "Increase financial monitoring frequency and review payment terms and exposure.",
+    "de": "Finanzkennzahlen häufiger prüfen sowie Zahlungsbedingungen und finanzielles Risiko überprüfen."
+  },
+  "Evaluate regional or second-source alternatives and transport fallbacks.": {
+    "en": "Evaluate regional or second-source alternatives and transport fallbacks.",
+    "de": "Regionale oder zusätzliche Bezugsquellen und alternative Transporte prüfen."
+  },
+  "Request corrective action plan and schedule an ESG / compliance audit.": {
+    "en": "Request corrective action plan and schedule an ESG / compliance audit.",
+    "de": "Korrekturmaßnahmenplan anfordern und ESG-/Compliance-Audit planen."
+  },
+  "Reduce dependency (alternative qualification, design-to-multi-source).": {
+    "en": "Reduce dependency (alternative qualification, design-to-multi-source).",
+    "de": "Abhängigkeit reduzieren (Alternativen qualifizieren, Konstruktion für mehrere Bezugsquellen auslegen)."
+  },
+  "Run a market scan for alternative sources and keep a shortlist of candidates.": {
+    "en": "Run a market scan for alternative sources and keep a shortlist of candidates.",
+    "de": "Markt nach alternativen Bezugsquellen durchsuchen und eine Kandidatenliste pflegen."
+  },
+  "Start qualifying an alternative source; consider redesign to widen the supply base.": {
+    "en": "Start qualifying an alternative source; consider redesign to widen the supply base.",
+    "de": "Alternative Bezugsquelle qualifizieren; Umgestaltung zur Erweiterung der Lieferantenbasis prüfen."
+  },
+  "Prepare an exit plan: technical documentation, tooling ownership and qualification steps.": {
+    "en": "Prepare an exit plan: technical documentation, tooling ownership and qualification steps.",
+    "de": "Ausstiegsplan erstellen: technische Dokumentation, Werkzeugeigentum und Qualifizierungsschritte."
+  },
+  "Pre-qualify a second source now; the time to exit is too long to react after a disruption.": {
+    "en": "Pre-qualify a second source now; the time to exit is too long to react after a disruption.",
+    "de": "Jetzt eine zweite Bezugsquelle vorqualifizieren; die Ausstiegsdauer ist für eine Reaktion nach einer Störung zu lang."
+  },
+  "Define safety stock and a customer communication plan for a supply interruption.": {
+    "en": "Define safety stock and a customer communication plan for a supply interruption.",
+    "de": "Sicherheitsbestand und Kundenkommunikation für eine Lieferunterbrechung festlegen."
+  },
+  "Agree a business continuity plan with the supplier, including allocation rules.": {
+    "en": "Agree a business continuity plan with the supplier, including allocation rules.",
+    "de": "Mit dem Lieferanten einen Plan zur Geschäftskontinuität einschließlich Zuteilungsregeln vereinbaren."
+  },
+  "Monitor credit information monthly; review payment terms and prepayments.": {
+    "en": "Monitor credit information monthly; review payment terms and prepayments.",
+    "de": "Bonitätsinformationen monatlich überwachen; Zahlungsbedingungen und Vorauszahlungen prüfen."
+  },
+  "Limit financial exposure (open orders, tooling, prepayments) and prepare a fallback source.": {
+    "en": "Limit financial exposure (open orders, tooling, prepayments) and prepare a fallback source.",
+    "de": "Finanzielles Risiko begrenzen (offene Bestellungen, Werkzeuge, Vorauszahlungen) und Ersatzbezugsquelle vorbereiten."
+  },
+  "Request current financial statements and discuss liquidity with the supplier.": {
+    "en": "Request current financial statements and discuss liquidity with the supplier.",
+    "de": "Aktuelle Finanzberichte anfordern und Liquidität mit dem Lieferanten besprechen."
+  },
+  "Assess a regional alternative or dual sourcing across countries.": {
+    "en": "Assess a regional alternative or dual sourcing across countries.",
+    "de": "Regionale Alternative oder Beschaffung aus zwei Ländern prüfen."
+  },
+  "Build buffer stock outside the region and qualify a source in a more stable country.": {
+    "en": "Build buffer stock outside the region and qualify a source in a more stable country.",
+    "de": "Pufferbestand außerhalb der Region aufbauen und eine Bezugsquelle in einem stabileren Land qualifizieren."
+  },
+  "Move from single to dual sourcing for the affected scope.": {
+    "en": "Move from single to dual sourcing for the affected scope.",
+    "de": "Für den betroffenen Bereich von einer auf zwei Bezugsquellen umstellen."
+  },
+  "Define alternative routes or transport modes and adjust safety lead times.": {
+    "en": "Define alternative routes or transport modes and adjust safety lead times.",
+    "de": "Alternative Routen oder Transportarten festlegen und Sicherheitsvorlaufzeiten anpassen."
+  },
+  "Request a corrective action plan and an updated ESG assessment.": {
+    "en": "Request a corrective action plan and an updated ESG assessment.",
+    "de": "Korrekturmaßnahmenplan und aktualisierte ESG-Bewertung anfordern."
+  },
+  "Schedule an audit and track the corrective actions to closure.": {
+    "en": "Schedule an audit and track the corrective actions to closure.",
+    "de": "Audit planen und Korrekturmaßnahmen bis zum Abschluss verfolgen."
+  },
+  "Escalate; suspend new business until the critical finding is resolved.": {
+    "en": "Escalate; suspend new business until the critical finding is resolved.",
+    "de": "Eskalieren; Neugeschäft aussetzen, bis der kritische Befund behoben ist."
+  },
+  "Keep as preferred supplier; consider for new business.": {
+    "en": "Keep as preferred supplier; consider for new business.",
+    "de": "Als bevorzugten Lieferanten beibehalten und für Neugeschäft berücksichtigen."
+  },
+  "Agree improvement targets on the weakest dimension.": {
+    "en": "Agree improvement targets on the weakest dimension.",
+    "de": "Verbesserungsziele für die schwächste Dimension vereinbaren."
+  },
+  "Start a supplier development plan with measurable targets and owner.": {
+    "en": "Start a supplier development plan with measurable targets and owner.",
+    "de": "Lieferantenentwicklungsplan mit messbaren Zielen und Verantwortlichen starten."
+  },
+  "Restrict new business until targets are met.": {
+    "en": "Restrict new business until targets are met.",
+    "de": "Neugeschäft einschränken, bis die Ziele erreicht sind."
+  },
+  "Agree a delivery improvement plan (root cause, buffer, schedule adherence).": {
+    "en": "Agree a delivery improvement plan (root cause, buffer, schedule adherence).",
+    "de": "Plan zur Lieferverbesserung vereinbaren (Ursachen, Puffer, Termineinhaltung)."
+  },
+  "Request a structured problem-solving report and quality improvement plan.": {
+    "en": "Request a structured problem-solving report and quality improvement plan.",
+    "de": "Strukturierten Problemlösungsbericht und Qualitätsverbesserungsplan anfordern."
+  },
+  "Prepare a cost review or market benchmark before the next negotiation.": {
+    "en": "Prepare a cost review or market benchmark before the next negotiation.",
+    "de": "Vor der nächsten Verhandlung Kostenprüfung oder Marktvergleich vorbereiten."
+  },
+  "Agree a delivery improvement plan with measurable on-time targets.": {
+    "en": "Agree a delivery improvement plan with measurable on-time targets.",
+    "de": "Lieferverbesserungsplan mit messbaren Termintreuezielen vereinbaren."
+  },
+  "Escalate to supplier management; add safety lead time until targets are met.": {
+    "en": "Escalate to supplier management; add safety lead time until targets are met.",
+    "de": "An Lieferantenmanagement eskalieren; Sicherheitsvorlaufzeit erhöhen, bis Ziele erreicht sind."
+  },
+  "Request a structured problem-solving report (root cause, containment, corrective action).": {
+    "en": "Request a structured problem-solving report (root cause, containment, corrective action).",
+    "de": "Strukturierten Problemlösungsbericht anfordern (Ursache, Sofortmaßnahmen, Korrekturmaßnahmen)."
+  },
+  "Start a quality escalation: increased inspection and an on-site quality review.": {
+    "en": "Start a quality escalation: increased inspection and an on-site quality review.",
+    "de": "Qualitätseskalation starten: verstärkte Kontrollen und Qualitätsprüfung vor Ort."
+  },
+  "Run a cost breakdown analysis or market benchmark before the next negotiation.": {
+    "en": "Run a cost breakdown analysis or market benchmark before the next negotiation.",
+    "de": "Vor der nächsten Verhandlung Kostenstrukturanalyse oder Marktvergleich durchführen."
+  },
+  "Agree communication rules (contacts, response times) in a supplier meeting.": {
+    "en": "Agree communication rules (contacts, response times) in a supplier meeting.",
+    "de": "Kommunikationsregeln (Ansprechpersonen, Antwortzeiten) im Lieferantengespräch vereinbaren."
+  },
+  "annual": {
+    "en": "annual",
+    "de": "jährlich"
+  },
+  "semi-annual": {
+    "en": "semi-annual",
+    "de": "halbjährlich"
+  },
+  "quarterly": {
+    "en": "quarterly",
+    "de": "vierteljährlich"
+  },
+  "monthly": {
+    "en": "monthly",
+    "de": "monatlich"
+  },
+  "category manager": {
+    "en": "category manager",
+    "de": "Warengruppenmanagement"
+  },
+  "category manager / engineering": {
+    "en": "category manager / engineering",
+    "de": "Warengruppenmanagement / Technik"
+  },
+  "supply chain planning": {
+    "en": "supply chain planning",
+    "de": "Lieferkettenplanung"
+  },
+  "finance / category manager": {
+    "en": "finance / category manager",
+    "de": "Finanzen / Warengruppenmanagement"
+  },
+  "finance": {
+    "en": "finance",
+    "de": "Finanzen"
+  },
+  "category manager / supply chain planning": {
+    "en": "category manager / supply chain planning",
+    "de": "Warengruppenmanagement / Lieferkettenplanung"
+  },
+  "logistics": {
+    "en": "logistics",
+    "de": "Logistik"
+  },
+  "sustainability": {
+    "en": "sustainability",
+    "de": "Nachhaltigkeit"
+  },
+  "compliance": {
+    "en": "compliance",
+    "de": "Compliance"
+  },
+  "compliance / management": {
+    "en": "compliance / management",
+    "de": "Compliance / Geschäftsführung"
+  },
+  "quality": {
+    "en": "Quality",
+    "de": "Qualität"
+  },
+  "portfolio": {
+    "en": "portfolio",
+    "de": "Portfolio"
+  },
+  "dimension": {
+    "en": "dimension",
+    "de": "Dimension"
+  },
+  "calibrated": {
+    "en": "calibrated",
+    "de": "kalibriert"
+  },
+  "default": {
+    "en": "default",
+    "de": "Standard"
+  },
+  "approved": {
+    "en": "approved",
+    "de": "freigegeben"
+  },
+  "credit_score": {
+    "en": "credit_score",
+    "de": "Bonitätswert"
+  },
+  "distress_signals": {
+    "en": "distress_signals",
+    "de": "Finanzielle Warnsignale"
+  },
+  "country_risk_index": {
+    "en": "country_risk_index",
+    "de": "Länderrisikoindex"
+  },
+  "qualified_sources": {
+    "en": "qualified_sources",
+    "de": "Qualifizierte Bezugsquellen"
+  },
+  "transport_mode": {
+    "en": "transport_mode",
+    "de": "Transportart"
+  },
+  "intercontinental": {
+    "en": "intercontinental",
+    "de": "Interkontinental"
+  },
+  "esg_score": {
+    "en": "esg_score",
+    "de": "ESG-Wert"
+  },
+  "on_time_rate": {
+    "en": "on_time_rate",
+    "de": "Termintreue %"
+  },
+  "quality_ppm": {
+    "en": "quality_ppm",
+    "de": "Fehlerhafte Teile (PPM)"
+  },
+  "time_to_exit_months": {
+    "en": "time_to_exit_months",
+    "de": "Ausstiegsdauer (Monate)"
+  },
+  "wgi_political_stability": {
+    "en": "wgi_political_stability",
+    "de": "Politische Stabilität (WGI)"
+  },
+  "wgi_political_stability_percentile": {
+    "en": "wgi_political_stability_percentile",
+    "de": "Politische Stabilität (WGI-Perzentil)"
+  },
+  "Classes per material group": {
+    "en": "Classes per material group",
+    "de": "Klassen je Warengruppe"
+  },
+  "{supplier} over time": {
+    "en": "{supplier} over time",
+    "de": "{supplier} im Zeitverlauf"
+  },
+  "{group}: mean score over time": {
+    "en": "{group}: mean score over time",
+    "de": "{group}: Durchschnittswert im Zeitverlauf"
+  },
+  "snapshot": {
+    "en": "snapshot",
+    "de": "Gespeicherter Stand"
+  },
+  "Weight (%)": {
+    "en": "Weight (%)",
+    "de": "Gewicht (%)"
+  },
+  "weight %": {
+    "en": "weight %",
+    "de": "Gewicht %"
+  },
+  "Current vs. proposed weights": {
+    "en": "Current vs. proposed weights",
+    "de": "Aktuelle und vorgeschlagene Gewichte"
+  },
+  "availability": {
+    "en": "Availability of alternatives",
+    "de": "Verfügbarkeit von Alternativen"
+  },
+  "switching_complexity": {
+    "en": "Change complexity (time to exit)",
+    "de": "Wechselkomplexität (Ausstiegsdauer)"
+  },
+  "switching complexity": {
+    "en": "Change complexity (time to exit)",
+    "de": "Wechselkomplexität (Ausstiegsdauer)"
+  },
+  "business_impact": {
+    "en": "Business consequence",
+    "de": "Auswirkung auf das Geschäft"
+  },
+  "business impact": {
+    "en": "Business consequence",
+    "de": "Auswirkung auf das Geschäft"
+  },
+  "credit_risk": {
+    "en": "Credit risk",
+    "de": "Bonitätsrisiko"
+  },
+  "credit risk": {
+    "en": "Credit risk",
+    "de": "Bonitätsrisiko"
+  },
+  "insolvency_signals": {
+    "en": "Insolvency / distress signals",
+    "de": "Insolvenz- und Krisensignale"
+  },
+  "insolvency signals": {
+    "en": "Insolvency / distress signals",
+    "de": "Insolvenz- und Krisensignale"
+  },
+  "country_risk": {
+    "en": "Country risk (political stability)",
+    "de": "Länderrisiko (politische Stabilität)"
+  },
+  "country risk": {
+    "en": "Country risk (political stability)",
+    "de": "Länderrisiko (politische Stabilität)"
+  },
+  "sourcing_strategy": {
+    "en": "Sourcing strategy",
+    "de": "Beschaffungsstrategie"
+  },
+  "sourcing strategy": {
+    "en": "Sourcing strategy",
+    "de": "Beschaffungsstrategie"
+  },
+  "transport_dependency": {
+    "en": "Transport dependency",
+    "de": "Transportabhängigkeit"
+  },
+  "transport dependency": {
+    "en": "Transport dependency",
+    "de": "Transportabhängigkeit"
+  },
+  "esg_rating": {
+    "en": "ESG rating",
+    "de": "ESG-Bewertung"
+  },
+  "esg rating": {
+    "en": "ESG rating",
+    "de": "ESG-Bewertung"
+  },
+  "compliance_status": {
+    "en": "Compliance status",
+    "de": "Compliance-Status"
+  },
+  "compliance status": {
+    "en": "Compliance status",
+    "de": "Compliance-Status"
+  },
+  "on_time_delivery": {
+    "en": "On-time delivery",
+    "de": "Termintreue"
+  },
+  "on time delivery": {
+    "en": "On-time delivery",
+    "de": "Termintreue"
+  },
+  "delivered_quality": {
+    "en": "Quality (PPM)",
+    "de": "Qualität (PPM)"
+  },
+  "delivered quality": {
+    "en": "Quality (PPM)",
+    "de": "Qualität (PPM)"
+  },
+  "price_competitiveness": {
+    "en": "Price competitiveness",
+    "de": "Preiswettbewerbsfähigkeit"
+  },
+  "price competitiveness": {
+    "en": "Price competitiveness",
+    "de": "Preiswettbewerbsfähigkeit"
+  },
+  "responsiveness": {
+    "en": "Responsiveness & cooperation",
+    "de": "Reaktionsfähigkeit & Zusammenarbeit"
+  },
+  "delivery": {
+    "en": "Delivery",
+    "de": "Lieferung"
+  },
+  "commercial": {
+    "en": "Commercial",
+    "de": "Kaufmännisch"
+  },
+  "cooperation": {
+    "en": "Cooperation",
+    "de": "Zusammenarbeit"
+  },
+  "stability_compliance": {
+    "en": "Stability & Compliance",
+    "de": "Stabilität & Compliance"
+  },
+  "severity": {
+    "en": "Severity Index",
+    "de": "Schweregrad"
+  },
+  "financial": {
+    "en": "Financial Stability",
+    "de": "Finanzielle Stabilität"
+  },
+  "supply_chain": {
+    "en": "Supply Chain Risk",
+    "de": "Lieferkettenrisiko"
+  },
+  "esg_compliance": {
+    "en": "ESG & Compliance",
+    "de": "ESG & Compliance"
+  },
+  "AI-generated explanation of the deterministic scoring trace. Scores, classes and weights are computed by the rule-based engine, not by the language model. Suggested actions are proposals for human review, not decisions.": {
+    "en": "AI-generated explanation of the deterministic scoring trace. Scores, classes and weights are computed by the rule-based engine, not by the language model. Suggested actions are proposals for human review, not decisions.",
+    "de": "KI-generierte Erklärung der regelbasierten Berechnung. Werte, Klassen und Gewichte werden vom Bewertungsmodell berechnet, nicht vom Sprachmodell. Maßnahmen sind Vorschläge zur fachlichen Prüfung, keine Entscheidungen."
+  },
+  "expert rating 1..5 entered by a category manager": {
+    "en": "expert rating 1..5 entered by a category manager",
+    "de": "Expertenbewertung 1–5 durch das Warengruppenmanagement"
+  },
+  "time to exit in months: <= 3 -> 1, <= 6 -> 2, <= 12 -> 3, <= 24 -> 4, longer -> 5": {
+    "en": "time to exit in months: <= 3 -> 1, <= 6 -> 2, <= 12 -> 3, <= 24 -> 4, longer -> 5",
+    "de": "Ausstiegsdauer in Monaten: <= 3 -> 1, <= 6 -> 2, <= 12 -> 3, <= 24 -> 4, länger -> 5"
+  },
+  "credit score: < 35 -> 5, < 50 -> 4, < 65 -> 3, < 80 -> 2, otherwise 1": {
+    "en": "credit score: < 35 -> 5, < 50 -> 4, < 65 -> 3, < 80 -> 2, otherwise 1",
+    "de": "Bonitätswert: < 35 -> 5, < 50 -> 4, < 65 -> 3, < 80 -> 2, sonst 1"
+  },
+  "negative financial signals: 0 -> 1, 1 -> 3, 2 -> 4, more -> 5": {
+    "en": "negative financial signals: 0 -> 1, 1 -> 3, 2 -> 4, more -> 5",
+    "de": "Finanzielle Warnsignale: 0 -> 1, 1 -> 3, 2 -> 4, mehr -> 5"
+  },
+  "WGI political stability percentile: < 20 -> 5, < 40 -> 4, < 60 -> 3, < 80 -> 2, otherwise 1; without WGI: country risk index: < 20 -> 1, < 40 -> 2, < 60 -> 3, < 80 -> 4, otherwise 5": {
+    "en": "WGI political stability percentile: < 20 -> 5, < 40 -> 4, < 60 -> 3, < 80 -> 2, otherwise 1; without WGI: country risk index: < 20 -> 1, < 40 -> 2, < 60 -> 3, < 80 -> 4, otherwise 5",
+    "de": "WGI-Perzentil für politische Stabilität: < 20 -> 5, < 40 -> 4, < 60 -> 3, < 80 -> 2, sonst 1; ohne WGI: Länderrisikoindex: < 20 -> 1, < 40 -> 2, < 60 -> 3, < 80 -> 4, sonst 5"
+  },
+  "qualified sources: 1 -> 5, 2 -> 3, 3 or more -> 1": {
+    "en": "qualified sources: 1 -> 5, 2 -> 3, 3 or more -> 1",
+    "de": "Qualifizierte Bezugsquellen: 1 -> 5, 2 -> 3, 3 oder mehr -> 1"
+  },
+  "transport mode: road -> 1, rail -> 2, air -> 3, sea -> 4; intercontinental route +1": {
+    "en": "transport mode: road -> 1, rail -> 2, air -> 3, sea -> 4; intercontinental route +1",
+    "de": "Transportart: Straße -> 1, Schiene -> 2, Luft -> 3, See -> 4; Interkontinentale Route +1"
+  },
+  "ESG score: < 25 -> 5, < 45 -> 4, < 60 -> 3, < 75 -> 2, otherwise 1": {
+    "en": "ESG score: < 25 -> 5, < 45 -> 4, < 60 -> 3, < 75 -> 2, otherwise 1",
+    "de": "ESG-Wert: < 25 -> 5, < 45 -> 4, < 60 -> 3, < 75 -> 2, sonst 1"
+  },
+  "compliance status: compliant -> 1, minor_findings -> 2, open_findings -> 3, major_findings -> 4, critical_findings -> 5": {
+    "en": "compliance status: compliant -> 1, minor_findings -> 2, open_findings -> 3, major_findings -> 4, critical_findings -> 5",
+    "de": "Compliance-Status: Konform -> 1, Geringfügige Befunde -> 2, Offene Befunde -> 3, Schwerwiegende Befunde -> 4, Kritische Befunde -> 5"
+  },
+  "on-time delivery %: >= 98 -> 1, >= 95 -> 2, >= 90 -> 3, >= 85 -> 4, lower -> 5": {
+    "en": "on-time delivery %: >= 98 -> 1, >= 95 -> 2, >= 90 -> 3, >= 85 -> 4, lower -> 5",
+    "de": "Termintreue %: >= 98 -> 1, >= 95 -> 2, >= 90 -> 3, >= 85 -> 4, niedriger -> 5"
+  },
+  "PPM: < 50 -> 1, < 200 -> 2, < 500 -> 3, < 1000 -> 4, otherwise 5": {
+    "en": "PPM: < 50 -> 1, < 200 -> 2, < 500 -> 3, < 1000 -> 4, otherwise 5",
+    "de": "PPM: < 50 -> 1, < 200 -> 2, < 500 -> 3, < 1000 -> 4, sonst 5"
+  },
+  "no factor could be rated — score cannot be computed": {
+    "de": "Kein Kriterium konnte bewertet werden — kein Wert berechenbar",
+    "en": "No criterion could be rated — score cannot be computed"
+  },
+  "expected a whole number, got {value}": {
+    "de": "Eine ganze Zahl wird erwartet; eingegeben: {value}",
+    "en": "Expected a whole number, got {value}"
+  },
+  "data completeness {actual} below {minimum} (missing: {criteria})": {
+    "de": "Datenbasis {actual} unter {minimum} (fehlend: {criteria})",
+    "en": "Data completeness {actual} below {minimum} (missing: {criteria})"
+  },
+  "calibrated weights for scope '{scope}' proposed — approval required": {
+    "de": "Kalibrierte Gewichte für „{scope}“ vorgeschlagen — Freigabe erforderlich",
+    "en": "Calibrated weights for scope '{scope}' proposed — approval required"
+  },
+  "calibrated weights for scope '{scope}' not auto-applied: level offset of {offset} points between labels and scores — review class thresholds": {
+    "de": "Kalibrierte Gewichte für „{scope}“ nicht automatisch übernommen: Niveauunterschied {offset} Punkte zwischen Experten- und Modellwerten — Klassengrenzen prüfen",
+    "en": "Calibrated weights for scope '{scope}' not auto-applied: level offset of {offset} points between labels and scores — review class thresholds"
+  },
+  "skipped: {n} usable expert label(s), at least {minimum} required": {
+    "de": "Übersprungen: {n} nutzbare Expertenbewertungen, mindestens {minimum} erforderlich",
+    "en": "Skipped: {n} usable expert label(s), at least {minimum} required"
+  },
+  "accepted: {basis}, {improvement} better": {
+    "de": "Akzeptiert: {basis}, {improvement} besser",
+    "en": "Accepted: {basis}, {improvement} better"
+  },
+  "rejected: {basis}, improvement {improvement} below required {minimum}": {
+    "de": "Abgelehnt: {basis}, Verbesserung {improvement} unter erforderlichen {minimum}",
+    "en": "Rejected: {basis}, improvement {improvement} below required {minimum}"
+  },
+  "rejected: {basis}, improvement {improvement} is not clear enough (z below required {minimum})": {
+    "de": "Abgelehnt: {basis}, Verbesserung {improvement} nicht eindeutig genug (z unter erforderlichen {minimum})",
+    "en": "Rejected: {basis}, improvement {improvement} is not clear enough (z below required {minimum})"
+  },
+  "cross-validated MSE {before} -> {after}, z = {z} (in-sample {in_before} -> {in_after})": {
+    "de": "Kreuzvalidierter MSE {before} → {after}, z = {z} (Trainingsdaten {in_before} → {in_after})",
+    "en": "Cross-validated MSE {before} → {after}, z = {z} (in-sample {in_before} → {in_after})"
+  },
+  "MSE {before} -> {after}": {
+    "de": "MSE {before} → {after}",
+    "en": "MSE {before} → {after}"
+  },
+  "solver did not converge: {detail}": {
+    "de": "Optimierung hat keine stabile Lösung gefunden: {detail}",
+    "en": "Solver did not converge: {detail}"
+  },
+  "higher (stricter)": {
+    "de": "höher (strenger)",
+    "en": "higher (stricter)"
+  },
+  "lower (more lenient)": {
+    "de": "niedriger (milder)",
+    "en": "lower (more lenient)"
+  },
+  "level offset: expert labels are on average {offset} points {direction} than model scores (t = {t}). Weights cannot express a level offset; calibrating them would distort them. Review the class thresholds instead of approving new weights.": {
+    "de": "Niveauunterschied: Expertenbewertungen liegen im Mittel {offset} Punkte {direction} als die Modellwerte (t = {t}). Gewichte können diesen Unterschied nicht abbilden; eine Kalibrierung würde sie verzerren. Prüfen Sie die Klassengrenzen vor einer Freigabe neuer Gewichte.",
+    "en": "Level offset: expert labels are on average {offset} points {direction} than model scores (t = {t}). Weights cannot express a level offset; calibrating them would distort them. Review the class thresholds instead of approving new weights."
+  },
+  "high residual: {share} of the label variance remains unexplained after calibration. Expert judgement may be non-additive, inconsistent between experts, or very noisy; weights alone cannot represent it.": {
+    "de": "Hoher Restfehler: {share} der Bewertungsstreuung bleibt nach der Kalibrierung unerklärt. Expertenurteile sind möglicherweise nicht additiv, zwischen Fachleuten uneinheitlich oder stark schwankend; Gewichte allein können dies nicht abbilden.",
+    "en": "High residual: {share} of the label variance remains unexplained after calibration. Expert judgement may be non-additive, inconsistent between experts, or very noisy; weights alone cannot represent it."
+  },
+  "pushed to the minimum weight: {criteria}. Either experts disregard these factors, or their judgement on them is not additive (level offset, knock-out logic). Check before approving.": {
+    "de": "Auf Mindestgewicht reduziert: {criteria}. Entweder berücksichtigen Fachleute diese Kriterien nicht oder ihre Bewertung ist nicht additiv (Niveauunterschied, Ausschlusskriterien). Vor der Freigabe prüfen.",
+    "en": "Pushed to the minimum weight: {criteria}. Either experts disregard these factors, or their judgement on them is not additive (level offset, knock-out logic). Check before approving."
+  },
+  "knock-out candidate: suppliers with a severe {criterion} rating are judged {extra} points riskier than the calibrated model predicts. Consider an escalation rule.": {
+    "de": "Mögliches Ausschlusskriterium: Lieferanten mit schwerwiegender Bewertung bei {criterion} werden um {extra} Punkte riskanter beurteilt als vom kalibrierten Modell. Prüfen Sie eine Eskalationsregel.",
+    "en": "Knock-out candidate: suppliers with a severe {criterion} rating are judged {extra} points riskier than the calibrated model predicts. Consider an escalation rule."
+  },
+  "The provider did not answer within {seconds} s (tried {attempts} time(s)). Try again later or raise SRA_LLM_TIMEOUT_SECONDS.": {
+    "de": "Der Anbieter antwortete nicht innerhalb von {seconds} s ({attempts} Versuche). Versuchen Sie es später erneut oder erhöhen Sie SRA_LLM_TIMEOUT_SECONDS.",
+    "en": "The provider did not answer within {seconds} s (tried {attempts} time(s)). Try again later or raise SRA_LLM_TIMEOUT_SECONDS."
+  },
+  "Rate limit reached (still limited after {retries} retries). Try again in a minute.": {
+    "de": "Anfragelimit erreicht (auch nach {retries} Wiederholungen). Versuchen Sie es in einer Minute erneut.",
+    "en": "Rate limit reached (still limited after {retries} retries). Try again in a minute."
+  },
+  "The provider returned an error (HTTP {code}) after {retries} retries. Try again later.": {
+    "de": "Der Anbieter meldete einen Fehler (HTTP {code}) nach {retries} Wiederholungen. Versuchen Sie es später erneut.",
+    "en": "The provider returned an error (HTTP {code}) after {retries} retries. Try again later."
+  },
+  "Model '{model}' was not found or is not available for this API key. Check SRA_LLM_MODEL.": {
+    "de": "Modell „{model}“ wurde nicht gefunden oder ist für diesen API-Key nicht verfügbar. Prüfen Sie SRA_LLM_MODEL.",
+    "en": "Model '{model}' was not found or is not available for this API key. Check SRA_LLM_MODEL."
+  },
+  "LLM provider '{provider}' is not supported (SRA_LLM_PROVIDER: {providers}).": {
+    "de": "LLM-Anbieter „{provider}“ wird nicht unterstützt (SRA_LLM_PROVIDER: {providers}).",
+    "en": "LLM provider '{provider}' is not supported (SRA_LLM_PROVIDER: {providers})."
+  },
+  "{setting} must be a number, got '{value}'.": {
+    "de": "{setting} muss eine Zahl sein; eingegeben: „{value}“.",
+    "en": "{setting} must be a number, got '{value}'."
+  },
+  "The provider returned no structured answer (stop reason: {reason}).": {
+    "de": "Der Anbieter lieferte keine strukturierte Antwort (Abbruchgrund: {reason}).",
+    "en": "The provider returned no structured answer (stop reason: {reason})."
+  },
+  "overall risk class '{class}'": {
+    "de": "Gesamtrisikoklasse „{class}“",
+    "en": "Overall risk class '{class}'"
+  },
+  "{dimension} score {score} >= {minimum}": {
+    "de": "{dimension}: Wert {score} ≥ {minimum}",
+    "en": "{dimension} score {score} ≥ {minimum}"
+  },
+  "{criterion} rated {rating} ({basis})": {
+    "de": "{criterion}: Bewertung {rating} ({basis})",
+    "en": "{criterion} rated {rating} ({basis})"
+  },
+  "escalation rule on factor '{criterion}'": {
+    "de": "Eskalationsregel für „{criterion}“",
+    "en": "Escalation rule on factor '{criterion}'"
+  },
+  "targeted": {
+    "de": "Gezielt",
+    "en": "Targeted"
+  },
+  "escalation": {
+    "de": "Eskalation",
+    "en": "Escalation"
+  },
+  "{sid}: '{field}' cannot be changed here": {
+    "de": "{sid}: „{field}“ kann hier nicht geändert werden",
+    "en": "{sid}: '{field}' cannot be changed here"
+  },
+  "{sid}: evaluated suppliers cannot be deleted in the table; the row was kept": {
+    "de": "{sid}: Bewertete Lieferanten können nicht in der Tabelle gelöscht werden; die Zeile bleibt erhalten",
+    "en": "{sid}: evaluated suppliers cannot be deleted in the table; the row was kept"
+  },
+  "row {row}: duplicate supplier_id '{sid}'": {
+    "de": "Zeile {row}: doppelte supplier_id „{sid}“",
+    "en": "Row {row}: duplicate supplier_id '{sid}'"
+  },
+  "row {row}: {error}": {
+    "de": "Zeile {row}: {error}",
+    "en": "Row {row}: {error}"
+  },
+  "{criterion} ({points})": {
+    "de": "{criterion} ({points})",
+    "en": "{criterion} ({points})"
+  },
+  "credit score {score}/100": {
+    "de": "Bonitätswert {score}/100",
+    "en": "Credit score {score}/100"
+  },
+  "ESG score {score}/100": {
+    "de": "ESG-Wert {score}/100",
+    "en": "ESG score {score}/100"
+  },
+  "on-time delivery {rate} %": {
+    "de": "Termintreue {rate} %",
+    "en": "On-time delivery {rate} %"
+  },
+  "compliance status: {status}": {
+    "de": "Compliance-Status: {status}",
+    "en": "Compliance status: {status}"
+  },
+  "country risk index {index}/100": {
+    "de": "Länderrisikoindex {index}/100",
+    "en": "Country risk index {index}/100"
+  },
+  "{mode} freight, intercontinental route": {
+    "de": "{mode}, interkontinentale Route",
+    "en": "{mode} freight, intercontinental route"
+  },
+  "{mode} freight": {
+    "de": "{mode}-Transport",
+    "en": "{mode} freight"
+  },
+  "single source ({n} qualified source(s))": {
+    "de": "Eine Bezugsquelle ({n} qualifiziert)",
+    "en": "Single source ({n} qualified source(s))"
+  },
+  "dual source ({n} qualified source(s))": {
+    "de": "Zwei Bezugsquellen ({n} qualifiziert)",
+    "en": "Dual source ({n} qualified source(s))"
+  },
+  "multi source ({n} qualified source(s))": {
+    "de": "Mehrere Bezugsquellen ({n} qualifiziert)",
+    "en": "Multi source ({n} qualified source(s))"
+  },
+  "no credit score available": {
+    "de": "Kein Bonitätswert vorhanden",
+    "en": "No credit score available"
+  },
+  "no ESG score available": {
+    "de": "Kein ESG-Wert vorhanden",
+    "en": "No ESG score available"
+  },
+  "no on-time delivery rate available": {
+    "de": "Keine Termintreuequote vorhanden",
+    "en": "No on-time delivery rate available"
+  },
+  "no PPM figure available": {
+    "de": "Kein PPM-Wert vorhanden",
+    "en": "No PPM figure available"
+  },
+  "compliance status not assessed": {
+    "de": "Compliance-Status nicht bewertet",
+    "en": "Compliance status not assessed"
+  },
+  "no country risk index available": {
+    "de": "Kein Länderrisikoindex vorhanden",
+    "en": "No country risk index available"
+  },
+  "number of qualified sources unknown": {
+    "de": "Anzahl qualifizierter Bezugsquellen unbekannt",
+    "en": "Number of qualified sources unknown"
+  },
+  "transport mode unknown": {
+    "de": "Transportart unbekannt",
+    "en": "Transport mode unknown"
+  },
+  "Investigate escalation on '{criterion}': {detail}": {
+    "de": "Eskalation bei „{criterion}“ untersuchen: {detail}",
+    "en": "Investigate escalation on '{criterion}': {detail}"
+  },
+  "Severe compliance finding — weighted average must not hide it.": {
+    "de": "Schwerwiegender Compliance-Befund — darf nicht durch den gewichteten Durchschnitt verdeckt werden.",
+    "en": "Severe compliance finding — weighted average must not hide it."
+  },
+  "Acute insolvency signals.": {
+    "de": "Akute Insolvenzsignale.",
+    "en": "Acute insolvency signals."
+  },
+  "Critical compliance finding — a good delivery record must not hide it.": {
+    "de": "Kritischer Compliance-Befund — darf nicht durch gute Lieferleistung verdeckt werden.",
+    "en": "Critical compliance finding — a good delivery record must not hide it."
+  },
+  "expert rating": {
+    "de": "Expertenbewertung",
+    "en": "Expert rating"
+  },
+  "expert assessment pending": {
+    "de": "Expertenbewertung ausstehend",
+    "en": "Expert assessment pending"
+  },
+  "no distress signal data": {
+    "de": "Keine Daten zu finanziellen Warnsignalen",
+    "en": "No distress signal data"
+  },
+  "{count} negative financial signal(s) in observation window": {
+    "de": "{count} negative Finanzsignale im Beobachtungszeitraum",
+    "en": "{count} negative financial signal(s) in observation window"
+  },
+  "political stability percentile {percentile} (WGI)": {
+    "de": "Perzentil der politischen Stabilität {percentile} (WGI)",
+    "en": "Political stability percentile {percentile} (WGI)"
+  },
+  "time to exit not assessed": {
+    "de": "Ausstiegsdauer nicht bewertet",
+    "en": "Time to exit not assessed"
+  },
+  "time to exit {months} months": {
+    "de": "Ausstiegsdauer {months} Monate",
+    "en": "Time to exit {months} months"
+  },
+  "unmapped transport mode '{mode}'": {
+    "de": "Nicht zugeordnete Transportart „{mode}“",
+    "en": "Unmapped transport mode '{mode}'"
+  },
+  "unmapped compliance status '{status}'": {
+    "de": "Nicht zugeordneter Compliance-Status „{status}“",
+    "en": "Unmapped compliance status '{status}'"
+  },
+  "{points} PPM": {
+    "de": "{points} PPM",
+    "en": "{points} PPM"
+  },
+  "invalid {origin} {value} (expected integer 1..5)": {
+    "de": "Ungültig: {origin} {value} (ganze Zahl 1–5 erwartet)",
+    "en": "Invalid {origin} {value} (expected integer 1–5)"
+  },
+  "Choose options": {
+    "de": "Auswählen",
+    "en": "Choose options"
+  }
+}

@@ -31,8 +31,8 @@ benötigen keinen API-Key. Eine vorhandene LLM-Konfiguration löst keine automat
   Quellen, Regeln, vollständige Berechnung und Maßnahmen werden bei Bedarf aufgeklappt.
 - **Maßnahmen:** bestehender Maßnahmenplan.
 - **Verwaltung & Analyse:** Dashboard, Historie, Daten & Import, Kalibrierung, Freigaben und
-  Einstellungen. Fachliche Modelltexte und Teile dieser bestehenden Verwaltungsansichten
-  bleiben in dieser ersten Version auf Englisch.
+  Einstellungen. Die Anwendungstexte einschließlich Modellkriterien und Maßnahmen sind
+  über **DE | EN** in beiden Sprachen verfügbar.
 
 1. **Demo ausprobieren**, im Portfolio nach `Delta` suchen.
 2. Tabellenzeile auswählen oder **Lieferanten direkt öffnen → Bewertung öffnen** verwenden.
@@ -111,3 +111,90 @@ liegt außerhalb des Projekts. Keine KI-Anfrage wurde ausgelöst.
 Weitere mobile Ausschnitte: [beide Bewertungskarten](images/professional-ui/detail-mobile-scores.png)
 und [Korrekturvorschau](images/professional-ui/correction-mobile.png).
 Die Auswahl per Tabellenzeile und die Rücknavigation wurden ebenfalls im Browser geprüft.
+
+
+## Sprache: DE | EN
+
+Der Sprachschalter steht ganz oben in der Seitenleiste. Beim ersten Aufruf wird
+`st.context.locale` ausgewertet: `de` (einschließlich `de-DE`, `de-AT` usw.) wählt
+Deutsch, alle anderen oder nicht verfügbaren Browserangaben wählen Englisch. Die
+Auswahl gilt für die aktuelle Streamlit-Sitzung. Auf schmalen Bildschirmen zuerst
+die native Seitenleiste öffnen.
+
+Der zentrale Katalog liegt in `ui/locales/messages.json`; `ui/i18n.py` enthält
+Anzeigeformatierung und Übersetzungszugriff. Navigation und Auswahlfelder behalten
+stabile interne Werte. Auswahl-Widgets erhalten zusätzlich einen Sprachsuffix am Schlüssel,
+damit Streamlit auch den ausgewählten Beschriftungstext aktualisiert; die eigentliche
+Auswahl liegt getrennt im Sitzungszustand. Korrektureingaben werden unmittelbar im Sitzungszustand
+gehalten, statt erst beim Absenden eines Streamlit-Formulars. Eine offene Vorschau
+wird beim Wechsel nur neu dargestellt. Weder Berechnung noch API-Aufruf werden ausgelöst.
+Dynamische Eingabetabellen bewahren ihren zurückgegebenen Bearbeitungsstand beim Wechsel.
+
+Zahlen in Ergebnistabellen, Karten und Vorschauen sowie Datumsangaben und Diagramme
+folgen der ausgewählten Sprache. Die zugrunde liegenden numerischen Tabellenspalten
+bleiben numerisch und sortierbar. Zeitstempel behalten ihre gespeicherte Zeitzone und
+zeigen sie an. Im Korrekturfeld wird zusätzlich ein deutsches Dezimalkomma akzeptiert.
+CSV-Exporte, interne IDs, Klassen-Codes, JSON-Vorschau, Rechenwerte und gespeicherte
+Historie verwenden weiterhin ihr unverändertes Austauschformat.
+
+Neue KI-Anfragen erhalten `language="de"` beziehungsweise `language="en"` als separate
+Anweisung. Die Berechnungsspur und ihr Hash bleiben unverändert. Bereits erzeugte
+Erklärungen werden in ihrer ursprünglichen Sprache gekennzeichnet und beibehalten;
+Nutzerbegründungen, Kommentare und Namen werden nicht übersetzt. Für eine neue
+Erklärung in der anderen Sprache die vorhandene Erklärung ausdrücklich verwerfen
+und anschließend neu anfordern. Der Sprachwechsel selbst ist kostenlos und ruft
+keinen Anbieter auf. Automatisierte Tests verwenden ausschließlich einen Testprovider.
+
+### Grenzen nativer Streamlit-Elemente
+
+Die von uns kontrollierten Beschriftungen und Auswahllisten sind übersetzt. Streamlit
+1.65 bietet jedoch keinen anwendungsweiten Sprachparameter für seine eigenen Texte:
+
+- Datei-Upload: „Drag and drop files here“, „Browse files“, Größen-/Typangaben.
+- Tabellenwerkzeuge: Such-, Download-, Vollbild- und Kopiermenüs sowie native
+  Leer-/Validierungsmeldungen des Zelleditors.
+- Native Tastaturhinweise, etwa „Press Enter to apply“, und Bedienhilfen wie
+  „Close sidebar“, „Open sidebar“ oder „Clear all“.
+- Streamlit-Verbindungs-, Laufzeit- und Framework-Fehlerdialoge.
+
+Diese Texte richten sich nach der Streamlit-Version beziehungsweise dem Browser und
+können teilweise englisch bleiben. Native numerische **Eingabezellen** verwenden die
+Formatierung/Validierung des Streamlit-Zelleditors; sie lassen sich nicht unabhängig
+von der Browsersprache vollständig lokalisieren. Die Ergebnistabellen und die
+Korrekturvorschau verwenden dagegen die ausgewählte Sprache. Wir ersetzen dafür weder
+interne DOM-Strukturen noch Framework-Texte durch JavaScript oder CSS. Systemdialoge
+zur Dateiauswahl werden vom Betriebssystem bereitgestellt.
+
+Die zusätzliche Browserprüfung und Screenshots für DE/EN liegen unter
+[images/professional-ui/i18n](images/professional-ui/i18n/).
+
+
+Prüfergebnis der Sprachergänzung am 13.10.2026: **224 Tests bestanden, 1 übersprungen**
+(realer LLM-Aufruf ohne API-Key). Nach der abschließenden Korrektur der Auswahl-Widgets
+wurden die **23 UI-Tests erneut erfolgreich** ausgeführt; die **11 Lokalisierungstests**
+bestehen ebenfalls. Ruff und `git diff --check` bestanden.
+
+Zusätzliche Prüffälle: Browser-Sprachwahl einschließlich unbekannter Sprache,
+Darstellung ohne Änderung der Rohwerte, Erhalt von Suche/Filtern/Lieferant/Ausfüllstand/
+Korrekturvorschau beim Wechsel, unveränderte Nutzerbegründung, kein erneuter KI-Aufruf,
+deutscher/englischer Prompt bei einer ausdrücklich angeforderten neuen Erklärung.
+
+
+Browserprüfung: **1440 × 1000** und **390 × 844**, Deutsch und Englisch.
+`de-DE` wurde automatisch erkannt; der englische Browser startete auf Englisch.
+Suche und Lieferantenauswahl blieben beim Wechsel erhalten. Die offene Korrektur von
+`compliance_status` wurde zwischen beiden Sprachen umgeschaltet, einschließlich der
+Beschriftung des ausgewählten Felds und der unveränderten deutschen Nutzerbegründung.
+Die mobile Bestätigung schrieb unverändert 41,75 → 35,75 in die synthetische Testhistorie
+unter `/tmp/sra-i18n-browser-history`; es gab keinen API-Aufruf und keinen horizontalen
+Seitenüberlauf. Zahlen in der JSON-Historie bleiben 41.75 beziehungsweise 35.75.
+
+Aktuelle Screenshots:
+
+- Einstieg: [DE](images/professional-ui/i18n/start-de.png), [EN](images/professional-ui/i18n/start-en.png)
+- Portfolio: [DE](images/professional-ui/i18n/portfolio-de.png), [EN](images/professional-ui/i18n/portfolio-en.png)
+- Lieferantendetail: [DE](images/professional-ui/i18n/detail-de.png), [EN](images/professional-ui/i18n/detail-en.png)
+- Offene Korrektur: [DE](images/professional-ui/i18n/correction-preview-de.png), [EN](images/professional-ui/i18n/correction-preview-en.png)
+- Mobile Korrektur: [DE](images/professional-ui/i18n/correction-mobile-de.png), [EN](images/professional-ui/i18n/correction-mobile-en.png)
+- [Mobiler Sprachschalter](images/professional-ui/i18n/language-mobile-de.png)
+- [Bestätigte Korrektur](images/professional-ui/i18n/detail-confirmed-de.png)

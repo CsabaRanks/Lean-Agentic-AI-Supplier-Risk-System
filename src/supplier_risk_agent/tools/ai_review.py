@@ -59,7 +59,7 @@ Rules:
 - Explain where the two views differ and why, based on criteria, weights and contributions.
 - Suggested actions are proposals for a human reviewer. Build on the rule-based actions in the
   trace where they fit, and prioritise them (high, medium, low).
-- Be concise and factual. Write in English for a procurement audience."""
+- Be concise and factual. Write for a procurement audience."""
 
 USER_TEMPLATE = f"""\
 Explain this supplier's evaluation and fill every field of the answer format:

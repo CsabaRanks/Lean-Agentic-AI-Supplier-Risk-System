@@ -79,3 +79,4 @@ class AIReviewResult(BaseModel):
     data_gaps: list[str] = Field(description="Missing criteria per view, derived from the payload (not by the LLM)")
     review: AIReviewDraft
     disclaimer: str = DISCLAIMER
+    language: Literal["de", "en"] = "en"

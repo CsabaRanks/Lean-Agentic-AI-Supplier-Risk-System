@@ -103,14 +103,17 @@ class SupplierRiskEvaluator:
         payload = decision.model_dump() if isinstance(decision, ReviewDecision) else decision
         return self.app.invoke(Command(resume=payload), self._config(run_id))
 
-    def ai_review(self, run_id: str, payload: dict) -> SupplierRiskState:
+    def ai_review(self, run_id: str, payload: dict, *, language: str = "en") -> SupplierRiskState:
         """Request the optional LLM review of one supplier as a follow-up step of a run.
 
         ``payload`` is the preview from :func:`ai_review_payload`, shown to the
         user beforehand; it is sent unchanged. The run's scores, classes and
         weights are not modified. A pending human review stays pending.
         """
-        return self.app.invoke({"ai_review_request": {"payload": payload}}, self._config(run_id))
+        if language not in {"de", "en"}:
+            raise ValueError("Unsupported review language; expected de or en")
+        return self.app.invoke({"ai_review_request": {"payload": payload, "language": language}},
+                               self._config(run_id))
 
     def assess(self, supplier_id: str) -> RiskAssessment:
         state = self.run([supplier_id])

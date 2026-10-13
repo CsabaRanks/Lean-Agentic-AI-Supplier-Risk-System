@@ -253,7 +253,10 @@ supplier-risk --data data/sample_suppliers.json --wgi-mock --history-dir data/hi
 streamlit run ui/app.py      # http://localhost:8501
 ```
 
-The app opens with **Demo ausprobieren**: six synthetic suppliers, no API key required.
+The app opens with **Try the demo / Demo ausprobieren**: six synthetic suppliers, no API key required.
+Use **DE | EN** at the top of the sidebar. The first visit uses German for a German browser
+locale and English otherwise. Switching keeps filters, selections and pending corrections.
+New AI explanations use the selected language; existing explanations and user reasons remain original.
 **Portfolio** shows risk and performance together, with search, filters and supplier selection.
 **Lieferantendetail** leads from **Warum diese Bewertung?** to a reasoned correction,
 before/after preview and explicit confirmation. Sources and calculation details expand on demand.
