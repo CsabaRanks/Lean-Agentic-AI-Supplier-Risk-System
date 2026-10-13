@@ -60,7 +60,7 @@ files, not in a vendor's black box.
 ## Explain & correct: why this rating, and is it right?
 
 A category manager looks at a supplier, wants to know why it is rated the way it is, spots a wrong
-input, and corrects it in a controlled way. The tab **Explain & correct** walks through four steps:
+input, and corrects it in a controlled way. The **Lieferantendetail** view provides the calculation, correction and optional explanation:
 
 1. **How the score is calculated.** A trace generated from the scoring engine's own results, without
    any API key. It shows per criterion the inputs with source and data date (or "missing"), the rating
@@ -79,7 +79,7 @@ input, and corrects it in a controlled way. The tab **Explain & correct** walks 
 4. **Dispute assessment.** Records that you disagree with a criterion. It changes no score and does
    not train weights.
 
-The same rule applies to the input table in **Scoring run**: new suppliers are entered directly, but
+The same rule applies to the input table in **Daten & Import**: new suppliers are entered directly, but
 a changed cell of a supplier that already has a result is held back as a pending correction and
 applied only after a reason, the before/after preview and your confirmation. Deleting such a
 supplier in the table is not applied.
@@ -163,7 +163,7 @@ than the template. The change is accepted because the error drops by about 40 % 
 suppliers *and* the drop is clearly larger than its own uncertainty (z ≥ 2). With fewer or noisier
 labels the same step rejects the change, or flags patterns that weights cannot express (a level
 offset between experts and model, knock-out logic). Accepted weights are only **proposed**: the run
-pauses, a reviewer approves or rejects them in the terminal or in the **Review & approval** tab, and
+pauses, a reviewer approves or rejects them in the terminal or in the **Freigaben** view, and
 approved weights are stored as a new version with the reviewer's name.
 
 ## What is deterministic, what is "agentic", what uses an LLM
@@ -253,11 +253,15 @@ supplier-risk --data data/sample_suppliers.json --wgi-mock --history-dir data/hi
 streamlit run ui/app.py      # http://localhost:8501
 ```
 
-Tabs: **Portfolio** · **Dashboard** · **Actions** · **History** · **Scoring run** ·
-**Calibration** · **Review & approval** · **Explain & correct**, with the risk / performance
-switch on top. The app only
-collects input and displays results; every number comes from the package. **Empty template CSV**
-in the sidebar is the starting point for your own data (semicolon-separated files are accepted).
+The app opens with **Demo ausprobieren**: six synthetic suppliers, no API key required.
+**Portfolio** shows risk and performance together, with search, filters and supplier selection.
+**Lieferantendetail** leads from **Warum diese Bewertung?** to a reasoned correction,
+before/after preview and explicit confirmation. Sources and calculation details expand on demand.
+**Verwaltung & Analyse** contains the existing dashboard, history, data import, calibration,
+approvals and settings. CSV templates are available under **Daten & Import**.
+Every score still comes from the package. The light theme uses supported Streamlit APIs.
+
+See [UI walkthrough, screenshots and limitations](docs/professional-ui.md).
 
 ### Python
 
@@ -312,7 +316,7 @@ Setup:
 pip install -e ".[llm]"
 cp .env.example .env          # then set ANTHROPIC_API_KEY (and optionally model, timeout, retries)
 supplier-risk --data data/sample_suppliers.json --ai-review SUP-004     # shows the payload, asks before sending
-streamlit run ui/app.py                                                 # tab "Explain & correct"
+streamlit run ui/app.py                                                 # Lieferantendetail → KI-Erklärung
 ```
 
 The LLM explanation is **experimental**. Automated tests use mocked responses; a real smoke test with

@@ -9,7 +9,7 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.types import Command
 
 from ..llm import ReviewModel
-from ..models.config import RiskModelConfig, load_risk_model
+from ..models.config import RiskModelConfig, WeightSet, load_risk_model
 from ..models.domain import ReviewDecision, RiskAssessment
 from ..models.state import SupplierRiskState
 from ..tools.ai_review import build_review_payload, section_from_state
@@ -66,12 +66,15 @@ class SupplierRiskEvaluator:
         material_group: str | None = None,
         calibrate: bool | None = None,
         run_id: str | None = None,
+        active_weights: dict[str, WeightSet] | None = None,
     ) -> SupplierRiskState:
         """Run the graph and return the state (incl. audit trail).
 
         ``calibrate=None`` falls back to ``calibration.enabled`` in the model.
         With a weight store, the latest stored weights per scope are the
         starting weights of the run.
+        ``active_weights`` preserves already approved session weights when
+        recalculating corrected data, including sessions without a weight store.
         """
         run_id = run_id or uuid.uuid4().hex[:12]
         initial: SupplierRiskState = {
@@ -85,6 +88,8 @@ class SupplierRiskEvaluator:
             active, warnings = self.weight_store.load_active(self.model)
             initial["active_weights"] = active
             initial["errors"] = warnings
+        if active_weights is not None:
+            initial["active_weights"] = dict(active_weights)
         return self.app.invoke(initial, self._config(run_id))
 
     @staticmethod

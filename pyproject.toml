@@ -32,7 +32,7 @@ Paper = "https://github.com/CsabaRanks/Lean-Agentic-AI-Supplier-Risk-System/blob
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.5"]
 research = ["matplotlib>=3.8"]  # regenerate docs/images/spider-diagram.png
-ui = ["streamlit>=1.38", "pandas>=2.0", "altair>=5"]  # spreadsheet-style front end: streamlit run ui/app.py
+ui = ["streamlit>=1.56,<2", "pandas>=2.0", "altair>=5"]  # native theme, badges and selectable tables
 llm = ["anthropic>=1.13"]  # optional AI review (needs ANTHROPIC_API_KEY, see .env.example)
 
 [project.scripts]

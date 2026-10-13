@@ -25,7 +25,7 @@ def app() -> AppTest:
     at.session_state["history_dir"] = tempfile.mkdtemp(prefix="sra-ui-history-")
     at.run()
     assert not at.exception, [e.value for e in at.exception]
-    return at
+    return click(at, "Demo ausprobieren")
 
 
 def click(at: AppTest, label: str) -> AppTest:
@@ -42,29 +42,46 @@ def metrics(at: AppTest) -> dict:
     return {m.label: m.value for m in at.metric}
 
 
+def navigate(at: AppTest, page: str) -> AppTest:
+    at.button(key=f"nav_{page}").click().run()
+    assert not at.exception, [e.value for e in at.exception]
+    return at
+
+
 def load_calibration_demo(at: AppTest) -> AppTest:
+    navigate(at, "Daten & Import")
     box = at.selectbox(key="dataset_choice")
     box.select(next(o for o in box.options if "Calibration demo" in o)).run()
-    return click(at, "Load example")
+    click(at, "Beispieldaten laden")
+    return navigate(at, "Kalibrierung")
 
 
 def reviewer(at: AppTest, name: str) -> None:
     next(t for t in at.text_input if t.label == "Reviewer").input(name)
 
 
-def test_portfolio_is_scored_on_start_without_clicking():
-    m = metrics(app())
-    assert m["Suppliers"] == "6" and m["🔴 critical"] == "2"
-    assert m["Raised by escalation rule"] == "2"
+def test_welcome_requires_explicit_demo_start():
+    at = AppTest.from_file(APP, default_timeout=240).run()
+    assert not at.exception
+    assert not at.session_state.rows and not at.session_state.runs
+    assert any(b.label == "Demo ausprobieren" for b in at.button)
+
+
+def test_demo_scores_both_views():
+    at = app()
+    m = metrics(at)
+    assert m["Lieferanten"] == "6" and m["Erhöhtes Risiko"] == "4"
+    assert m["Performance A"] == "3"
+    assert set(at.session_state.runs) == {"risk", "performance"}
 
 
 def test_recalculate_keeps_results():
-    at = click(app(), "Recalculate")
-    assert metrics(at)["Suppliers"] == "6"
+    at = click(app(), "Neu berechnen")
+    assert metrics(at)["Lieferanten"] == "6"
 
 
 def test_review_with_class_override_on_sample_data():
-    at = app()  # SUP-006 has too little data and pauses for review
+    at = navigate(app(), "Freigaben")  # SUP-006 has too little data and pauses for review
     assert any("Waiting for your decision" in s.value for s in at.subheader)
     reviewer(at, "alice")
     click(at, "Submit decision")
@@ -72,11 +89,11 @@ def test_review_with_class_override_on_sample_data():
 
 
 def test_view_switch_to_performance_uses_its_own_classes():
-    at = app()
+    at = navigate(app(), "Dashboard")
     at.radio(key="view").set_value("performance").run()
     assert not at.exception
     m = metrics(at)
-    assert m["Suppliers"] == "6" and "🔴 C" in m  # A / B / C classes of the performance view
+    assert m["Suppliers"] == "6" and state(at, "performance")["results"]["SUP-004"].risk_class == "C"  # A / B / C classes of the performance view
     perf = state(at, "performance")["results"]
     assert perf["SUP-003"].risk_class == "A" and state(at, "risk")["results"]["SUP-003"].risk_class == "critical"
 
@@ -86,6 +103,7 @@ def test_calibration_proposes_and_approval_applies_weights():
     click(at, "Calibrate")
     assert state(at)["calibration_report"].accepted
     assert not state(at)["calibration_applied"]  # the UI always asks for approval
+    navigate(at, "Freigaben")
     next(c for c in at.checkbox if c.label == "Approve proposed weights").check()
     reviewer(at, "bob")
     click(at, "Submit decision")
@@ -101,28 +119,32 @@ def test_performance_calibration_in_ui():
     report = state(at, "performance")["calibration_report"]
     assert report.accepted and report.n_samples == 32
     assert "on_time_delivery" in report.new_weights
-    assert "calibration_report" not in state(at, "risk")  # views keep separate runs
+    assert not state(at, "risk").get("calibration_report")  # views keep separate runs
 
 
 def test_dashboard_actions_and_history(tmp_path):
     at = app()
     m = metrics(at)
-    assert m["Suppliers"] == "6"  # portfolio tab
+    assert m["Lieferanten"] == "6"
+    navigate(at, "Dashboard")
     # dashboard: per material group selection
     at.selectbox(key="dash_group").select("chemicals").run()
     assert not at.exception
     assert any(mm.label == "Suppliers" and mm.value == "1" for mm in at.metric)
     # history: snapshot to a temporary folder, then it is listed
+    navigate(at, "Einstellungen")
     at.text_input(key="history_dir").input(str(tmp_path)).run()
+    navigate(at, "Historie")
     click(at, "Save snapshot")
     assert (tmp_path / "risk.jsonl").exists()
     assert any("snapshot(s)" in c.value for c in at.caption)
 
 
 def test_wgi_mock_option_and_recalculate_now():
-    at = app()
+    at = navigate(app(), "Einstellungen")
     at.checkbox(key="use_wgi_mock").check().run()
-    click(at, "Recalculate now")
+    navigate(at, "Portfolio")
+    click(at, "Neu berechnen")
     sup1 = state(at)["results"]["SUP-001"]
     assert "WGI" in next(f.rationale for f in sup1.factor_scores if f.factor == "country_risk")
 
@@ -136,7 +158,7 @@ def ai_button(at: AppTest):
 
 def test_ai_review_unavailable_without_api_key(monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    at = app()
+    at = navigate(app(), "Lieferantendetail")
     assert ai_button(at).disabled
     assert any("AI explanation not available" in i.value for i in at.info)
     assert any('"views"' in c.value for c in at.code)  # the payload preview is shown anyway
@@ -148,7 +170,7 @@ def test_ai_review_button_calls_provider_once(monkeypatch):
     reviewer = FakeReviewer()
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
     monkeypatch.setattr("supplier_risk_agent.agents.ai_review.reviewer_from_env", lambda: reviewer)
-    at = app()
+    at = navigate(app(), "Lieferantendetail")
     assert not ai_button(at).disabled and reviewer.calls == []
 
     ai_button(at).click().run()
@@ -165,6 +187,7 @@ def test_ai_review_button_calls_provider_once(monkeypatch):
 
 
 def select_supplier(at: AppTest, sid: str) -> AppTest:
+    navigate(at, "Lieferantendetail")
     box = at.selectbox(key="ai_supplier")
     return box.select(sid).run()
 
@@ -174,7 +197,7 @@ def propose(at: AppTest, sid: str, field: str, value: str, reason: str) -> AppTe
     at.text_input(key=f"correction_value_{sid}").input(value)
     at.text_area(key=f"correction_reason_{sid}").input(reason)
     at.text_input(key=f"correction_name_{sid}").input("tester")
-    return click(at, "Preview correction")
+    return click(at, "Vorher/Nachher prüfen")
 
 
 def risk_score(at: AppTest, sid: str) -> float:
@@ -190,12 +213,12 @@ def test_trace_is_shown_without_api_key():
 def test_preview_does_not_apply_and_confirm_applies_and_records():
     at = select_supplier(app(), "SUP-003")
     at = propose(at, "SUP-003", "qualified_sources", "2", "Second source qualified (synthetic)")
-    assert any("Preview — nothing is applied yet" in m.value for m in at.markdown)
+    assert any("Vorschau — noch nicht übernommen" in m.value for m in at.markdown)
     assert risk_score(at, "SUP-003") == 84.0  # preview only
     row = next(r for r in at.session_state.rows if r["supplier_id"] == "SUP-003")
     assert row["qualified_sources"] == 1
 
-    click(at, "Confirm and apply")
+    click(at, "Korrektur bestätigen")
     assert risk_score(at, "SUP-003") == pytest.approx(79.63, abs=0.01)
     history = Path(at.session_state["history_dir"]) / "corrections.jsonl"
     entry = json.loads(history.read_text().splitlines()[-1])
@@ -221,7 +244,7 @@ def test_ai_explanation_is_marked_outdated_after_a_correction(monkeypatch):
     assert len(reviewer.calls) == 1 and not at.error
 
     at = propose(at, "SUP-003", "qualified_sources", "2", "Second source qualified (synthetic)")
-    click(at, "Confirm and apply")
+    click(at, "Korrektur bestätigen")
     assert any(e.value.startswith("Outdated:") for e in at.error)
     assert not ai_button(at).disabled and len(reviewer.calls) == 1  # no automatic new call
 
@@ -235,3 +258,58 @@ def test_objection_is_recorded_without_changing_the_score():
     assert risk_score(at, "SUP-003") == 84.0
     lines = (Path(at.session_state["history_dir"]) / "objections.jsonl").read_text().splitlines()
     assert json.loads(lines[-1])["status"] == "open"
+
+
+def test_literal_search_empty_state_and_reset():
+    at = app()
+    at.text_input(key="portfolio_search").input("[").run()
+    assert not at.exception
+    assert any("Keine Lieferanten gefunden" in x.value for x in at.info)
+    click(at, "Filter zurücksetzen")
+    assert at.text_input(key="portfolio_search").value == ""
+    assert len(at.dataframe[0].value) == 6
+
+
+def test_filter_and_open_supplier():
+    at = app()
+    at.multiselect(key="portfolio_classes").select("critical").run()
+    assert set(at.dataframe[0].value.supplier_id) == {"SUP-003", "SUP-005"}
+    at.selectbox(key="portfolio_supplier").select("SUP-005").run()
+    click(at, "Bewertung öffnen")
+    assert at.selectbox(key="ai_supplier").value == "SUP-005"
+    assert len(at.metric) == 2
+
+
+def test_demo_reload_discards_pending_correction():
+    at = propose(select_supplier(app(), "SUP-003"), "SUP-003", "qualified_sources", "2", "Synthetic reason")
+    assert "pending_correction" in at.session_state
+    navigate(at, "Start")
+    click(at, "Demo ausprobieren")
+    assert "pending_correction" not in at.session_state
+    assert risk_score(at, "SUP-003") == 84
+
+
+def test_discard_preview_does_not_apply():
+    at = propose(select_supplier(app(), "SUP-004"), "SUP-004", "compliance_status", "minor_findings", "Synthetic audit")
+    click(at, "Vorschau verwerfen")
+    assert risk_score(at, "SUP-004") == 41.75
+    assert not (Path(at.session_state.history_dir) / "corrections.jsonl").exists()
+
+
+def test_correction_preserves_approved_session_weights():
+    at = load_calibration_demo(app())
+    click(at, "Calibrate")
+    navigate(at, "Freigaben")
+    next(c for c in at.checkbox if c.label == "Approve proposed weights").check()
+    reviewer(at, "calibration reviewer")
+    click(at, "Submit decision")
+    weights = state(at)["active_weights"]
+    sid = next(iter(state(at)["results"]))
+    at = select_supplier(at, sid)
+    row = next(r for r in at.session_state.rows if r["supplier_id"] == sid)
+    new_value = "2" if row.get("qualified_sources") != 2 else "3"
+    propose(at, sid, "qualified_sources", new_value, "Synthetic second source")
+    expected = at.session_state.pending_correction["comparison"]["risk"]["score"][1]
+    click(at, "Korrektur bestätigen")
+    assert state(at)["active_weights"] == weights
+    assert risk_score(at, sid) == pytest.approx(expected, abs=0.01)
