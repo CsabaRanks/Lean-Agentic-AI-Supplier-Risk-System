@@ -375,3 +375,22 @@ def test_cli_never_sends_without_confirmation(monkeypatch, tmp_path, capsys):
     assert cli.main(["--data", str(SAMPLE), "--ai-review", "SUP-004"]) == 0
     out = capsys.readouterr().out
     assert '"risk:rule:compliance_status"' in out and out.rstrip().endswith("Not sent.")
+
+
+@pytest.mark.parametrize(('language', 'expected'), [('de', 'German'), ('en', 'English')])
+def test_review_language_changes_prompt_only(runs, language, expected):
+    payload = payload_for(runs)
+    before = json.dumps(payload, sort_keys=True)
+    state = runs.risk.ai_review(runs.risk_state['run_id'], payload, language=language)
+    result = state['ai_reviews']['SUP-003']
+    assert result.language == language
+    assert result.payload_sha256 == payload_hash(payload)
+    assert json.dumps(payload, sort_keys=True) == before
+    assert f'in {expected}' in runs.reviewer.calls[-1][0]
+    assert state['results'] == runs.risk_state['results']
+
+
+def test_invalid_review_language_does_not_call_provider(runs):
+    with pytest.raises(ValueError, match='language'):
+        runs.risk.ai_review(runs.risk_state['run_id'], payload_for(runs), language='fr')
+    assert runs.reviewer.calls == []

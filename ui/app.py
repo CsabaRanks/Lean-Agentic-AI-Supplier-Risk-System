@@ -1,18 +1,8 @@
-"""Supplier Risk Agent — spreadsheet-style front end ("wolf in sheep's clothing").
+"""Supplier Workspace: a native Streamlit procurement UI.
 
-It looks and feels like a spreadsheet: suppliers in rows, criteria, scores and
-classes in columns, filters, sorting, traffic-light colours, direct input,
-CSV import and export. A switch at the top changes the view between
-**Performance** ("How well does this supplier deliver?") and **Risk**
-("How exposed are we if it fails?"). The views share criteria such as credit
-risk, ESG and compliance, and each has its own weights, classes and actions.
-
-Underneath runs the full workflow of the package: deterministic scoring,
-expert calibration with safeguards, human review via graph interrupt,
-versioned weights and an audit trail, separately for each view.
-
-This file only collects input and displays results. Every number comes from
-`SupplierRiskEvaluator` and the package's tools; nothing is recomputed here.
+Start with synthetic data, compare risk and performance in one portfolio,
+then explain and correct a supplier assessment with a reason and preview.
+Scoring, calibration, approvals and optional AI reviews use the package.
 
     pip install -e ".[ui]"
     streamlit run ui/app.py
@@ -26,6 +16,24 @@ from pathlib import Path
 import altair as alt
 import pandas as pd
 import streamlit as st
+from i18n import (
+    browser_language,
+    data_editor,
+    dataframe,
+    date,
+    date_axis,
+    display_value,
+    error_text,
+    language,
+    localized_chart,
+    message,
+    multiselect,
+    number,
+    option_labels,
+    parse_input,
+    selectbox,
+    tr,
+)
 from pydantic import ValidationError
 
 from supplier_risk_agent import SupplierRiskEvaluator, load_risk_model
@@ -59,16 +67,30 @@ from supplier_risk_agent.tools.tabular import (
 ROOT = Path(__file__).resolve().parents[1]
 DATASETS = {
     "Sample portfolio (6 suppliers)": ROOT / "data" / "sample_suppliers.json",
-    "Calibration demo (36 suppliers, synthetic expert labels)": ROOT / "data" / "calibration_portfolio.json",
+    "Calibration demo (36 suppliers, synthetic expert labels)": ROOT
+    / "data"
+    / "calibration_portfolio.json",
 }
 # status palette (fixed roles), from favourable to unfavourable — always shown with the class label
-STATUS = [("#0ca30c", "🟢"), ("#fab219", "🟡"), ("#ec835a", "🟠"), ("#d03b3b", "🔴")]
+STATUS = [("#e8f3ed", "🟢"), ("#fcf3dc", "🟡"), ("#fff0e5", "🟠"), ("#fbe9e7", "🔴")]
 # categorical slots 1 and 2 of the validated reference palette
 CURRENT_COLOR, PROPOSED_COLOR = "#2a78d6", "#eb6834"
-NUMERIC_INPUTS = {"annual_spend", "credit_score", "distress_signals", "country_risk_index", "qualified_sources",
-                  "esg_score", "on_time_rate", "quality_ppm"}
+NUMERIC_INPUTS = {
+    "annual_spend",
+    "credit_score",
+    "distress_signals",
+    "country_risk_index",
+    "qualified_sources",
+    "esg_score",
+    "on_time_rate",
+    "quality_ppm",
+}
 
-st.set_page_config(page_title="Supplier Risk Agent", page_icon="📋", layout="wide")
+st.session_state.setdefault("language", browser_language(st.context.locale))
+
+st.set_page_config(
+    page_title="Supplier Workspace", page_icon=":material/view_quilt:", layout="wide"
+)
 load_env_file(ROOT / ".env")  # optional LLM settings; variables already set in the environment win
 
 
@@ -106,6 +128,11 @@ def load_rows(path: Path) -> list[dict]:
 
 def set_rows(rows: list[dict], origin: str) -> None:
     """Replace the data and score it straight away, like a spreadsheet that is always calculated."""
+    st.session_state.pop("pending_correction", None)
+    st.session_state.pop("table_preview", None)
+    st.session_state.pop("selected_supplier", None)
+    st.session_state.pop("correction_success", None)
+    st.session_state.pop("editor_locale_drafts", None)
     st.session_state.rows = rows
     st.session_state.origin = origin
     st.session_state.editor_version = st.session_state.get("editor_version", 0) + 1
@@ -133,28 +160,71 @@ def assessments() -> list:
 
 def assessed_ids() -> set[str]:
     """Suppliers that already have a result in any view: changes to them go through a correction."""
-    return {sid for info in st.session_state.get("runs", {}).values()
-            for sid in ((info or {}).get("state") or {}).get("results", {})}
+    return {
+        sid
+        for info in st.session_state.get("runs", {}).values()
+        for sid in ((info or {}).get("state") or {}).get("results", {})
+    }
 
 
 def show_comparison(comparison: dict) -> None:
     """Before/after of a proposed correction, per view and per changed criterion."""
-    st.dataframe(pd.DataFrame([{
-        "view": ui_model(v).view_label, "score": f"{c['score'][0]} → {c['score'][1]}",
-        "class": f"{c['class'][0]} → {c['class'][1]}",
-        "data": f"{c['data_completeness'][0]:.0%} → {c['data_completeness'][1]:.0%}",
-        "needs review": f"{c['needs_review'][0]} → {c['needs_review'][1]}",
-        "rules now triggered": ", ".join(c["rules_now_triggered"]) or "—",
-        "rules no longer triggered": ", ".join(c["rules_no_longer_triggered"]) or "—",
-    } for v, c in comparison.items()]), hide_index=True, width="stretch")
-    changed = [{"view": v, "criterion": x["criterion"], "rating": f"{x['rating'][0]} → {x['rating'][1]}",
-                "origin": f"{x['origin'][0]} → {x['origin'][1]}",
-                "points": f"{x['contribution_points'][0]} → {x['contribution_points'][1]}"}
-               for v, c in comparison.items() for x in c["changed_criteria"]]
+    for col, (view, values) in zip(st.columns(len(comparison)), comparison.items()):
+        with col.container(border=True):
+            st.markdown(tr("**Risiko**") if view == "risk" else tr("**Performance**"))
+            before, after = values["score"]
+            st.metric(tr("Vorher → Nachher"), f"{display_value(before)} → {display_value(after)}")
+            st.write(
+                tr(
+                    "{v0} → {v1}",
+                    v0=risk_name(values["class"][0]),
+                    v1=risk_name(values["class"][1]),
+                )
+            )
+            if values["rules_no_longer_triggered"]:
+                st.caption(
+                    tr("Regel entfällt: ") + tr(", ".join(values["rules_no_longer_triggered"]))
+                )
+            if values["rules_now_triggered"]:
+                st.caption(tr("Neue Regel: ") + tr(", ".join(values["rules_now_triggered"])))
+    with st.expander(tr("Alle Auswirkungen der Korrektur")):
+        comparison_table(comparison)
+
+
+def comparison_table(comparison: dict) -> None:
+    dataframe(
+        pd.DataFrame(
+            [
+                {
+                    "view": tr(ui_model(v).view_label),
+                    "score": f"{display_value(c['score'][0])} → {display_value(c['score'][1])}",
+                    "class": f"{risk_name(c['class'][0])} → {risk_name(c['class'][1])}",
+                    "data": f"{number(c['data_completeness'][0], '.0%')} → {number(c['data_completeness'][1], '.0%')}",
+                    "needs review": f"{display_value(c['needs_review'][0])} → {display_value(c['needs_review'][1])}",
+                    "rules now triggered": ", ".join(c["rules_now_triggered"]) or "—",
+                    "rules no longer triggered": ", ".join(c["rules_no_longer_triggered"]) or "—",
+                }
+                for v, c in comparison.items()
+            ]
+        ),
+        hide_index=True,
+        width="stretch",
+    )
+    changed = [
+        {
+            "view": v,
+            "criterion": x["criterion"],
+            "rating": f"{x['rating'][0]} → {x['rating'][1]}",
+            "origin": f"{tr(x['origin'][0])} → {tr(x['origin'][1])}",
+            "points": f"{display_value(x['contribution_points'][0])} → {display_value(x['contribution_points'][1])}",
+        }
+        for v, c in comparison.items()
+        for x in c["changed_criteria"]
+    ]
     if changed:
-        st.dataframe(pd.DataFrame(changed), hide_index=True, width="stretch")
+        dataframe(pd.DataFrame(changed), hide_index=True, width="stretch")
     else:
-        st.caption("No criterion rating changes.")
+        st.caption(tr("No criterion rating changes."))
 
 
 def apply_corrections(items: list[tuple], new_rows: list[dict]) -> None:
@@ -162,27 +232,37 @@ def apply_corrections(items: list[tuple], new_rows: list[dict]) -> None:
     for request, comparison in items:
         entry = history().record_correction(request, comparison)
         if request.supplier_id in st.session_state.get("ai_explanations", {}):
-            st.session_state.setdefault("ai_outdated", {})[request.supplier_id] = (
-                f"the correction of {entry['recorded_at']} ({request.reason})")
+            st.session_state.setdefault("ai_outdated", {})[request.supplier_id] = {
+                "time": entry["recorded_at"],
+                "reason": request.reason,
+            }
     st.session_state.rows = new_rows
     st.session_state.editor_version = st.session_state.get("editor_version", 0) + 1
-    st.session_state.runs = {}
-    run(calibrate=False, material_group=None)
+    # Each view retains its approved session weights when the corrected data is scored.
+    for view in ("risk", "performance"):
+        run(calibrate=False, material_group=None, view=view)
 
 
 def run(calibrate: bool, material_group: str | None, view: str | None = None) -> None:
     """Score the current data in the current view (or in ``view``)."""
+    st.session_state.pop("pending_correction", None)
+    st.session_state.pop("table_preview", None)
     view_model = ui_model(view) if view else model()
     profiles, errors = rows_to_profiles(st.session_state.rows, view_model)
     st.session_state.input_errors = errors
     info = st.session_state.setdefault("runs", {}).setdefault(view_model.view, {})
+    approved_weights = (info.get("state") or {}).get("active_weights") or None
     info.clear()
     if not profiles:
         return
-    evaluator = SupplierRiskEvaluator(InMemorySource(profiles), view_model, weight_store(), providers=providers())
+    evaluator = SupplierRiskEvaluator(
+        InMemorySource(profiles), view_model, weight_store(), providers=providers()
+    )
     info.update(
         evaluator=evaluator,
-        state=evaluator.run(material_group=material_group, calibrate=calibrate),
+        state=evaluator.run(
+            material_group=material_group, calibrate=calibrate, active_weights=approved_weights
+        ),
         run_kind="calibration" if calibrate else "scoring",
         rows_at_run=[dict(r) for r in st.session_state.rows],
     )
@@ -191,13 +271,18 @@ def run(calibrate: bool, material_group: str | None, view: str | None = None) ->
 def results_frame() -> pd.DataFrame:
     """Result rows in the view's reading direction, most concerning supplier first."""
     state = run_info().get("state") or {}
-    ranked = sorted(state.get("results", {}).values(),
-                    key=lambda a: a.overall_score if a.overall_score is not None else -1, reverse=True)
+    ranked = sorted(
+        state.get("results", {}).values(),
+        key=lambda a: a.overall_score if a.overall_score is not None else -1,
+        reverse=True,
+    )
     return pd.DataFrame([assessment_to_row(a, model()) for a in ranked])
 
 
 def material_groups() -> list[str]:
-    return sorted({str(r["material_group"]) for r in st.session_state.rows if r.get("material_group")})
+    return sorted(
+        {str(r["material_group"]) for r in st.session_state.rows if r.get("material_group")}
+    )
 
 
 def with_numeric(df: pd.DataFrame, columns) -> pd.DataFrame:
@@ -210,439 +295,555 @@ def with_numeric(df: pd.DataFrame, columns) -> pd.DataFrame:
 
 def class_label(value) -> str:
     icon = class_styles().get(value, ("", "⚪"))[1]
-    return f"{icon} {value}" if isinstance(value, str) else "⚪ n/a"
+    return f"{icon} {tr(value)}" if isinstance(value, str) else "⚪ —"
 
 
 def style_class(value: str) -> str:
-    key = str(value).split(" ")[-1]
+    key = next((c for c in class_styles() if tr(c) == str(value).split(" ")[-1]), value)
     styles = class_styles()
     if key not in styles:
         return ""
     worst = key == list(styles)[-1]
-    return f"background-color: {styles[key][0]}; color: {'#ffffff' if worst else '#0b0b0b'}; font-weight: 600"
+    return f"background-color: {styles[key][0]}; color: {'#a33636' if worst else '#243247'}; font-weight: 600"
 
 
-if "view" not in st.session_state:
-    st.session_state.view = "risk"
-if "rows" not in st.session_state:
-    set_rows(load_rows(next(iter(DATASETS.values()))), next(iter(DATASETS)))
-
-
-# --- sidebar: data in and out -------------------------------------------------------------
-
-with st.sidebar:
-    st.header("Data")
-    choice = st.selectbox("Example data", list(DATASETS), key="dataset_choice")
-    if st.button("Load example", width="stretch"):
-        set_rows(load_rows(DATASETS[choice]), choice)
-        st.rerun()
-
-    upload = st.file_uploader("Import CSV (one supplier per row)", type=["csv"], key="input_csv")
-    if upload is not None and st.session_state.get("imported") != upload.file_id:
-        st.session_state.imported = upload.file_id
-        set_rows(from_csv(upload.getvalue().decode("utf-8-sig")), upload.name)
-        st.rerun()
-
-    st.download_button("Export input CSV", to_csv(st.session_state.rows), file_name="suppliers.csv",
-                       mime="text/csv", width="stretch")
-    st.download_button("Empty template CSV", ",".join(all_view_columns()) + "\n", file_name="template.csv",
-                       mime="text/csv", width="stretch")
-    st.caption(f"Current data: {st.session_state.origin} · {len(st.session_state.rows)} rows")
-
-    with st.expander("Advanced"):
-        st.checkbox("Store approved weights (versioned)", key="use_store",
-                    help="Approved weights are saved as a new version per view and used as the starting "
-                         "point of later runs.")
-        st.session_state.setdefault("store_dir", "data/weights")
-        st.text_input("Weight store folder", key="store_dir")
-        st.checkbox("Political stability from World Bank WGI (MOCK)", key="use_wgi_mock",
-                    help="Placeholder provider with FICTIONAL values for the sample regions. For real data, "
-                         "download WGI and use WorldBankWgiProvider.from_csv() (see docs/data-providers.md). "
-                         "Recalculate after switching.")
-        st.session_state.setdefault("history_dir", "data/history")
-        st.text_input("History folder", key="history_dir")
-        st.caption(f"Model: {model().name} v{model().version}")
-
-
-# --- header and view switch ------------------------------------------------------------------
-
-st.title("Supplier Risk Agent")
-views = available_views()
-top_left, top_right = st.columns([3, 1])
-top_left.radio("View", views, key="view", horizontal=True, format_func=lambda v: ui_model(v).view_label)
-if top_right.button("🔄 Recalculate now", type="primary", width="stretch",
-                    help="Scores are recalculated on demand from the current data, weights and providers."):
-    run(calibrate=False, material_group=None)
-    st.toast("Recalculated")
-if not run_info():  # first time this view is shown: score it
-    run(calibrate=False, material_group=None)
-st.caption(
-    f"**{model().view_label}** — {model().view_question} Works like a spreadsheet: change data, press "
-    "**Recalculate now**, and every score, class and action is updated at once. Underneath: deterministic "
-    "scoring, expert calibration with safeguards, human review and versioned weights."
-)
-for error in st.session_state.get("input_errors", []):
-    st.error(f"Input: {error}")
-
-tab_portfolio, tab_dash, tab_actions, tab_history, tab_run, tab_cal, tab_review, tab_explain = st.tabs(
-    ["📋 Portfolio", "📊 Dashboard", "🛠 Actions", "🕓 History", "▶️ Scoring run", "🎯 Calibration",
-     "✅ Review & approval", "🔎 Explain & correct"]
-)
-
-
-# --- tab: dashboard ---------------------------------------------------------------------------
-
-with tab_dash:
+def dashboard_page():
     items = assessments()
     if not items:
-        st.info("No results yet.")
+        st.info(tr("No results yet."))
     else:
         order = [c.key for c in model().risk_classes]
         styles = class_styles()
         summary = pd.DataFrame(group_summary(items, model()))
-        group = st.selectbox("Material group", summary.material_group.tolist(), key="dash_group")
+        group = selectbox(
+            tr("Material group"),
+            summary.material_group.tolist(),
+            key="dash_group",
+            format_func=option_labels(summary.material_group.tolist(), tr),
+            _parent=st,
+        )
         row = summary.set_index("material_group").loc[group]
-        selected = items if group == ALL_GROUPS else [a for a in items if (a.material_group or "(none)") == group]
+        selected = (
+            items
+            if group == ALL_GROUPS
+            else [a for a in items if (a.material_group or "(none)") == group]
+        )
 
         k = st.columns(5)
-        k[0].metric("Suppliers", int(row.suppliers))
-        k[1].metric(f"Mean {model().score_label.lower()}", f"{row.mean_score:.1f}" if pd.notna(row.mean_score) else "–")
-        k[2].metric(f"Share {' / '.join(order[-2:])}", f"{row.share_top_two_classes:.0%}")
-        k[3].metric("Need review", int(row.needs_review))
-        k[4].metric("Raised by escalation rule", int(row.escalated))
+        k[0].metric(tr("Suppliers"), int(row.suppliers))
+        k[1].metric(
+            tr("Mean {v0}", v0=tr(model().score_label)),
+            number(row.mean_score, ".1f") if pd.notna(row.mean_score) else "–",
+        )
+        k[2].metric(
+            tr("Share {v0}", v0=" / ".join(risk_name(c) for c in order[-2:])),
+            number(row.share_top_two_classes, ".0%"),
+        )
+        k[3].metric(tr("Need review"), int(row.needs_review))
+        k[4].metric(tr("Raised by escalation rule"), int(row.escalated))
 
         left, right = st.columns([3, 2])
         with left:
             class_columns = [f"class_{c}" for c in order]
-            per_group = summary.loc[summary.material_group != ALL_GROUPS, ["material_group", *class_columns]].melt(
-                id_vars="material_group", value_vars=class_columns, var_name="class", value_name="suppliers")
-            per_group["class"] = per_group["class"].str.removeprefix("class_")
-            stacked = alt.Chart(per_group).mark_bar(stroke="white", strokeWidth=2).encode(
-                y=alt.Y("material_group:N", title=None),
-                x=alt.X("suppliers:Q", title="Suppliers", axis=alt.Axis(tickMinStep=1)),
-                color=alt.Color("class:N", scale=alt.Scale(domain=order, range=[styles[c][0] for c in order]),
-                                legend=alt.Legend(title=None, orient="top")),
-                order=alt.Order("class_rank:Q"),
-                tooltip=["material_group", "class", "suppliers"],
-            ).transform_calculate(class_rank=f"indexof({order}, datum.class)")
-            st.altair_chart(stacked.properties(height=alt.Step(34), title="Classes per material group"),
-                            width="stretch")
+            per_group = summary.loc[
+                summary.material_group != ALL_GROUPS, ["material_group", *class_columns]
+            ].melt(
+                id_vars="material_group",
+                value_vars=class_columns,
+                var_name="class",
+                value_name="suppliers",
+            )
+            per_group["class"] = per_group["class"].str.removeprefix("class_").map(risk_name)
+            stacked = (
+                alt.Chart(per_group)
+                .mark_bar(stroke="white", strokeWidth=2)
+                .encode(
+                    y=alt.Y("material_group:N", title=None),
+                    x=alt.X("suppliers:Q", title=tr("Suppliers"), axis=alt.Axis(tickMinStep=1)),
+                    color=alt.Color(
+                        "class:N",
+                        scale=alt.Scale(
+                            domain=[risk_name(c) for c in order],
+                            range=[styles[c][0] for c in order],
+                        ),
+                        legend=alt.Legend(title=None, orient="top"),
+                    ),
+                    order=alt.Order("class_rank:Q"),
+                    tooltip=[
+                        alt.Tooltip("material_group:N", title=tr("material_group")),
+                        alt.Tooltip("class:N", title=tr("class")),
+                        alt.Tooltip("suppliers:Q", title=tr("suppliers")),
+                    ],
+                )
+                .transform_calculate(
+                    class_rank=f"indexof({[risk_name(c) for c in order]}, datum.class)"
+                )
+            )
+            localized_chart(
+                stacked.properties(height=alt.Step(34), title=tr("Classes per material group")),
+                width="stretch",
+            )
         with right:
-            st.markdown(f"**Top risks — {group}**")
+            st.markdown(tr("**Top risks — {v0}**", v0=tr(group)))
             top = pd.DataFrame(top_risks(selected, model(), n=5))
             if not top.empty:
                 top["risk_class"] = top.risk_class.map(class_label)
-                st.dataframe(top[["name", "score", "risk_class", "main_drivers"]], hide_index=True, width="stretch",
-                             column_config={"name": "Supplier", "score": st.column_config.NumberColumn(
-                                 model().score_label, format="%.1f"), "risk_class": "Class",
-                                 "main_drivers": "Main drivers (points)"})
-        st.markdown("**All material groups**")
-        st.dataframe(summary, hide_index=True, width="stretch", column_config={
-            "material_group": "Material group", "suppliers": "Suppliers",
-            "mean_score": st.column_config.NumberColumn(f"Mean {model().score_label.lower()}", format="%.1f"),
-            "share_top_two_classes": st.column_config.NumberColumn(f"Share {' / '.join(order[-2:])}",
-                                                                   format="percent"),
-            **{f"class_{c}": f"{styles[c][1]} {c}" for c in order},
-            "needs_review": "Review", "escalated": "Escalated", "most_concerning": "Most concerning"})
+                dataframe(
+                    top[["name", "score", "risk_class", "main_drivers"]],
+                    hide_index=True,
+                    width="stretch",
+                    column_config={
+                        "name": "Supplier",
+                        "score": st.column_config.NumberColumn(
+                            tr(model().score_label), format="%.1f"
+                        ),
+                        "risk_class": "Class",
+                        "main_drivers": "Main drivers (points)",
+                    },
+                )
+        st.markdown(tr("**All material groups**"))
+        dataframe(
+            summary.assign(
+                material_group=summary.material_group.map(
+                    lambda group: tr(group) if group == ALL_GROUPS else group
+                )
+            ),
+            hide_index=True,
+            width="stretch",
+            column_config={
+                "material_group": "Material group",
+                "suppliers": "Suppliers",
+                "mean_score": st.column_config.NumberColumn(
+                    tr("Mean {v0}", v0=tr(model().score_label)), format="%.1f"
+                ),
+                "share_top_two_classes": st.column_config.NumberColumn(
+                    tr("Share {v0}", v0=" / ".join(risk_name(c) for c in order[-2:])),
+                    format="percent",
+                ),
+                **{f"class_{c}": f"{styles[c][1]} {risk_name(c)}" for c in order},
+                "needs_review": "Review",
+                "escalated": "Escalated",
+                "most_concerning": "Most concerning",
+            },
+        )
 
 
-# --- tab: actions ------------------------------------------------------------------------------
+# --- page: actions ------------------------------------------------------------------------------
 
-with tab_actions:
+
+def actions_page():
     plan = pd.DataFrame(action_plan(assessments()))
     if plan.empty:
-        st.info("No actions.")
+        st.info(tr("No actions."))
     else:
-        st.caption("Action framework: measures per risk class, per elevated dimension and per factor level. "
-                   "Defined in the view's YAML (`actions`, `dimension_triggers`, `factor_actions`).")
+        st.caption(
+            tr(
+                "Action framework: measures per risk class, per elevated dimension and per factor level. Defined in the view's YAML (`actions`, `dimension_triggers`, `factor_actions`)."
+            )
+        )
         f = st.columns([2, 2, 2, 2])
-        groups = f[0].multiselect("Material group", sorted(plan.material_group.dropna().unique()), key="act_group")
-        classes = f[1].multiselect("Class", [c.key for c in model().risk_classes], key="act_class")
-        levels = f[2].multiselect("Level", sorted(plan.level.unique()), key="act_level")
-        owners = f[3].multiselect("Owner", sorted(plan.owner.dropna().unique()), key="act_owner")
+        groups = multiselect(
+            tr("Material group"),
+            sorted(plan.material_group.dropna().unique()),
+            key="act_group",
+            placeholder=tr("Choose options"),
+            _parent=f[0],
+        )
+        classes = multiselect(
+            tr("Class"),
+            [c.key for c in model().risk_classes],
+            key="act_class",
+            format_func=option_labels([c.key for c in model().risk_classes], risk_name),
+            placeholder=tr("Choose options"),
+            _parent=f[1],
+        )
+        levels = multiselect(
+            tr("Level"),
+            sorted(plan.level.unique()),
+            key="act_level",
+            format_func=option_labels(sorted(plan.level.unique()), tr),
+            placeholder=tr("Choose options"),
+            _parent=f[2],
+        )
+        owners = multiselect(
+            tr("Owner"),
+            sorted(plan.owner.dropna().unique()),
+            key="act_owner",
+            format_func=option_labels(sorted(plan.owner.dropna().unique()), tr),
+            placeholder=tr("Choose options"),
+            _parent=f[3],
+        )
         view_plan = plan
-        for column, chosen in (("material_group", groups), ("risk_class", classes), ("level", levels),
-                               ("owner", owners)):
+        for column, chosen in (
+            ("material_group", groups),
+            ("risk_class", classes),
+            ("level", levels),
+            ("owner", owners),
+        ):
             if chosen:
                 view_plan = view_plan[view_plan[column].isin(chosen)]
-        st.dataframe(view_plan.assign(risk_class=view_plan.risk_class.map(class_label)), hide_index=True,
-                     width="stretch", column_config={"supplier_id": "ID", "name": "Supplier", "risk_class": "Class",
-                                                    "material_group": "Material group", "level": "Level",
-                                                    "factor": "Factor", "action": "Action", "owner": "Owner",
-                                                    "review_cycle": "Review cycle", "trigger": "Why"})
-        st.download_button("Export action plan CSV", to_csv(view_plan.to_dict("records")),
-                           file_name=f"{model().view}_action_plan.csv", mime="text/csv")
+        dataframe(
+            view_plan.assign(risk_class=view_plan.risk_class.map(class_label)),
+            hide_index=True,
+            width="stretch",
+            column_config={
+                "supplier_id": "ID",
+                "name": "Supplier",
+                "risk_class": "Class",
+                "material_group": "Material group",
+                "level": "Level",
+                "factor": "Factor",
+                "action": "Action",
+                "owner": "Owner",
+                "review_cycle": "Review cycle",
+                "trigger": "Why",
+            },
+        )
+        st.download_button(
+            tr("Export action plan CSV"),
+            to_csv(view_plan.to_dict("records")),
+            file_name=f"{model().view}_action_plan.csv",
+            mime="text/csv",
+            key="control_324",
+        )
 
 
-# --- tab: history ---------------------------------------------------------------------------
+# --- page: history ---------------------------------------------------------------------------
 
-with tab_history:
+
+def history_page():
     c1, c2 = st.columns([1, 3])
-    note = c2.text_input("Note for this snapshot", placeholder="e.g. annual review 2026", key="snap_note")
-    if c1.button("📌 Save snapshot", width="stretch", disabled=not assessments()):
-        n = history().record(assessments(), model(), run_id=(run_info().get("state") or {}).get("run_id"),
-                             note=note)
-        st.success(f"Saved {n} rows to {st.session_state.get('history_dir', 'data/history')}/{model().view}.jsonl")
+    note = c2.text_input(
+        tr("Note for this snapshot"), placeholder=tr("e.g. annual review 2026"), key="snap_note"
+    )
+    if c1.button(
+        tr("📌 Save snapshot"), width="stretch", disabled=not assessments(), key="control_335"
+    ):
+        n = history().record(
+            assessments(), model(), run_id=(run_info().get("state") or {}).get("run_id"), note=note
+        )
+        st.success(
+            tr(
+                "Saved {v0} rows to {v1}/{v2}.jsonl",
+                v0=n,
+                v1=st.session_state.get("history_dir", "data/history"),
+                v2=model().view,
+            )
+        )
     rows = pd.DataFrame(history().load(model().view))
     if rows.empty:
-        st.info("No snapshots yet for this view. Save one above; approved reviews are saved automatically.")
+        st.info(
+            tr(
+                "No snapshots yet for this view. Save one above; approved reviews are saved automatically."
+            )
+        )
     else:
         rows["recorded_at"] = pd.to_datetime(rows.recorded_at)
-        st.caption(f"{rows.recorded_at.nunique()} snapshot(s) for the {model().view_label.lower()} view.")
+        st.caption(
+            tr(
+                "{v0} snapshot(s) for the {v1} view.",
+                v0=rows.recorded_at.nunique(),
+                v1=tr(model().view_label),
+            )
+        )
         left, right = st.columns(2)
         with left:
             names = dict(zip(rows.supplier_id, rows.name))
-            sid = st.selectbox("Supplier", sorted(names), format_func=lambda s: f"{s} · {names[s]}", key="hist_sup")
-            mine = rows[rows.supplier_id == sid]
-            line = alt.Chart(mine).mark_line(point=alt.OverlayMarkDef(size=60, filled=True), strokeWidth=2,
-                                             color=CURRENT_COLOR).encode(
-                x=alt.X("recorded_at:T", title=None, axis=alt.Axis(format="%d %b %Y", labelAngle=0, tickCount=6)),
-                y=alt.Y("score:Q", title=model().score_label, scale=alt.Scale(domain=[0, 100])),
-                tooltip=[alt.Tooltip("recorded_at:T", title="snapshot"), "score", "risk_class", "note"],
+            sid = selectbox(
+                tr("Supplier"),
+                sorted(names),
+                format_func=option_labels(sorted(names), lambda s: f"{s} · {names[s]}"),
+                key="hist_sup",
+                _parent=st,
             )
-            st.altair_chart(line.properties(height=260, title=f"{names[sid]} over time"), width="stretch")
-            st.dataframe(mine[["recorded_at", "score", "risk_class", "weights", "approved_by", "note"]],
-                         hide_index=True, width="stretch")
+            mine = rows[rows.supplier_id == sid]
+            line = (
+                alt.Chart(mine.assign(risk_class=mine.risk_class.map(risk_name)))
+                .mark_line(
+                    point=alt.OverlayMarkDef(size=60, filled=True),
+                    strokeWidth=2,
+                    color=CURRENT_COLOR,
+                )
+                .encode(
+                    x=alt.X(
+                        "recorded_at:T",
+                        title=None,
+                        axis=alt.Axis(format=date_axis(), labelAngle=0, tickCount=6),
+                    ),
+                    y=alt.Y(
+                        "score:Q", title=tr(model().score_label), scale=alt.Scale(domain=[0, 100])
+                    ),
+                    tooltip=[
+                        alt.Tooltip("recorded_at:T", title=tr("snapshot"), format=date_axis()),
+                        alt.Tooltip("score:Q", title=tr("score")),
+                        alt.Tooltip("risk_class:N", title=tr("risk_class")),
+                        alt.Tooltip("note:N", title=tr("note")),
+                    ],
+                )
+            )
+            localized_chart(
+                line.properties(height=260, title=tr("{supplier} over time", supplier=names[sid])),
+                width="stretch",
+            )
+            dataframe(
+                mine[["recorded_at", "score", "risk_class", "weights", "approved_by", "note"]],
+                hide_index=True,
+                width="stretch",
+            )
         with right:
             groups = sorted(rows.material_group.dropna().unique())
-            g = st.selectbox("Material group", groups, key="hist_group")
+            g = selectbox(tr("Material group"), groups, key="hist_group", _parent=st)
             trend = pd.DataFrame(history().group_trend(model().view, material_group=g))
             trend["recorded_at"] = pd.to_datetime(trend.recorded_at)
-            line = alt.Chart(trend).mark_line(point=alt.OverlayMarkDef(size=60, filled=True), strokeWidth=2,
-                                              color=CURRENT_COLOR).encode(
-                x=alt.X("recorded_at:T", title=None, axis=alt.Axis(format="%d %b %Y", labelAngle=0, tickCount=6)),
-                y=alt.Y("mean_score:Q", title=f"Mean {model().score_label.lower()}", scale=alt.Scale(domain=[0, 100])),
-                tooltip=[alt.Tooltip("recorded_at:T", title="snapshot"), "mean_score", "suppliers"],
+            line = (
+                alt.Chart(trend)
+                .mark_line(
+                    point=alt.OverlayMarkDef(size=60, filled=True),
+                    strokeWidth=2,
+                    color=CURRENT_COLOR,
+                )
+                .encode(
+                    x=alt.X(
+                        "recorded_at:T",
+                        title=None,
+                        axis=alt.Axis(format=date_axis(), labelAngle=0, tickCount=6),
+                    ),
+                    y=alt.Y(
+                        "mean_score:Q",
+                        title=tr("Mean {v0}", v0=tr(model().score_label)),
+                        scale=alt.Scale(domain=[0, 100]),
+                    ),
+                    tooltip=[
+                        alt.Tooltip("recorded_at:T", title=tr("snapshot"), format=date_axis()),
+                        alt.Tooltip("mean_score:Q", title=tr("mean_score")),
+                        alt.Tooltip("suppliers:Q", title=tr("suppliers")),
+                    ],
+                )
             )
-            st.altair_chart(line.properties(height=260, title=f"{g}: mean score over time"), width="stretch")
-            st.dataframe(trend.assign(classes=trend.classes.map(lambda c: ", ".join(f"{k}: {v}" for k, v in c.items()))),
-                         hide_index=True, width="stretch")
+            localized_chart(
+                line.properties(height=260, title=tr("{group}: mean score over time", group=g)),
+                width="stretch",
+            )
+            dataframe(
+                trend.assign(
+                    classes=trend.classes.map(
+                        lambda c: ", ".join(f"{risk_name(k)}: {v}" for k, v in c.items())
+                    )
+                ),
+                hide_index=True,
+                width="stretch",
+            )
 
 
-# --- tab: scoring run --------------------------------------------------------------------
+# --- page: scoring run --------------------------------------------------------------------
 
-with tab_run:
-    st.subheader("Supplier inputs")
+
+def scoring_page():
+    st.subheader(tr("Supplier inputs"))
     st.caption(
-        "One sheet for both views: shared criteria appear once. Add new suppliers at the bottom (or import a "
-        "CSV in the sidebar) and press **Recalculate**. Changes to suppliers that already have a result are "
-        "not applied directly: they need a reason, a preview and your confirmation, and are recorded in the "
-        "history. Expert ratings: 1 (favourable) – 5 (unfavourable). Empty cells mean “no data”."
+        tr(
+            "One sheet for both views: shared criteria appear once. Add new suppliers at the bottom (or import a CSV in the sidebar) and press **Recalculate**. Changes to suppliers that already have a result are not applied directly: they need a reason, a preview and your confirmation, and are recorded in the history. Expert ratings: 1 (favourable) – 5 (unfavourable). Empty cells mean “no data”."
+        )
     )
     all_factors = {f.key for v in views for d in ui_model(v).dimensions for f in d.factors}
     # expert labels are edited only in the Calibration tab, so that two editors never compete for a cell
-    columns = [c for c in dict.fromkeys(all_view_columns() + [k for r in st.session_state.rows for k in r])
-               if not label_view(c)]
+    columns = [
+        c
+        for c in dict.fromkeys(all_view_columns() + [k for r in st.session_state.rows for k in r])
+        if not label_view(c)
+    ]
     expert_cols = [c for c in columns if c in all_factors and c != "compliance_status"]
     config = {
-        "supplier_id": st.column_config.TextColumn("Supplier ID", required=True),
-        "material_group": st.column_config.TextColumn("Material group"),
-        "annual_spend": st.column_config.NumberColumn("Annual spend", format="%.0f"),
-        "transport_mode": st.column_config.SelectboxColumn("Transport", options=["road", "rail", "air", "sea"]),
-        "intercontinental": st.column_config.CheckboxColumn("Intercontinental"),
-        "on_time_rate": st.column_config.NumberColumn("On-time %", min_value=0, max_value=100),
-        "quality_ppm": st.column_config.NumberColumn("PPM", min_value=0),
+        "supplier_id": st.column_config.TextColumn(tr("Supplier ID"), required=True),
+        "material_group": st.column_config.TextColumn(tr("Material group")),
+        "annual_spend": st.column_config.NumberColumn(tr("Annual spend"), format="%.0f"),
+        "transport_mode": st.column_config.SelectboxColumn(
+            tr("Transport"), options=["road", "rail", "air", "sea"], format_func=tr
+        ),
+        "intercontinental": st.column_config.CheckboxColumn(tr("Intercontinental")),
+        "on_time_rate": st.column_config.NumberColumn(tr("On-time %"), min_value=0, max_value=100),
+        "quality_ppm": st.column_config.NumberColumn(tr("PPM"), min_value=0),
         "compliance_status": st.column_config.SelectboxColumn(
-            "Compliance", options=["compliant", "minor_findings", "open_findings", "major_findings",
-                                   "critical_findings"]),
-        **{c: st.column_config.NumberColumn(c.replace("_", " "), min_value=1, max_value=5, step=1)
-           for c in expert_cols},
+            tr("Compliance"),
+            options=[
+                "compliant",
+                "minor_findings",
+                "open_findings",
+                "major_findings",
+                "critical_findings",
+            ],
+            format_func=tr,
+        ),
+        **{
+            c: st.column_config.NumberColumn(tr(c), min_value=1, max_value=5, step=1)
+            for c in expert_cols
+        },
     }
     numeric_cols = [c for c in columns if c in NUMERIC_INPUTS or c in expert_cols]
-    edited = st.data_editor(
+    edited = data_editor(
         with_numeric(pd.DataFrame(st.session_state.rows, columns=columns), numeric_cols),
-        num_rows="dynamic", width="stretch", hide_index=True, column_config=config,
+        num_rows="dynamic",
+        width="stretch",
+        hide_index=True,
+        column_config=config,
         key=f"input_editor_{st.session_state.editor_version}",
     )
     previous = {r.get("supplier_id"): r for r in st.session_state.rows}
     edited_rows = [
-        {**{k: v for k, v in previous.get(row.get("supplier_id"), {}).items() if label_view(k)}, **row}
+        {
+            **{k: v for k, v in previous.get(row.get("supplier_id"), {}).items() if label_view(k)},
+            **row,
+        }
         for row in edited.astype(object).where(edited.notna(), None).to_dict("records")
     ]
     # First data entry stays direct; changes to suppliers that already have a result become corrections.
     view_models = [ui_model("risk"), ui_model("performance")]
     st.session_state.rows, table_changes, table_notes = split_table_edits(
-        st.session_state.rows, edited_rows, assessed_ids(), view_models)
+        st.session_state.rows, edited_rows, assessed_ids(), view_models
+    )
     for note in table_notes:
-        st.warning(note)
+        st.warning(message(note))
     if table_changes:
-        st.warning("Changes to suppliers that already have a result are **not applied yet**. Give a reason, "
-                   "preview the effect in both views and confirm; the correction is then recorded in the history. "
-                   "New suppliers can still be entered directly.", icon="✋")
-        st.dataframe(pd.DataFrame([{"supplier": sid, "field": c.field, "kind": c.kind.replace("_", " "),
-                                    "current": c.old_value, "proposed": c.new_value}
-                                   for sid, changes in table_changes.items() for c in changes]).astype(str),
-                     hide_index=True, width="stretch")
-        digest = json.dumps({sid: [(c.field, c.new_value) for c in cs] for sid, cs in table_changes.items()},
-                            sort_keys=True, default=str)
-        with st.form("table_correction_form"):
-            t_reason = st.text_area("Reason for the change (required)", key="table_reason")
-            t_name = st.text_input("Your name (optional, not verified)", key="table_name")
-            t_preview = st.form_submit_button("Preview table changes")
+        st.warning(
+            tr(
+                "Changes to suppliers that already have a result are **not applied yet**. Give a reason, preview the effect in both views and confirm; the correction is then recorded in the history. New suppliers can still be entered directly."
+            ),
+            icon="✋",
+        )
+        dataframe(
+            pd.DataFrame(
+                [
+                    {
+                        "supplier": sid,
+                        "field": c.field,
+                        "kind": c.kind.replace("_", " "),
+                        "current": display_value(c.old_value),
+                        "proposed": display_value(c.new_value),
+                    }
+                    for sid, changes in table_changes.items()
+                    for c in changes
+                ]
+            ).astype(str),
+            hide_index=True,
+            width="stretch",
+        )
+        digest = json.dumps(
+            {sid: [(c.field, c.new_value) for c in cs] for sid, cs in table_changes.items()},
+            sort_keys=True,
+            default=str,
+        )
+        with st.container(key="table_correction_form"):
+            t_reason = st.text_area(tr("Reason for the change (required)"), key="table_reason")
+            t_name = st.text_input(tr("Your name (optional, not verified)"), key="table_name")
+            t_preview = st.button(tr("Preview table changes"), key="control_431")
         if t_preview:
             try:
                 items, rows_now = [], st.session_state.rows
-                active = {v: ((st.session_state.get("runs", {}).get(v) or {}).get("state") or {}).get(
-                    "active_weights") or {} for v in ("risk", "performance")}
+                active = {
+                    v: ((st.session_state.get("runs", {}).get(v) or {}).get("state") or {}).get(
+                        "active_weights"
+                    )
+                    or {}
+                    for v in ("risk", "performance")
+                }
                 for sid, changes in table_changes.items():
-                    req = CorrectionRequest(supplier_id=sid, changes=changes, reason=t_reason,
-                                            entered_by=t_name.strip() or None)
-                    rows_now, comparison = preview_correction(rows_now, req, view_models, active, providers())
+                    req = CorrectionRequest(
+                        supplier_id=sid,
+                        changes=changes,
+                        reason=t_reason,
+                        entered_by=t_name.strip() or None,
+                    )
+                    rows_now, comparison = preview_correction(
+                        rows_now, req, view_models, active, providers()
+                    )
                     items.append((req, comparison))
-                st.session_state.table_preview = {"digest": digest, "items": items, "new_rows": rows_now}
+                st.session_state.table_preview = {
+                    "digest": digest,
+                    "items": items,
+                    "new_rows": rows_now,
+                }
             except (ValidationError, ValueError) as exc:
                 st.session_state.pop("table_preview", None)
-                st.error(f"Correction not possible: {exc}")
+                st.error(tr("Correction not possible: {v0}", v0=error_text(exc)))
         preview = st.session_state.get("table_preview")
         if preview and preview["digest"] == digest:
-            st.markdown("**Preview — nothing is applied yet**")
+            st.markdown(tr("**Preview — nothing is applied yet**"))
             for req, comparison in preview["items"]:
-                st.markdown(f"`{req.supplier_id}`")
+                st.markdown(tr("`{v0}`", v0=req.supplier_id))
                 show_comparison(comparison)
             b1, b2 = st.columns(2)
-            if b1.button("✅ Confirm table changes", type="primary", width="stretch"):
+            if b1.button(
+                tr("✅ Confirm table changes"), type="primary", width="stretch", key="control_453"
+            ):
                 apply_corrections(preview["items"], preview["new_rows"])
                 st.session_state.pop("table_preview", None)
-                st.toast("Changes applied and recorded")
+                st.toast(tr("Changes applied and recorded"))
                 st.rerun()
-            if b2.button("Discard table changes", width="stretch"):
+            if b2.button(tr("Discard table changes"), width="stretch", key="control_458"):
                 st.session_state.pop("table_preview", None)
                 st.session_state.editor_version = st.session_state.get("editor_version", 0) + 1
                 st.rerun()
 
     c1, c2, _ = st.columns([2, 1, 3])
-    group = c1.selectbox("Scope", ["All material groups", *material_groups()], key="run_scope")
-    if c2.button("▶️ Recalculate", type="primary", width="stretch"):
+    group = selectbox(
+        tr("Scope"),
+        ["All material groups", *material_groups()],
+        key="run_scope",
+        format_func=option_labels(["All material groups", *material_groups()], tr),
+        _parent=c1,
+    )
+    if c2.button(tr("▶️ Recalculate"), type="primary", width="stretch", key="control_465"):
         run(calibrate=False, material_group=None if group.startswith("All") else group)
         st.rerun()
     if run_info().get("run_kind") and run_info().get("rows_at_run") != st.session_state.rows:
-        st.info("Inputs changed since the last run — recalculate to update the results.")
+        st.info(tr("Inputs changed since the last run — recalculate to update the results."))
 
 
-# --- tab: portfolio -----------------------------------------------------------------------
-
-with tab_portfolio:
-    df = results_frame()
-    if df.empty:
-        st.info("No results. Add suppliers in **▶️ Scoring run** or import a CSV in the sidebar.")
-    else:
-        order = [c.key for c in model().risk_classes]
-        styles = class_styles()
-        m = st.columns(5)
-        m[0].metric("Suppliers", len(df))
-        for col, key in zip(m[1:3], reversed(order[-2:])):
-            col.metric(f"{styles[key][1]} {key}", int((df.risk_class == key).sum()))
-        m[3].metric("Need review", int(df.needs_review.sum()))
-        m[4].metric("Raised by escalation rule", int(df.escalated.sum()))
-
-        f = st.columns([2, 2, 1, 2])
-        groups = f[0].multiselect("Material group", sorted(df.material_group.dropna().unique()))
-        classes = f[1].multiselect("Class", order)
-        only_review = f[2].checkbox("Needs review")
-        search = f[3].text_input("Search supplier", placeholder="ID or name")
-        view = df
-        if groups:
-            view = view[view.material_group.isin(groups)]
-        if classes:
-            view = view[view.risk_class.isin(classes)]
-        if only_review:
-            view = view[view.needs_review]
-        if search:
-            hit = view.supplier_id.str.contains(search, case=False) | view.name.str.contains(search, case=False)
-            view = view[hit]
-
-        dims = [c for c in view.columns if c.startswith("dim_")]
-        shown = with_numeric(view.copy(), ["score", "data_completeness", *dims]).assign(
-            risk_class=view.risk_class.map(class_label),
-            data_completeness=lambda d: d.data_completeness * 100,
-        )
-        direction = "higher = better" if model().score_orientation == "higher_is_better" else "higher = riskier"
-        dim_labels = {f"dim_{d.key}": d.label for d in model().dimensions}
-        st.dataframe(
-            shown.style.map(style_class, subset=["risk_class"])
-            .format(precision=1, na_rep="", subset=["score"])
-            .format(precision=0, na_rep="", subset=["data_completeness", *dims]),
-            width="stretch", hide_index=True,
-            column_order=["supplier_id", "name", "material_group", "score", "risk_class", "escalated",
-                          "manual_override", "needs_review", "review_cycle", "data_completeness", *dims,
-                          "weights"],
-            column_config={
-                "supplier_id": "ID", "name": "Supplier", "material_group": "Material group",
-                "score": f"{model().score_label} ({direction})", "risk_class": "Class",
-                "escalated": st.column_config.CheckboxColumn("Escalated"),
-                "manual_override": st.column_config.CheckboxColumn("Manual class"),
-                "needs_review": st.column_config.CheckboxColumn("Review"),
-                "review_cycle": "Review cycle", "data_completeness": "Data %",
-                **{d: dim_labels.get(d, d[4:]) for d in dims}, "weights": "Weights",
-            },
-        )
-        st.download_button("Export results CSV", to_csv(view.to_dict("records")),
-                           file_name=f"{model().view}_assessment.csv", mime="text/csv")
-
-        counts = df.risk_class.value_counts().reindex(order, fill_value=0).reset_index()
-        counts.columns = ["class", "suppliers"]
-        chart = alt.Chart(counts).mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4).encode(
-            y=alt.Y("class:N", sort=order, title=None),
-            x=alt.X("suppliers:Q", title="Suppliers", axis=alt.Axis(tickMinStep=1)),
-            color=alt.Color("class:N", scale=alt.Scale(domain=order, range=[styles[c][0] for c in order]),
-                            legend=None),
-            tooltip=["class", "suppliers"],
-        )
-        labels = chart.mark_text(align="left", dx=4).encode(text="suppliers:Q", color=alt.value("#52514e"))
-        st.altair_chart((chart + labels).properties(height=alt.Step(30), title="Suppliers per class"),
-                        width="stretch")
-
-        state = run_info()["state"]
-        with st.expander("🔍 Supplier details"):
-            sid = st.selectbox("Supplier", list(view.supplier_id), key="detail_supplier")
-            if sid:
-                a = state["results"][sid]
-                st.markdown(f"**{a.supplier_name}** · {class_label(a.risk_class)} · {model().score_label.lower()} "
-                            f"{model().to_display(a.overall_score)} · weights {a.weights_scope}/{a.weights_origin}")
-                st.dataframe(pd.DataFrame([f.model_dump() for f in a.factor_scores]),
-                             width="stretch", hide_index=True,
-                             column_order=["dimension", "factor", "rating", "weight", "rationale"],
-                             column_config={"weight": st.column_config.NumberColumn("weight", format="%.3f")})
-                for r in a.recommendations:
-                    cycle = f" · review {r.review_cycle}" if r.review_cycle else ""
-                    st.markdown(f"- **{r.priority}**: {r.action}{cycle}")
-                for e in a.escalations:
-                    st.warning(f"Escalation on {e.rule_factor}: {e.reason}")
-                for reason in a.review_reasons:
-                    st.info(f"Review: {reason}")
-                if a.review_comment:
-                    st.caption(f"Reviewer comment: {a.review_comment}")
-
-        with st.expander("🧾 Audit trail of this run"):
-            st.dataframe(pd.DataFrame([{"time": e.timestamp, "agent": e.agent, "event": e.event}
-                                       for e in state["audit_trail"]]), width="stretch", hide_index=True)
+# --- page: portfolio -----------------------------------------------------------------------
 
 
-# --- tab: calibration -----------------------------------------------------------------------
-
-with tab_cal:
+def calibration_page():
     label_col = model().label_column
-    direction = "higher = better" if model().score_orientation == "higher_is_better" else "higher = riskier"
-    st.subheader(f"Expert labels — {model().view_label} view")
-    st.caption(
-        f"Give a holistic {model().score_label.lower()} (0–100, {direction}) for suppliers you know well — ideally "
-        "before looking at the model score. Calibration fits this view's weights to these labels; safeguards decide "
-        "whether the result is trustworthy. Approval happens in **✅ Review & approval**."
+    direction = (
+        "higher = better" if model().score_orientation == "higher_is_better" else "higher = riskier"
     )
-    labels = pd.DataFrame([{**{k: r.get(k) for k in ("supplier_id", "name", "material_group")},
-                            label_col: r.get(label_col)} for r in st.session_state.rows])
+    st.subheader(tr("Expert labels — {v0} view", v0=tr(model().view_label)))
+    st.caption(
+        tr(
+            "Give a holistic {v0} (0–100, {v1}) for suppliers you know well — ideally before looking at the model score. Calibration fits this view's weights to these labels; safeguards decide whether the result is trustworthy. Approval happens in **✅ Review & approval**.",
+            v0=tr(model().score_label),
+            v1=tr(direction),
+        )
+    )
+    labels = pd.DataFrame(
+        [
+            {
+                **{k: r.get(k) for k in ("supplier_id", "name", "material_group")},
+                label_col: r.get(label_col),
+            }
+            for r in st.session_state.rows
+        ]
+    )
     scores = results_frame()
     if not scores.empty:
         labels = labels.merge(scores[["supplier_id", "score"]], on="supplier_id", how="left")
     labels = with_numeric(labels, [label_col, "score"])
-    edited_labels = st.data_editor(
-        labels, width="stretch", hide_index=True,
+    edited_labels = data_editor(
+        labels,
+        width="stretch",
+        hide_index=True,
         key=f"label_editor_{model().view}_{st.session_state.editor_version}",
         disabled=[c for c in labels.columns if c != label_col],
         column_config={
-            label_col: st.column_config.NumberColumn(f"Expert label (0–100, {direction})",
-                                                     min_value=0, max_value=100, step=5),
-            "score": st.column_config.NumberColumn(f"Model {model().score_label.lower()}", format="%.1f"),
+            label_col: st.column_config.NumberColumn(
+                tr("Expert label (0–100, {v0})", v0=tr(direction)),
+                min_value=0,
+                max_value=100,
+                step=5,
+            ),
+            "score": st.column_config.NumberColumn(
+                tr("Model {v0}", v0=tr(model().score_label)), format="%.1f"
+            ),
         },
     )
     new_labels = dict(zip(edited_labels.supplier_id, edited_labels[label_col]))
@@ -650,369 +851,1329 @@ with tab_cal:
         value = new_labels.get(row.get("supplier_id"))
         row[label_col] = None if pd.isna(value) else float(value)
 
-    label_upload = st.file_uploader(f"Import labels CSV (columns supplier_id, {label_col})", type=["csv"],
-                                    key=f"label_csv_{model().view}")
+    label_upload = st.file_uploader(
+        tr("Import labels CSV (columns supplier_id, {v0})", v0=label_col),
+        type=["csv"],
+        key=f"label_csv_{model().view}",
+    )
     if label_upload is not None and st.session_state.get("imported_labels") != label_upload.file_id:
         st.session_state.imported_labels = label_upload.file_id
-        imported = {r["supplier_id"]: r.get(label_col) for r in from_csv(label_upload.getvalue().decode("utf-8-sig"))}
+        imported = {
+            r["supplier_id"]: r.get(label_col)
+            for r in from_csv(label_upload.getdisplay_value().decode("utf-8-sig"))
+        }
         for row in st.session_state.rows:
-            if row.get("supplier_id") in imported and imported[row["supplier_id"]] not in (None, ""):
+            if row.get("supplier_id") in imported and imported[row["supplier_id"]] not in (
+                None,
+                "",
+            ):
                 row[label_col] = float(imported[row["supplier_id"]])
         st.session_state.editor_version += 1
         st.rerun()
 
     n_labels = sum(1 for r in st.session_state.rows if r.get(label_col) is not None)
     c1, c2, _ = st.columns([2, 1, 3])
-    scope = c1.selectbox("Calibrate for", ["All material groups (global)", *material_groups()], key="cal_scope")
-    if c2.button("🎯 Calibrate", type="primary", width="stretch", disabled=n_labels == 0):
+    scope = selectbox(
+        tr("Calibrate for"),
+        ["All material groups (global)", *material_groups()],
+        key="cal_scope",
+        format_func=option_labels(["All material groups (global)", *material_groups()], tr),
+        _parent=c1,
+    )
+    if c2.button(
+        tr("🎯 Calibrate"),
+        type="primary",
+        width="stretch",
+        disabled=n_labels == 0,
+        key="control_518",
+    ):
         run(calibrate=True, material_group=None if scope.startswith("All") else scope)
         st.rerun()
-    st.caption(f"{n_labels} supplier(s) labelled for this view. Roughly 30 or more consistent labels per scope are "
-               "needed before calibration is usually accepted.")
+    st.caption(
+        tr(
+            "{v0} supplier(s) labelled for this view. Roughly 30 or more consistent labels per scope are needed before calibration is usually accepted.",
+            v0=n_labels,
+        )
+    )
 
     report = (run_info().get("state") or {}).get("calibration_report")
     if report:
         st.divider()
-        st.subheader("Result")
+        st.subheader(tr("Result"))
         k = st.columns(5)
-        k[0].metric("Labels used", report.n_samples)
+        k[0].metric(tr("Labels used"), report.n_samples)
         if report.cv_mse_before is not None:
-            k[1].metric("Error before → after (cross-validated)",
-                        f"{report.cv_mse_before:.1f} → {report.cv_mse_after:.1f}")
-            k[2].metric("Clarity z (≥ 2 needed)", f"{report.cv_improvement_z:.1f}")
+            k[1].metric(
+                tr("Error before → after (cross-validated)"),
+                f"{number(report.cv_mse_before, '.1f')} → {number(report.cv_mse_after, '.1f')}",
+            )
+            k[2].metric(tr("Clarity z (≥ 2 needed)"), number(report.cv_improvement_z, ".1f"))
         if report.regularization_used is not None:
-            k[3].metric("Regularisation λ", f"{report.regularization_used:.3g}")
+            k[3].metric(tr("Regularisation λ"), number(report.regularization_used, ".3g"))
         if report.level_offset is not None:
-            k[4].metric("Mean label − model (internal scale)", f"{report.level_offset:+.1f}")
+            k[4].metric(
+                tr("Mean label − model (internal scale)"), number(report.level_offset, "+.1f")
+            )
         (st.success if report.accepted else st.info)(report.message)
         for warning in report.warnings:
-            st.warning(warning)
+            st.warning(message(warning))
 
         if report.new_weights:
             comparison = pd.DataFrame(
-                [{"factor": f, "weights": "current", "weight": v * 100} for f, v in report.old_weights.items()]
-                + [{"factor": f, "weights": "proposed", "weight": v * 100} for f, v in report.new_weights.items()]
+                [
+                    {"factor": tr(f), "weights": tr("current"), "weight": v * 100}
+                    for f, v in report.old_weights.items()
+                ]
+                + [
+                    {"factor": tr(f), "weights": tr("proposed"), "weight": v * 100}
+                    for f, v in report.new_weights.items()
+                ]
             )
-            bars = alt.Chart(comparison).mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4).encode(
-                y=alt.Y("factor:N", title=None, sort=list(report.old_weights), axis=alt.Axis(labelLimit=220)),
-                yOffset=alt.YOffset("weights:N", sort=["current", "proposed"]),
-                x=alt.X("weight:Q", title="Weight (%)"),
-                color=alt.Color("weights:N", scale=alt.Scale(domain=["current", "proposed"],
-                                                             range=[CURRENT_COLOR, PROPOSED_COLOR]),
-                                legend=alt.Legend(title=None, orient="top")),
-                tooltip=["factor", "weights", alt.Tooltip("weight:Q", format=".1f", title="weight %")],
+            bars = (
+                alt.Chart(comparison)
+                .mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4)
+                .encode(
+                    y=alt.Y(
+                        "factor:N",
+                        title=None,
+                        sort=[tr(f) for f in report.old_weights],
+                        axis=alt.Axis(labelLimit=220),
+                    ),
+                    yOffset=alt.YOffset("weights:N", sort=[tr("current"), tr("proposed")]),
+                    x=alt.X("weight:Q", title=tr("Weight (%)")),
+                    color=alt.Color(
+                        "weights:N",
+                        scale=alt.Scale(
+                            domain=[tr("current"), tr("proposed")],
+                            range=[CURRENT_COLOR, PROPOSED_COLOR],
+                        ),
+                        legend=alt.Legend(title=None, orient="top"),
+                    ),
+                    tooltip=[
+                        alt.Tooltip("factor:N", title=tr("factor")),
+                        alt.Tooltip("weights:N", title=tr("weights")),
+                        alt.Tooltip("weight:Q", format=".1f", title=tr("weight %")),
+                    ],
+                )
             )
-            st.altair_chart(bars.properties(height=46 * len(report.old_weights),
-                                            title="Current vs. proposed weights"), width="stretch")
-            table = pd.DataFrame({"current %": {f: v * 100 for f, v in report.old_weights.items()},
-                                  "proposed %": {f: v * 100 for f, v in report.new_weights.items()}})
+            localized_chart(
+                bars.properties(
+                    height=46 * len(report.old_weights), title=tr("Current vs. proposed weights")
+                ),
+                width="stretch",
+            )
+            table = pd.DataFrame(
+                {
+                    "current %": {f: v * 100 for f, v in report.old_weights.items()},
+                    "proposed %": {f: v * 100 for f, v in report.new_weights.items()},
+                }
+            )
             table["change"] = table["proposed %"] - table["current %"]
-            with st.expander("Weights as a table"):
-                st.dataframe(table.round(1), width="stretch")
-                st.download_button("Export weights CSV", table.round(4).to_csv(),
-                                   file_name=f"{model().view}_weights.csv", mime="text/csv")
+            with st.expander(tr("Weights as a table")):
+                dataframe(table.round(1), width="stretch")
+                st.download_button(
+                    tr("Export weights CSV"),
+                    table.round(4).to_csv(),
+                    file_name=f"{model().view}_weights.csv",
+                    mime="text/csv",
+                    key="control_562",
+                )
 
 
-# --- tab: review & approval -----------------------------------------------------------------
+# --- page: review & approval -----------------------------------------------------------------
 
-with tab_review:
+
+def review_page():
     state = run_info().get("state")
     evaluator = run_info().get("evaluator")
     request = evaluator.pending_review(state) if state and evaluator else None
     if not request:
         if state and state.get("review_decision"):
             d = state["review_decision"]
-            st.success(f"Review {state.get('review_status')} by {d.reviewer}.")
+            st.success(tr("Review {v0} by {v1}.", v0=tr(state.get("review_status")), v1=d.reviewer))
             report = state.get("calibration_report")
             if report and report.stored_as:
-                st.caption(f"Approved weights stored as `{report.stored_as}`")
+                st.caption(tr("Approved weights stored as `{v0}`", v0=report.stored_as))
         else:
-            st.info("Nothing to review. Runs pause here when data is insufficient or calibrated weights are proposed.")
+            st.info(
+                tr(
+                    "Nothing to review. Runs pause here when data is insufficient or calibrated weights are proposed."
+                )
+            )
     else:
-        st.subheader(f"Waiting for your decision — {model().view_label} view")
+        st.subheader(tr("Waiting for your decision — {v0} view", v0=tr(model().view_label)))
         proposed = request.get("proposed_weights")
         if proposed:
-            st.markdown(f"**Proposed weights** for scope *{proposed['scope']}* from {proposed['n_samples']} labels — "
-                        f"cross-validated error {proposed['cv_mse_before']:.1f} → {proposed['cv_mse_after']:.1f} "
-                        f"(z = {proposed['cv_improvement_z']:.1f}). Details in **🎯 Calibration**.")
+            st.markdown(
+                tr(
+                    "**Proposed weights** for scope *{v0}* from {v1} labels — cross-validated error {v2} → {v3} (z = {v4}). Details in **🎯 Calibration**.",
+                    v0=proposed["scope"],
+                    v1=proposed["n_samples"],
+                    v2=number(proposed["cv_mse_before"], ".1f"),
+                    v3=number(proposed["cv_mse_after"], ".1f"),
+                    v4=number(proposed["cv_improvement_z"], ".1f"),
+                )
+            )
             for warning in proposed.get("warnings", []):
-                st.warning(warning)
+                st.warning(message(warning))
         for reason in request.get("portfolio_reasons", []):
-            st.info(reason)
+            st.info(message(reason))
 
         flagged = pd.DataFrame(request["flagged_suppliers"])
         overrides = None
         if not flagged.empty:
-            st.markdown("**Suppliers flagged for review** — optionally set a class manually (with a comment).")
+            st.markdown(
+                tr(
+                    "**Suppliers flagged for review** — optionally set a class manually (with a comment)."
+                )
+            )
             flagged = flagged.assign(
-                current=flagged.risk_class.map(class_label), new_class="", comment="",
+                current=flagged.risk_class.map(class_label),
+                new_class="",
+                comment="",
                 reasons=flagged.reasons.map("; ".join),
             )
-            overrides = st.data_editor(
+            overrides = data_editor(
                 flagged[["supplier_id", "name", "current", "reasons", "new_class", "comment"]],
-                width="stretch", hide_index=True, key=f"override_editor_{state['run_id']}",
+                width="stretch",
+                hide_index=True,
+                key=f"override_editor_{state['run_id']}",
                 disabled=["supplier_id", "name", "current", "reasons"],
-                column_config={"new_class": st.column_config.SelectboxColumn(
-                    "New class", options=["", *request["allowed_classes"]])},
+                column_config={
+                    "new_class": st.column_config.SelectboxColumn(
+                        tr("New class"), options=["", *request["allowed_classes"]], format_func=tr
+                    )
+                },
             )
 
-        with st.form("decision"):
-            reviewer = st.text_input("Reviewer", placeholder="Your name")
-            approve = st.checkbox("Approve proposed weights", disabled=not proposed)
+        with st.container(key="decision"):
+            reviewer = st.text_input(tr("Reviewer"), placeholder=tr("Your name"), key="control_610")
+            approve = st.checkbox(
+                tr("Approve proposed weights"), disabled=not proposed, key="control_611"
+            )
             c1, c2 = st.columns(2)
-            submit = c1.form_submit_button("✅ Submit decision", type="primary", width="stretch")
-            defer = c2.form_submit_button("Defer", width="stretch")
+            submit = c1.button(
+                tr("✅ Submit decision"), type="primary", width="stretch", key="control_613"
+            )
+            defer = c2.button(tr("Defer"), width="stretch", key="control_614")
         if submit or defer:
             chosen = {}
             if overrides is not None:
                 for row in overrides.to_dict("records"):
                     if row["new_class"]:
-                        chosen[row["supplier_id"]] = ClassOverride(risk_class=row["new_class"],
-                                                                   comment=row["comment"] or "")
-            decision = ReviewDecision(reviewer=reviewer or "unknown", approve_weights=bool(approve and proposed),
-                                      overrides=chosen, defer=defer)
+                        chosen[row["supplier_id"]] = ClassOverride(
+                            risk_class=row["new_class"], comment=row["comment"] or ""
+                        )
+            decision = ReviewDecision(
+                reviewer=reviewer or "unknown",
+                approve_weights=bool(approve and proposed),
+                overrides=chosen,
+                defer=defer,
+            )
             new_state = evaluator.resume(state["run_id"], decision)
             run_info()["state"] = new_state
             if not defer:  # an approved assessment is worth keeping: snapshot to history
-                history().record(list(new_state["results"].values()), model(), run_id=new_state["run_id"],
-                                 note="after review", approved_by=decision.reviewer)
+                history().record(
+                    list(new_state["results"].values()),
+                    model(),
+                    run_id=new_state["run_id"],
+                    note="after review",
+                    approved_by=decision.reviewer,
+                )
             st.rerun()
 
     if state and state.get("errors"):
-        with st.expander("Messages"):
+        with st.expander(tr("Messages")):
             for error in state["errors"]:
-                st.warning(error)
+                st.warning(message(error))
 
 
-# --- tab: explain & correct ----------------------------------------------------------------
+# --- page: explain & correct ----------------------------------------------------------------
 
 
-def show_ai_review(result: AIReviewResult, outdated_note: str | None) -> None:
+def show_ai_review(result: AIReviewResult, outdated_note: str | dict | None) -> None:
     if outdated_note:
-        st.error(f"Outdated: this AI explanation was generated before {outdated_note}. The numbers above are "
-                 "current; generate a new explanation to match them.", icon="⚠️")
-    st.warning(result.disclaimer, icon="🤖")
+        if isinstance(outdated_note, dict):
+            outdated_note = tr(
+                "the correction of {time} ({reason})",
+                time=date(outdated_note["time"]),
+                reason=outdated_note["reason"],
+            )
+        st.error(
+            tr(
+                "Outdated: this AI explanation was generated before {v0}. The numbers above are current; generate a new explanation to match them.",
+                v0=message(outdated_note),
+            ),
+            icon="⚠️",
+        )
+    st.warning(tr(result.disclaimer), icon="🤖")
+    st.caption(
+        tr(
+            "Original explanation · {lang}. A language change does not request a new explanation.",
+            lang=tr({"de": "German", "en": "English"}[result.language]),
+        )
+    )
     r = result.review
-    st.markdown("**Management summary**")
+    st.markdown(tr("**Management summary**"))
     st.write(r.management_summary)
-    st.caption("Based on: " + ", ".join(f"`{x}`" for x in r.summary_refs))
-    st.markdown("**Main drivers**")
-    st.dataframe(pd.DataFrame([{**d.model_dump(), "trace_refs": ", ".join(d.trace_refs)} for d in r.risk_drivers]),
-                 hide_index=True, width="stretch",
-                 column_config={"criterion": "Criterion", "view": "View", "explanation": "Why it matters",
-                                "trace_refs": "Trace entries"})
+    st.caption(tr("Based on: ") + tr(", ".join(f"`{x}`" for x in r.summary_refs)))
+    st.markdown(tr("**Main drivers**"))
+    dataframe(
+        pd.DataFrame(
+            [{**d.model_dump(), "trace_refs": ", ".join(d.trace_refs)} for d in r.risk_drivers]
+        ),
+        original_text=True,
+        hide_index=True,
+        width="stretch",
+        column_config={
+            "criterion": "Criterion",
+            "view": "View",
+            "explanation": "Why it matters",
+            "trace_refs": "Trace entries",
+        },
+    )
     if r.view_differences:
-        st.markdown("**Risk vs. performance**")
+        st.markdown(tr("**Risk vs. performance**"))
         for d in r.view_differences:
-            st.markdown(f"- **{d.topic}** — {d.explanation} `{', '.join(d.trace_refs)}`")
-    st.markdown("**Suggested actions** — proposals for human review, not decisions")
-    st.dataframe(pd.DataFrame([{**a.model_dump(), "criteria": ", ".join(a.criteria),
-                                "trace_refs": ", ".join(a.trace_refs)} for a in r.suggested_actions]),
-                 hide_index=True, width="stretch",
-                 column_config={"priority": "Priority", "action": "Action", "rationale": "Rationale",
-                                "criteria": "Criteria", "trace_refs": "Trace entries"})
+            st.markdown(
+                tr(
+                    "- **{v0}** — {v1} `{v2}`",
+                    v0=d.topic,
+                    v1=d.explanation,
+                    v2=", ".join(d.trace_refs),
+                )
+            )
+    st.markdown(tr("**Suggested actions** — proposals for human review, not decisions"))
+    dataframe(
+        pd.DataFrame(
+            [
+                {
+                    **a.model_dump(),
+                    "criteria": ", ".join(a.criteria),
+                    "trace_refs": ", ".join(a.trace_refs),
+                }
+                for a in r.suggested_actions
+            ]
+        ),
+        original_text=True,
+        hide_index=True,
+        width="stretch",
+        column_config={
+            "priority": "Priority",
+            "action": "Action",
+            "rationale": "Rationale",
+            "criteria": "Criteria",
+            "trace_refs": "Trace entries",
+        },
+    )
     if r.open_questions or result.data_gaps:
-        st.markdown("**Open questions**")
+        st.markdown(tr("**Open questions**"))
         for q in r.open_questions:
-            st.markdown(f"- {q.question} `{', '.join(q.criteria)}`")
+            st.markdown(tr("- {v0} `{v1}`", v0=q.question, v1=", ".join(q.criteria)))
         if result.data_gaps:
-            st.caption("Missing data in the input (determined by the tool, not by the LLM): "
-                       + ", ".join(result.data_gaps))
-    st.caption(f"{result.provider} / {result.model} · {result.created_at} · input SHA-256 {result.payload_sha256[:12]}…")
+            st.caption(
+                tr("Missing data in the input (determined by the tool, not by the LLM): ")
+                + tr(", ".join(result.data_gaps))
+            )
+    st.caption(
+        tr(
+            "{v0} / {v1} · {v2} · input SHA-256 {v3}…",
+            v0=result.provider,
+            v1=result.model,
+            v2=date(result.created_at),
+            v3=result.payload_sha256[:12],
+        )
+    )
 
 
 def inputs_text(inputs: list[dict]) -> str:
-    return "; ".join(f"{i['input']} = {'—' if i['value'] is None else i['value']} [{i['source']}]" for i in inputs)
+    return "; ".join(
+        f"{tr(i['input'])} = {display_value(i['value'])} [{message(i['source'])}]" for i in inputs
+    )
 
 
 def show_trace(t: dict) -> None:
     s = t["score"]
-    st.markdown(f"**{ui_model(t['view']).view_label}** · {s['label']} **{s['value']}** · class "
-                f"**{class_label(t['class']['final']) if t['view'] == model().view else t['class']['final']}** · "
-                f"data {t['data_completeness']:.0%} · model `{t['model']}` · weights `{t['weights']}`")
-    st.caption(s["note"] + f". Sum of contributions: {s['sum_of_contributions']} = internal score "
-               f"{s['internal_value']}.")
-    frame = pd.DataFrame([{  # numbers first, long texts last, so the contributions stay visible
-        "id": c["id"], "criterion": c["label"], "rating": c["rating"], "points": c["contribution_points"],
-        "weight": c["nominal_weight"], "effective weight": c["effective_weight"], "origin": c["rating_origin"],
-        "inputs (source)": inputs_text(c["inputs"]), "rule": c["rule"],
-    } for c in sorted(t["criteria"], key=lambda c: -(c["contribution_points"] or 0))])
-    st.dataframe(frame, hide_index=True, width="stretch", column_config={
-        "weight": st.column_config.NumberColumn("Weight", format="%.3f"),
-        "effective weight": st.column_config.NumberColumn("Effective weight", format="%.3f"),
-        "points": st.column_config.NumberColumn("Points", format="%.2f")})
-    rules = [r for r in t["non_additive"] if r["fired"] or r.get("rating") is None and "rule" in r["id"]]
-    st.markdown("Rules that do not add points: " + ("; ".join(
-        f"`{r['id']}` {r['effect']}" for r in rules) if rules else "none triggered."))
+    st.markdown(
+        tr(
+            "**{v0}** · {v1} **{v2}** · class **{v3}** · data {v4} · model `{v5}` · weights `{v6}`",
+            v0=tr(ui_model(t["view"]).view_label),
+            v1=tr(s["label"]),
+            v2=display_value(s["value"]),
+            v3=class_label(t["class"]["final"])
+            if t["view"] == model().view
+            else risk_name(t["class"]["final"]),
+            v4=number(t["data_completeness"], ".0%"),
+            v5=t["model"],
+            v6=t["weights"],
+        )
+    )
+    st.caption(
+        message(s["note"])
+        + tr(
+            ". Sum of contributions: {v0} = internal score {v1}.",
+            v0=display_value(s["sum_of_contributions"]),
+            v1=display_value(s["internal_value"]),
+        )
+    )
+    frame = pd.DataFrame(
+        [
+            {  # numbers first, long texts last, so the contributions stay visible
+                "id": c["id"],
+                "criterion": tr(c["label"]),
+                "rating": c["rating"],
+                "points": c["contribution_points"],
+                "weight": c["nominal_weight"],
+                "effective weight": c["effective_weight"],
+                "origin": c["rating_origin"],
+                "inputs (source)": inputs_text(c["inputs"]),
+                "rule": c["rule"],
+            }
+            for c in sorted(t["criteria"], key=lambda c: -(c["contribution_points"] or 0))
+        ]
+    )
+    dataframe(
+        frame,
+        hide_index=True,
+        width="stretch",
+        column_config={
+            "weight": st.column_config.NumberColumn(tr("Weight"), format="%.3f"),
+            "effective weight": st.column_config.NumberColumn(
+                tr("Effective weight"), format="%.3f"
+            ),
+            "points": st.column_config.NumberColumn(tr("Points"), format="%.2f"),
+        },
+    )
+    rules = [
+        r for r in t["non_additive"] if r["fired"] or r.get("rating") is None and "rule" in r["id"]
+    ]
+    st.markdown(
+        tr("Rules that do not add points: ")
+        + (
+            tr("; ".join(f"`{r['id']}` {message(r['effect'])}" for r in rules))
+            if rules
+            else tr("none triggered.")
+        )
+    )
 
 
-with tab_explain:
-    st.caption("Why does this supplier get its rating, and is the input right? The calculation below comes "
-               "straight from the scoring engine and needs no API key. Corrections are previewed in both "
-               "views and applied only after you confirm them.")
-    current = assessments()
+def detail_page():
+    ensure_both_views()
+    link(portfolio_page, tr("Zurück zum Portfolio"), ":material/arrow_back:")
+    st.caption(tr("SUPPLIER WORKSPACE / LIEFERANTENDETAIL"))
+    current = list(
+        st.session_state.runs.get("risk", {}).get("state", {}).get("results", {}).values()
+    )
     if not current:
-        st.info("No results yet.")
+        st.info(
+            tr(
+                "Noch keine Bewertungen. Starten Sie die Demo oder importieren Sie Lieferantendaten."
+            )
+        )
     else:
         names = {a.supplier_id: a.supplier_name for a in current}
-        sid = st.selectbox("Supplier", sorted(names), format_func=lambda i: f"{i} · {names[i]}", key="ai_supplier")
+        if st.session_state.get("selected_supplier") in names:
+            st.session_state.ai_supplier = st.session_state.pop("selected_supplier")
+        sid = selectbox(
+            tr("Lieferant"),
+            sorted(names),
+            format_func=option_labels(sorted(names), lambda i: f"{names[i]} · {i}"),
+            key="ai_supplier",
+            _parent=st,
+        )
+        st.title(tr(names[sid]))
+        row = next(r for r in st.session_state.rows if str(r.get("supplier_id")) == sid)
+        st.caption(
+            tr(
+                "{v0} · {v1} · {v2}",
+                v0=sid,
+                v1=row.get("material_group") or tr("Ohne Warengruppe"),
+                v2=row.get("country") or tr("Land nicht angegeben"),
+            )
+        )
+        if st.session_state.get("correction_success") == sid:
+            st.success(
+                tr(
+                    "Korrektur bestätigt. Beide Bewertungen wurden aktualisiert und die Änderung protokolliert."
+                )
+            )
+
         runs = st.session_state.setdefault("runs", {})
         for view in ("risk", "performance"):
             if not (runs.get(view) or {}).get("state"):
                 run(calibrate=False, material_group=None, view=view)
         try:
-            payload = ai_review_payload(sid, *((runs[v]["evaluator"], runs[v]["state"])
-                                               for v in ("risk", "performance")))
+            payload = ai_review_payload(
+                sid, *((runs[v]["evaluator"], runs[v]["state"]) for v in ("risk", "performance"))
+            )
         except (KeyError, LookupError) as exc:
             payload = None
-            st.warning(f"Both views are needed: {exc}")
+            st.warning(tr("Both views are needed: {v0}", v0=error_text(exc)))
 
         if payload is not None:
             # 1 · deterministic explanation --------------------------------------------------------
-            st.subheader("1 · How the score is calculated")
-            cols = st.columns(2)
-            for col, (view, t) in zip(cols, payload["views"].items()):
-                col.metric(f"{ui_model(view).view_label}: {t['score']['label']}",
-                           f"{t['score']['value']} · {t['class']['final']}",
-                           help=f"class from score: {t['class']['from_score']}; data {t['data_completeness']:.0%}")
-            show_trace(payload["views"][model().view])
-            st.caption("Switch the view at the top to see the other view's trace.")
-
-            # 2 · AI explanation -----------------------------------------------------------------------
-            st.subheader("2 · AI explanation (optional)")
-            try:
-                llm_settings = LLMSettings.from_env()
-                unavailable = llm_settings.unavailable_reason
-            except LLMReviewError as exc:
-                llm_settings, unavailable = None, str(exc)
-            if unavailable:
-                st.info(f"AI explanation not available: {unavailable} The calculation above is complete without it.")
-            else:
-                st.caption(f"Provider: **{llm_settings.describe()}** · timeout {llm_settings.timeout_seconds:g} s "
-                           f"per attempt · up to {llm_settings.max_retries} retries")
-            digest = payload_hash(payload)
-            with st.expander("Data sent to the provider (exactly this JSON)"):
-                st.caption("The scoring trace of both views. Not sent: supplier name, country, annual spend and "
-                           "expert labels. Use synthetic or approved data only.")
-                st.code(payload_json(payload), language="json")
-            explanations = st.session_state.setdefault("ai_explanations", {})  # supplier -> AIReviewResult
-            outdated_notes = st.session_state.setdefault("ai_outdated", {})  # supplier -> note
-            failures = st.session_state.setdefault("ai_review_failures", {})
-            existing = explanations.get(sid)
-            current_ok = existing is not None and review_is_current(existing, payload)
-            c1, c2 = st.columns(2)
-            clicked = c1.button("Generate AI Review", type="primary", width="stretch",
-                                disabled=bool(unavailable) or current_ok,
-                                help="One paid API call. The result is kept for this exact input; reruns of the "
-                                     "app do not call the provider again.")
-            if existing is not None:
-                c2.button("Discard explanation", width="stretch",
-                          on_click=lambda s=sid: (explanations.pop(s, None), outdated_notes.pop(s, None)))
-            if clicked and not current_ok:  # explicit trigger only; guarded against double clicks
-                risk_run = runs["risk"]
-                with st.spinner(f"Waiting for {llm_settings.describe()} …"):
-                    new_state = risk_run["evaluator"].ai_review(risk_run["state"]["run_id"], payload)
-                risk_run["state"] = new_state
-                error = new_state.get("ai_review_errors", {}).get(sid)
-                if error:
-                    failures[digest] = error
-                else:
-                    failures.pop(digest, None)
-                    explanations[sid] = new_state["ai_reviews"][sid]
-                    outdated_notes.pop(sid, None)
-                st.rerun()
-            if digest in failures and not current_ok:
-                st.error(f"AI explanation failed: {failures[digest]}")
-            if existing is not None:
-                show_ai_review(existing, None if current_ok else outdated_notes.get(sid, "the data changed"))
-
+            for col, (view, t) in zip(st.columns(2), payload["views"].items()):
+                with col.container(border=True):
+                    st.markdown(tr("**RISIKO**") if view == "risk" else tr("**PERFORMANCE**"))
+                    st.metric(
+                        (
+                            tr("Risiko bei Ausfall")
+                            if view == "risk"
+                            else tr("Leistung des Lieferanten")
+                        ),
+                        "—"
+                        if t["score"]["value"] is None
+                        else f"{number(t['score']['value'], '.1f')} / 100",
+                    )
+                    final_class = t["class"]["final"]
+                    color = {
+                        "low": "green",
+                        "medium": "orange",
+                        "high": "orange",
+                        "critical": "red",
+                        "A": "green",
+                        "B": "orange",
+                        "C": "red",
+                    }.get(final_class, "gray")
+                    st.badge(tr(risk_name(final_class)), color=color)
+                    st.caption(
+                        tr("Niedriger ist besser") if view == "risk" else tr("Höher ist besser")
+                    )
+                    st.caption(tr("Datenbasis: {v0}", v0=number(t["data_completeness"], ".0%")))
+                    if t["class"]["final"] != t["class"]["from_score"]:
+                        st.warning(
+                            tr(
+                                "Klasse aus Score: {v0}. Eine Eskalation oder Freigabe verändert die endgültige Klasse.",
+                                v0=risk_name(t["class"]["from_score"]),
+                            )
+                        )
+            gaps = [
+                v
+                for v, t in payload["views"].items()
+                if t["data_completeness"] < ui_model(v).min_data_completeness
+            ]
+            if gaps:
+                st.warning(
+                    tr(
+                        "Unvollständige Datenbasis: Diese Bewertung erfordert eine fachliche Prüfung."
+                    )
+                )
+            st.write("")
+            st.subheader(tr("Bewertung nachvollziehen & korrigieren"))
+            st.caption(
+                tr(
+                    "1  Verstehen   →   2  Korrektur begründen   →   3  Wirkung prüfen   →   4  Bestätigen"
+                )
+            )
+            with st.expander(tr("Warum diese Bewertung?"), expanded=True):
+                for col, (v, t) in zip(st.columns(2), payload["views"].items()):
+                    with col:
+                        st.markdown(
+                            tr("**Risiko: wichtigste Beiträge**")
+                            if v == "risk"
+                            else tr("**Performance: größte Abzüge**")
+                        )
+                        ranked = sorted(
+                            t["criteria"], key=lambda c: -(c["contribution_points"] or 0)
+                        )[:3]
+                        for c in ranked:
+                            st.write(
+                                tr(
+                                    "{v0} · {v1} Punkte",
+                                    v0=tr(c["label"]),
+                                    v1=number(c["contribution_points"] or 0, ".2f"),
+                                )
+                            )
+                        if v == "performance":
+                            st.caption(tr("Performance = 100 − interne Belastungspunkte."))
+                        for rule in t["non_additive"]:
+                            if rule["fired"]:
+                                st.info(
+                                    tr("{v0} ({v1})", v0=message(rule["effect"]), v1=rule["id"])
+                                )
+                for v, t in payload["views"].items():
+                    with st.expander(
+                        tr("Daten, Quellen & Berechnung · ")
+                        + (tr("Risiko") if v == "risk" else tr("Performance"))
+                    ):
+                        show_trace(t)
+            with st.expander(tr("Empfohlene Maßnahmen")):
+                for v in ("risk", "performance"):
+                    a = runs[v]["state"]["results"].get(sid)
+                    if a:
+                        st.markdown(
+                            (tr("**") + (tr("Risiko") if v == "risk" else tr("Performance")))
+                            + tr("**")
+                        )
+                        for recommendation in a.recommendations:
+                            st.write(
+                                tr(
+                                    "{v0} · {v1}",
+                                    v0=tr(recommendation.priority),
+                                    v1=message(recommendation.action),
+                                )
+                            )
             # 3 · controlled correction ---------------------------------------------------------------------
-            st.subheader("3 · Correct data or ratings")
-            st.caption("**Data correction**: fix a wrong or missing input (or an expert-assessed rating). "
-                       "**Expert override**: replace a rating derived by rule with your own 1–5 rating. "
-                       "Weights, thresholds and rules are not changed here; they go through calibration and approval.")
+            st.subheader(tr("Korrektur begründen"))
+            st.caption(
+                tr(
+                    "Korrigieren Sie einen Eingabewert oder ersetzen Sie eine abgeleitete Bewertung durch ein Expertenurteil (1–5). Begründen Sie die Änderung. Gewichte und Regeln werden separat kalibriert und freigegeben."
+                )
+            )
             fields = correctable_fields([ui_model("risk"), ui_model("performance")])
             row = next(r for r in st.session_state.rows if str(r.get("supplier_id")) == sid)
-            with st.expander("Current values of all correctable fields"):
-                st.dataframe(pd.DataFrame([{
-                    "field": f, "kind": spec["kind"].replace("_", " "), "used by": ", ".join(spec["criteria"]),
-                    "expects": spec["expects"], "current": None if row.get(f) is None else str(row.get(f)),
-                } for f, spec in fields.items()]), hide_index=True, width="stretch")
-            with st.form(f"correction_form_{sid}"):
+            with st.expander(tr("Alle korrigierbaren Felder und aktuellen Werte")):
+                dataframe(
+                    pd.DataFrame(
+                        [
+                            {
+                                "field": f,
+                                "kind": spec["kind"].replace("_", " "),
+                                "used by": ", ".join(spec["criteria"]),
+                                "expects": spec["expects"],
+                                "current": None
+                                if row.get(f) is None
+                                else display_value(row.get(f)),
+                            }
+                            for f, spec in fields.items()
+                        ]
+                    ),
+                    hide_index=True,
+                    width="stretch",
+                )
+            with st.container(key=f"correction_form_{sid}"):
                 f1, f2 = st.columns([2, 1])
-                c_field = f1.selectbox(
-                    "Field", list(fields), key=f"correction_field_{sid}",
-                    format_func=lambda f: f"{f} · {fields[f]['kind'].replace('_', ' ')} · current: "
-                                          f"{'—' if row.get(f) is None else row.get(f)}")
-                c_value = f2.text_input("New value ('none' clears it)", key=f"correction_value_{sid}")
-                reason = st.text_area("Reason for the change (required)", key=f"correction_reason_{sid}")
-                entered_by = st.text_input("Your name (optional, not verified)", key=f"correction_name_{sid}")
-                preview_clicked = st.form_submit_button("Preview correction")
+                c_field = selectbox(
+                    tr("Feld"),
+                    list(fields),
+                    key=f"correction_field_{sid}",
+                    format_func=option_labels(
+                        list(fields),
+                        lambda f: tr(
+                            "{label} · {field} · current: {current}",
+                            label=tr(fields[f]["label"]),
+                            field=f,
+                            current=display_value(row.get(f)),
+                        ),
+                    ),
+                    _parent=f1,
+                )
+                c_value = f2.text_input(
+                    tr("Neuer Wert ('none' leert das Feld)"), key=f"correction_value_{sid}"
+                )
+                reason = st.text_area(
+                    tr("Begründung (erforderlich)"), key=f"correction_reason_{sid}"
+                )
+                entered_by = st.text_input(
+                    tr("Ihr Name (optional, ungeprüft)"), key=f"correction_name_{sid}"
+                )
+                preview_clicked = st.button(tr("Vorher/Nachher prüfen"), key="control_789")
             if preview_clicked:
                 try:
                     request = CorrectionRequest(
-                        supplier_id=sid, reason=reason, entered_by=entered_by.strip() or None,
-                        changes=[FieldChange(field=c_field, kind=fields[c_field]["kind"], new_value=parse_cell(c_value))])
-                    active = {v: (runs[v]["state"] or {}).get("active_weights") or {} for v in ("risk", "performance")}
-                    new_rows, comparison = preview_correction(st.session_state.rows, request,
-                                                              [ui_model("risk"), ui_model("performance")],
-                                                              active, providers())
-                    st.session_state.pending_correction = {"sid": sid, "request": request, "new_rows": new_rows,
-                                                           "comparison": comparison}
+                        supplier_id=sid,
+                        reason=reason,
+                        entered_by=entered_by.strip() or None,
+                        changes=[
+                            FieldChange(
+                                field=c_field,
+                                kind=fields[c_field]["kind"],
+                                new_value=parse_cell(parse_input(c_value)),
+                            )
+                        ],
+                    )
+                    active = {
+                        v: (runs[v]["state"] or {}).get("active_weights") or {}
+                        for v in ("risk", "performance")
+                    }
+                    new_rows, comparison = preview_correction(
+                        st.session_state.rows,
+                        request,
+                        [ui_model("risk"), ui_model("performance")],
+                        active,
+                        providers(),
+                    )
+                    st.session_state.pending_correction = {
+                        "sid": sid,
+                        "request": request,
+                        "new_rows": new_rows,
+                        "comparison": comparison,
+                    }
                 except (ValidationError, ValueError) as exc:
                     st.session_state.pop("pending_correction", None)
-                    st.error(f"Correction not possible: {exc}")
+                    st.error(tr("Korrektur nicht möglich: {v0}", v0=error_text(exc)))
             pending = st.session_state.get("pending_correction")
             if pending and pending["sid"] == sid:
-                st.markdown("**Preview — nothing is applied yet**")
+                st.markdown(tr("**Vorschau — noch nicht übernommen**"))
+                request = pending["request"]
+                st.write(tr("**Begründung dieser Vorschau:** ") + request.reason)
+                for change in request.changes:
+                    st.write(
+                        tr(
+                            "{v0}: {v1} → {v2}",
+                            v0=tr(change.field),
+                            v1=display_value(change.old_value),
+                            v2=display_value(change.new_value),
+                        )
+                    )
                 comparison = pending["comparison"]
                 show_comparison(comparison)
                 a1, a2 = st.columns(2)
-                if a1.button("✅ Confirm and apply", type="primary", width="stretch"):
+                if a1.button(
+                    tr("Korrektur bestätigen"), type="primary", width="stretch", key="control_814"
+                ):
                     apply_corrections([(pending["request"], comparison)], pending["new_rows"])
                     st.session_state.pop("pending_correction", None)
-                    st.toast("Correction applied and recorded")
+                    st.session_state.correction_success = sid
+                    st.toast(tr("Korrektur gespeichert"))
                     st.rerun()
-                if a2.button("Discard preview", width="stretch"):
+                if a2.button(tr("Vorschau verwerfen"), width="stretch", key="control_820"):
                     st.session_state.pop("pending_correction", None)
                     st.rerun()
             log = history().corrections(sid)
             if log:
-                with st.expander(f"Correction history ({len(log)})"):
-                    st.dataframe(pd.DataFrame([{
-                        "time": e["recorded_at"], "changes": "; ".join(
-                            f"{c['field']} ({c['kind'].replace('_', ' ')}): {c['old_value']} → {c['new_value']}"
-                            for c in e["changes"]),
-                        "reason": e["reason"], "entered by (not verified)": e["entered_by"],
-                        "risk": f"{e['views']['risk']['score'][0]} → {e['views']['risk']['score'][1]}",
-                        "performance": f"{e['views']['performance']['score'][0]} → "
-                                       f"{e['views']['performance']['score'][1]}",
-                    } for e in log]), hide_index=True, width="stretch")
+                with st.expander(tr("Korrekturhistorie ({v0})", v0=len(log))):
+                    dataframe(
+                        pd.DataFrame(
+                            [
+                                {
+                                    "time": date(e["recorded_at"]),
+                                    "changes": "; ".join(
+                                        f"{tr(c['field'])} ({tr(c['kind'])}): {display_value(c['old_value'])} → {display_value(c['new_value'])}"
+                                        for c in e["changes"]
+                                    ),
+                                    "reason": e["reason"],
+                                    "entered by (not verified)": e["entered_by"],
+                                    "risk": f"{display_value(e['views']['risk']['score'][0])} → {display_value(e['views']['risk']['score'][1])}",
+                                    "performance": f"{display_value(e['views']['performance']['score'][0])} → "
+                                    f"{display_value(e['views']['performance']['score'][1])}",
+                                }
+                                for e in log
+                            ]
+                        ),
+                        hide_index=True,
+                        width="stretch",
+                    )
 
-            # 4 · dispute --------------------------------------------------------------------------------------
-            st.subheader("4 · Dispute assessment")
-            st.caption("Records that you disagree with a criterion. It changes no score and does not train weights; "
-                       "it is a note for the next review.")
-            with st.form(f"dispute_form_{sid}"):
-                d1, d2 = st.columns(2)
-                d_view = d1.selectbox("View", ["risk", "performance"], format_func=lambda v: ui_model(v).view_label)
-                criteria = sorted({c["key"] for t in payload["views"].values() for c in t["criteria"]})
-                d_criterion = d2.selectbox("Criterion", criteria)
-                d_reason = st.text_area("Why is the assessment wrong? (required)")
-                d_name = st.text_input("Your name (optional, not verified)", key=f"dispute_name_{sid}")
-                if st.form_submit_button("Record objection"):
-                    entry_view = payload["views"].get(d_view, {})
-                    rated = next((c for c in entry_view.get("criteria", []) if c["key"] == d_criterion), None)
-                    try:
-                        history().record_objection(sid, d_view, d_criterion, d_reason, d_name.strip() or None,
-                                                   context={"rating": rated["rating"] if rated else None,
-                                                            "score": entry_view.get("score", {}).get("value")})
-                        st.success("Objection recorded. Scores are unchanged.")
-                    except ValueError as exc:
-                        st.error(str(exc))
-            objections = history().objections(sid)
-            if objections:
-                with st.expander(f"Objections ({len(objections)})"):
-                    st.dataframe(pd.DataFrame([{k: o[k] for k in ("recorded_at", "view", "criterion", "reason",
-                                                                  "entered_by", "status")} for o in objections]),
-                                 hide_index=True, width="stretch")
+            with st.expander(tr("KI-Erklärung · optional")):
+                # 2 · AI explanation -----------------------------------------------------------------------
+                try:
+                    llm_settings = LLMSettings.from_env()
+                    unavailable = llm_settings.unavailable_reason
+                except LLMReviewError as exc:
+                    llm_settings, unavailable = None, str(exc)
+                if unavailable:
+                    st.info(
+                        tr(
+                            "AI explanation not available: {v0} The calculation above is complete without it.",
+                            v0=error_text(unavailable),
+                        )
+                    )
+                else:
+                    st.caption(
+                        tr(
+                            "Provider: **{v0}** · timeout {v1} s per attempt · up to {v2} retries",
+                            v0=llm_settings.describe(),
+                            v1=number(llm_settings.timeout_seconds, "g"),
+                            v2=llm_settings.max_retries,
+                        )
+                    )
+                st.caption(
+                    tr(
+                        "New explanations are generated in {lang}.",
+                        lang=tr({"de": "German", "en": "English"}[language()]),
+                    )
+                )
+                digest = payload_hash(payload)
+                with st.expander(tr("Data sent to the provider (exactly this JSON)")):
+                    st.caption(
+                        tr(
+                            "The scoring trace of both views. Not sent: supplier name, country, annual spend and expert labels. Use synthetic or approved data only."
+                        )
+                    )
+                    st.code(payload_json(payload), language="json")
+                explanations = st.session_state.setdefault(
+                    "ai_explanations", {}
+                )  # supplier -> AIReviewResult
+                outdated_notes = st.session_state.setdefault("ai_outdated", {})  # supplier -> note
+                failures = st.session_state.setdefault("ai_review_failures", {})
+                existing = explanations.get(sid)
+                current_ok = existing is not None and review_is_current(existing, payload)
+                c1, c2 = st.columns(2)
+                clicked = c1.button(
+                    tr("Generate AI Review"),
+                    type="primary",
+                    width="stretch",
+                    disabled=bool(unavailable) or current_ok,
+                    help=tr(
+                        "One paid API call. The result is kept for this exact input; reruns of the app do not call the provider again."
+                    ),
+                    key="control_857",
+                )
+                if existing is not None:
+                    c2.button(
+                        tr("Discard explanation"),
+                        width="stretch",
+                        on_click=lambda s=sid: (
+                            explanations.pop(s, None),
+                            outdated_notes.pop(s, None),
+                        ),
+                        key="control_861",
+                    )
+                if (
+                    clicked and not current_ok
+                ):  # explicit trigger only; guarded against double clicks
+                    risk_run = runs["risk"]
+                    with st.spinner(tr("Waiting for {v0} …", v0=llm_settings.describe())):
+                        new_state = risk_run["evaluator"].ai_review(
+                            risk_run["state"]["run_id"], payload, language=language()
+                        )
+                    risk_run["state"] = new_state
+                    error = new_state.get("ai_review_errors", {}).get(sid)
+                    if error:
+                        failures[digest] = error
+                    else:
+                        failures.pop(digest, None)
+                        explanations[sid] = new_state["ai_reviews"][sid]
+                        outdated_notes.pop(sid, None)
+                    st.rerun()
+                if digest in failures and not current_ok:
+                    st.error(tr("AI explanation failed: {v0}", v0=error_text(failures[digest])))
+                if existing is not None:
+                    show_ai_review(
+                        existing,
+                        None if current_ok else outdated_notes.get(sid, "the data changed"),
+                    )
+
+            with st.expander(tr("Bewertung beanstanden")):
+                # 4 · dispute --------------------------------------------------------------------------------------
+                st.caption(
+                    tr(
+                        "Records that you disagree with a criterion. It changes no score and does not train weights; it is a note for the next review."
+                    )
+                )
+                with st.container(key=f"dispute_form_{sid}"):
+                    d1, d2 = st.columns(2)
+                    d_view = selectbox(
+                        tr("View"),
+                        ["risk", "performance"],
+                        format_func=option_labels(
+                            ["risk", "performance"], lambda v: tr(ui_model(v).view_label)
+                        ),
+                        key=f"dispute_view_{sid}",
+                        _parent=d1,
+                    )
+                    criteria = sorted(
+                        {c["key"] for t in payload["views"].values() for c in t["criteria"]}
+                    )
+                    d_criterion = selectbox(
+                        tr("Criterion"),
+                        criteria,
+                        format_func=option_labels(criteria, tr),
+                        key=f"dispute_criterion_{sid}",
+                        _parent=d2,
+                    )
+                    d_reason = st.text_area(
+                        tr("Why is the assessment wrong? (required)"), key=f"dispute_reason_{sid}"
+                    )
+                    d_name = st.text_input(
+                        tr("Ihr Name (optional, ungeprüft)"), key=f"dispute_name_{sid}"
+                    )
+                    if st.button(tr("Record objection"), key="control_892"):
+                        entry_view = payload["views"].get(d_view, {})
+                        rated = next(
+                            (c for c in entry_view.get("criteria", []) if c["key"] == d_criterion),
+                            None,
+                        )
+                        try:
+                            history().record_objection(
+                                sid,
+                                d_view,
+                                d_criterion,
+                                d_reason,
+                                d_name.strip() or None,
+                                context={
+                                    "rating": rated["rating"] if rated else None,
+                                    "score": entry_view.get("score", {}).get("value"),
+                                },
+                            )
+                            st.success(tr("Objection recorded. Scores are unchanged."))
+                        except ValueError as exc:
+                            st.error(error_text(exc))
+                objections = history().objections(sid)
+                if objections:
+                    with st.expander(tr("Objections ({v0})", v0=len(objections))):
+                        dataframe(
+                            pd.DataFrame(
+                                [
+                                    {
+                                        k: o[k]
+                                        for k in (
+                                            "recorded_at",
+                                            "view",
+                                            "criterion",
+                                            "reason",
+                                            "entered_by",
+                                            "status",
+                                        )
+                                    }
+                                    for o in objections
+                                ]
+                            ),
+                            hide_index=True,
+                            width="stretch",
+                        )
+
+
+def home_page():
+    st.caption(tr("SUPPLIER WORKSPACE / WILLKOMMEN"))
+    st.title(tr("Gute Entscheidungen beginnen\nmit einem klaren Überblick."))
+    st.markdown(tr("Risiken erkennen. Leistung verstehen. Bewertungen gemeinsam verbessern."))
+    st.write("")
+    with st.container(border=True):
+        st.subheader(tr("Ihr Lieferantenportfolio. Zwei Perspektiven."))
+        st.write(
+            tr(
+                "Erkunden Sie sechs fiktive Lieferanten und sehen Sie, warum gute Performance nicht automatisch geringes Risiko bedeutet."
+            )
+        )
+        if st.button(
+            tr("Demo ausprobieren"), type="primary", icon=":material/play_arrow:", key="control_918"
+        ):
+            with st.spinner(tr("Demo wird vorbereitet …")):
+                set_rows(load_rows(next(iter(DATASETS.values()))), next(iter(DATASETS)))
+                st.session_state.demo_mode = True
+            navigate(portfolio_page)
+        st.caption(tr("Synthetische Daten · Kein API-Key nötig · Keine automatische KI-Anfrage"))
+    for col, title, body in zip(
+        st.columns(3),
+        ["01  Überblick gewinnen", "02  Bewertung verstehen", "03  Begründet korrigieren"],
+        [
+            "Risiko und Performance in einer gemeinsamen Tabelle vergleichen.",
+            "Von der Bewertung bis zu Daten, Regeln und Quellen navigieren.",
+            "Die Wirkung prüfen und Änderungen bewusst bestätigen.",
+        ],
+    ):
+        with col:
+            st.markdown(tr("**{v0}**", v0=tr(title)))
+            st.write(tr(body))
+    st.divider()
+    link(data_page, label=tr("Mit eigenen Daten starten"), icon=":material/upload_file:")
+    st.caption(
+        tr("CSV importieren oder Lieferanten erfassen. Bewertungen werden auf Anfrage berechnet.")
+    )
+
+
+def ensure_both_views():
+    for v in ("risk", "performance"):
+        if not st.session_state.get("runs", {}).get(v, {}).get("state"):
+            with st.spinner(tr("Risiko und Performance werden berechnet …")):
+                run(calibrate=False, material_group=None, view=v)
+
+
+def portfolio_page():
+    ensure_both_views()
+    st.caption(tr("SUPPLIER WORKSPACE / PORTFOLIO"))
+    left, right = st.columns([4, 1], vertical_alignment="bottom")
+    left.title(tr("Lieferantenportfolio"))
+    left.write(tr("Risiko und Performance. Alle Lieferanten im Blick."))
+    if right.button(
+        tr("Neu berechnen"), icon=":material/refresh:", width="stretch", key="control_950"
+    ):
+        for v in ("risk", "performance"):
+            run(False, None, v)
+        st.rerun()
+    risks = st.session_state.runs.get("risk", {}).get("state", {}).get("results", {})
+    perfs = st.session_state.runs.get("performance", {}).get("state", {}).get("results", {})
+    if not risks:
+        st.info(tr("Noch keine Bewertungen. Importieren Sie eine CSV oder starten Sie die Demo."))
+        link(home_page, label=tr("Zur Demo"), icon=":material/play_arrow:")
+        link(data_page, label=tr("Daten erfassen"), icon=":material/upload_file:")
+        return
+    records = []
+    for sid, a in risks.items():
+        b = perfs.get(sid)
+        records.append(
+            {
+                "supplier_id": sid,
+                "name": a.supplier_name,
+                "material_group": a.material_group or "Ohne Warengruppe",
+                "risk": ui_model("risk").to_display(a.overall_score),
+                "risk_class": a.risk_class,
+                "performance": ui_model("performance").to_display(b.overall_score) if b else None,
+                "performance_class": b.risk_class if b else None,
+                "review": a.requires_human_review or bool(b and b.requires_human_review),
+                "data": min(a.data_completeness, b.data_completeness if b else 0) * 100,
+                "escalated": bool(a.escalations) or bool(b and b.escalations),
+            }
+        )
+    df = pd.DataFrame(records)
+    # Class severity comes before score: a class floor must never disappear in a ranking.
+    df["rank"] = df.risk_class.map({"critical": 0, "high": 1, "medium": 2, "low": 3}).fillna(4)
+    df = df.sort_values(["rank", "risk"], ascending=[True, False]).drop(columns="rank")
+    for col, label, value, note in zip(
+        st.columns(4),
+        ["Lieferanten", "Erhöhtes Risiko", "Performance A", "Prüfung erforderlich"],
+        [
+            len(df),
+            int(df.risk_class.isin(["high", "critical"]).sum()),
+            int((df.performance_class == "A").sum()),
+            int(df.review.sum()),
+        ],
+        [
+            "im Portfolio",
+            "hoch oder kritisch",
+            "leistungsstarke Partner",
+            "Daten oder Bewertung prüfen",
+        ],
+    ):
+        with col.container(border=True):
+            st.metric(tr(label), value)
+            st.caption(message(note))
+    with st.container(border=True):
+        search = st.text_input(
+            tr("Lieferanten suchen"),
+            placeholder=tr("Name oder Lieferanten-ID …"),
+            key="portfolio_search",
+            icon=":material/search:",
+        )
+        f = st.columns(3)
+        groups = multiselect(
+            tr("Warengruppe"),
+            sorted(df.material_group.unique()),
+            key="portfolio_groups",
+            placeholder=tr("Choose options"),
+            _parent=f[0],
+        )
+        classes = multiselect(
+            tr("Risikoklasse"),
+            ["low", "medium", "high", "critical"],
+            format_func=option_labels(["low", "medium", "high", "critical"], risk_name),
+            key="portfolio_classes",
+            placeholder=tr("Choose options"),
+            _parent=f[1],
+        )
+        perf = multiselect(
+            tr("Performance"),
+            ["A", "B", "C"],
+            key="portfolio_perf",
+            placeholder=tr("Choose options"),
+            _parent=f[2],
+        )
+        only_review = st.checkbox(tr("Nur Lieferanten mit Prüfbedarf"), key="portfolio_review")
+        visible = df
+        if search:
+            visible = visible[
+                visible.name.str.contains(search, case=False, regex=False)
+                | visible.supplier_id.str.contains(search, case=False, regex=False)
+            ]
+        for column, chosen in (
+            ("material_group", groups),
+            ("risk_class", classes),
+            ("performance_class", perf),
+        ):
+            if chosen:
+                visible = visible[visible[column].isin(chosen)]
+        if only_review:
+            visible = visible[visible.review]
+        st.caption(
+            tr(
+                "{v0} von {v1} Lieferanten · Zeile auswählen, um die Bewertung zu öffnen",
+                v0=len(visible),
+                v1=len(df),
+            )
+        )
+        if visible.empty:
+            st.info(
+                tr("Keine Lieferanten gefunden. Passen Sie den Suchbegriff oder die Filter an.")
+            )
+            st.button(tr("Filter zurücksetzen"), on_click=reset_filters, key="control_1005")
+            return
+        shown = visible.assign(
+            risk_class=visible.risk_class.map(risk_name),
+            performance_class=visible.performance_class.fillna(tr("Nicht bewertet")),
+            review=visible.review.map({True: tr("Prüfen"), False: "—"}),
+        )
+        event = dataframe(
+            shown.style.map(status_cell, subset=["risk_class", "performance_class"]),
+            hide_index=True,
+            width="stretch",
+            row_height=48,
+            column_order=[
+                "name",
+                "risk_class",
+                "risk",
+                "performance_class",
+                "performance",
+                "review",
+                "material_group",
+                "data",
+                "supplier_id",
+            ],
+            column_config={
+                "name": st.column_config.TextColumn(tr("Lieferant"), width="medium"),
+                "risk_class": "Risiko",
+                "risk": st.column_config.NumberColumn(tr("Risk ↓"), format="%.1f"),
+                "performance_class": "Klasse",
+                "performance": st.column_config.NumberColumn(tr("Performance ↑"), format="%.1f"),
+                "review": "Prüfbedarf",
+                "material_group": "Warengruppe",
+                "supplier_id": "ID",
+                "data": st.column_config.ProgressColumn(
+                    tr("Datenbasis"), min_value=0, max_value=100, format="%.0f %%"
+                ),
+            },
+            on_select="rerun",
+            selection_mode="single-row",
+            key=f"portfolio_table_{st.session_state.get('portfolio_version', 0)}",
+        )
+        if event.selection.rows:
+            open_supplier(str(visible.iloc[event.selection.rows[0]].supplier_id))
+        st.caption(
+            tr(
+                "Risk: niedriger ist besser · Performance: höher ist besser · Skala 0–100. Eskalationsregeln können die Klasse unabhängig vom Score erhöhen."
+            )
+        )
+        # Accessible alternative to the canvas table, especially on narrow screens.
+        with st.expander(tr("Lieferanten direkt öffnen")):
+            sid = selectbox(
+                tr("Lieferant auswählen"),
+                list(visible.supplier_id),
+                format_func=option_labels(
+                    list(visible.supplier_id), lambda s: f"{risks[s].supplier_name} · {s}"
+                ),
+                key="portfolio_supplier",
+                _parent=st,
+            )
+            if st.button(tr("Bewertung öffnen"), type="primary", key="control_1028"):
+                open_supplier(sid)
+        st.download_button(
+            tr("Tabelle exportieren"),
+            to_csv(visible.to_dict("records")),
+            file_name="supplier_portfolio.csv",
+            mime="text/csv",
+            icon=":material/download:",
+            key="control_1030",
+        )
+
+
+def risk_name(value):
+    return tr(value or "Nicht bewertet")
+
+
+def status_cell(value):
+    color, background = {
+        tr("Niedrig"): ("#22634b", "#e8f3ed"),
+        "A": ("#22634b", "#e8f3ed"),
+        tr("Mittel"): ("#805b15", "#fcf3dc"),
+        "B": ("#805b15", "#fcf3dc"),
+        tr("Hoch"): ("#94562b", "#fff0e5"),
+        tr("Kritisch"): ("#a33636", "#fbe9e7"),
+        "C": ("#a33636", "#fbe9e7"),
+    }.get(value, ("#526175", "#f1f4f8"))
+    return f"color: {color}; background-color: {background}; font-weight: 600"
+
+
+def reset_filters():
+    for key in ("portfolio_groups", "portfolio_classes", "portfolio_perf"):
+        st.session_state[key] = []
+        for locale in ("de", "en"):
+            st.session_state.pop(f"{key}__{locale}", None)
+    st.session_state.portfolio_search = ""
+    st.session_state.portfolio_review = False
+
+
+def open_supplier(sid):
+    st.session_state.selected_supplier = sid
+    st.session_state.portfolio_version = st.session_state.get("portfolio_version", 0) + 1
+    st.session_state.pop("pending_correction", None)
+    navigate(detail_page)
+
+
+def data_page():
+    st.title(tr("Daten & Import"))
+    st.caption(tr("Lieferanten erfassen, Beispieldaten laden oder eine eigene CSV importieren."))
+    choice = selectbox(
+        tr("Beispieldaten"),
+        list(DATASETS),
+        key="dataset_choice",
+        format_func=option_labels(list(DATASETS), tr),
+        _parent=st,
+    )
+    if st.button(tr("Beispieldaten laden"), key="control_1065"):
+        set_rows(load_rows(DATASETS[choice]), choice)
+        st.session_state.demo_mode = True
+        st.rerun()
+    upload = st.file_uploader(tr("CSV importieren"), type=["csv"], key="input_csv")
+    if upload is not None and st.session_state.get("imported") != upload.file_id:
+        try:
+            rows = from_csv(upload.getdisplay_value().decode("utf-8-sig"))
+            profiles, errors = rows_to_profiles(rows, model())
+            if errors or not profiles:
+                raise ValueError("; ".join(errors) or "Die Datei enthält keine Lieferanten.")
+            set_rows(rows, upload.name)
+            st.session_state.imported = upload.file_id
+            st.session_state.demo_mode = False
+            st.rerun()
+        except (ValueError, UnicodeError, KeyError) as exc:
+            st.error(
+                tr(
+                    "Import nicht möglich: {v0}. Prüfen Sie die CSV-Vorlage und versuchen Sie es erneut.",
+                    v0=error_text(exc),
+                )
+            )
+    a, b = st.columns(2)
+    a.download_button(
+        tr("Eingabedaten exportieren"),
+        to_csv(st.session_state.rows),
+        file_name="suppliers.csv",
+        mime="text/csv",
+        key="control_1083",
+    )
+    b.download_button(
+        tr("CSV-Vorlage herunterladen"),
+        ",".join(all_view_columns()) + "\n",
+        file_name="template.csv",
+        mime="text/csv",
+        key="control_1084",
+    )
+    if st.session_state.rows:
+        scoring_page()
+    else:
+        st.info(tr("Laden Sie Beispieldaten oder importieren Sie zunächst eine CSV-Vorlage."))
+
+
+def settings_page():
+    st.title(tr("Einstellungen"))
+    st.checkbox(tr("Store approved weights (versioned)"), key="use_store")
+    st.text_input(tr("Weight store folder"), key="store_dir")
+    st.checkbox(tr("Political stability from World Bank WGI (MOCK)"), key="use_wgi_mock")
+    st.text_input(tr("History folder"), key="history_dir")
+    st.caption(tr("Mock-Daten sind fiktiv. Nach Änderungen im Portfolio neu berechnen."))
+    st.caption(
+        tr(
+            "Die optionale KI-Erklärung wird nur im Lieferantendetail ausdrücklich angefordert. API-Zugang über die lokale .env-Datei konfigurieren."
+        )
+    )
+
+
+PAGES = {
+    "Start": home_page,
+    "Portfolio": portfolio_page,
+    "Lieferantendetail": detail_page,
+    "Dashboard": dashboard_page,
+    "Maßnahmen": actions_page,
+    "Historie": history_page,
+    "Daten & Import": data_page,
+    "Kalibrierung": calibration_page,
+    "Freigaben": review_page,
+    "Einstellungen": settings_page,
+}
+
+
+def navigate(page):
+    st.session_state.next_page = next(name for name, fn in PAGES.items() if fn == page)
+    st.rerun()
+
+
+def link(page, label, icon=None):
+    if st.button(label, icon=icon, key=f"link_{page.__name__}"):
+        navigate(page)
+
+
+st.session_state.setdefault("view", "risk")
+st.session_state.setdefault("rows", [])
+st.session_state.setdefault("runs", {})
+st.session_state.setdefault("origin", "Noch keine Daten geladen")
+st.session_state.setdefault("editor_version", 0)
+st.session_state.setdefault("store_dir", "data/weights")
+st.session_state.setdefault("history_dir", "data/history")
+# Settings and view widgets are conditional; retain their values between pages.
+for setting in (
+    "view",
+    "store_dir",
+    "history_dir",
+    "use_store",
+    "use_wgi_mock",
+    "ai_supplier",
+    "portfolio_supplier",
+    "portfolio_search",
+    "portfolio_groups",
+    "portfolio_classes",
+    "portfolio_perf",
+    "portfolio_review",
+):
+    if setting in st.session_state:
+        st.session_state[setting] = st.session_state[setting]
+if "next_page" in st.session_state:
+    st.session_state.navigation = st.session_state.pop("next_page")
+with st.sidebar:
+    st.segmented_control(
+        "DE | EN",
+        ["de", "en"],
+        format_func=str.upper,
+        key="language",
+        selection_mode="single",
+        required=True,
+        width="stretch",
+    )
+    st.markdown(tr("### :material/view_quilt: Supplier Workspace"))
+    st.caption(tr("PROCUREMENT · RISK & PERFORMANCE"))
+    page = st.session_state.setdefault("navigation", "Start")
+    st.caption(tr("ARBEITSBEREICH"))
+    primary_pages = {
+        "Start": "home",
+        "Portfolio": "table_view",
+        "Lieferantendetail": "domain",
+        "Maßnahmen": "task_alt",
+    }
+    for name, icon in primary_pages.items():
+        if st.button(
+            tr(name),
+            key=f"nav_{name}",
+            icon=f":material/{icon}:",
+            type="primary" if page == name else "tertiary",
+            width="stretch",
+        ):
+            navigate(PAGES[name])
+    with st.expander(tr("Verwaltung & Analyse"), expanded=page not in primary_pages):
+        for name in (
+            "Dashboard",
+            "Historie",
+            "Daten & Import",
+            "Kalibrierung",
+            "Freigaben",
+            "Einstellungen",
+        ):
+            if st.button(
+                tr(name),
+                key=f"nav_{name}",
+                type="primary" if page == name else "tertiary",
+                width="stretch",
+            ):
+                navigate(PAGES[name])
+    st.divider()
+    if st.session_state.get("demo_mode"):
+        st.badge(tr("Demo · synthetische Daten"), color="blue")
+    else:
+        st.caption(tr(st.session_state.origin))
+    st.caption(tr("{v0} Lieferanten · lokal", v0=len(st.session_state.rows)))
+    st.caption(tr("Nachvollziehbare Bewertungen. Entscheidungen bleiben bei Ihnen."))
+views = available_views()
+if page in {"Dashboard", "Maßnahmen", "Historie", "Daten & Import", "Kalibrierung", "Freigaben"}:
+    st.radio(
+        tr("Bewertungsperspektive"),
+        views,
+        key="view",
+        horizontal=True,
+        format_func=option_labels(views, lambda v: tr(v)),
+    )
+    if st.session_state.rows and not run_info():
+        run(False, None)
+for error in st.session_state.get("input_errors", []):
+    st.error(tr("Eingabedaten prüfen: {v0}", v0=error_text(error)))
+if page in {"Kalibrierung", "Freigaben"} and not st.session_state.rows:
+    st.info(tr("Laden Sie zunächst Lieferantendaten oder starten Sie die Demo."))
+    link(home_page, tr("Zum Einstieg"))
+else:
+    PAGES[page]()

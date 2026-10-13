@@ -1,0 +1,22 @@
+[client]
+toolbarMode = "minimal"
+
+[theme]
+base = "light"
+primaryColor = "#2563b0"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f4f7fb"
+textColor = "#243247"
+font = "Arial"
+headingFont = "Arial"
+baseFontSize = 16
+headingFontWeights = [600, 600, 600, 600, 600, 600]
+headingFontSizes = ["2.25rem", "1.7rem", "1.25rem", "1.1rem", "1rem", "1rem"]
+baseRadius = "0.6rem"
+buttonRadius = "0.5rem"
+borderColor = "#e0e6ee"
+showWidgetBorder = true
+
+[theme.sidebar]
+backgroundColor = "#f4f7fb"
+secondaryBackgroundColor = "#ffffff"

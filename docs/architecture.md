@@ -203,3 +203,29 @@ src/supplier_risk_agent/
 | add an agent (e.g. external risk monitoring) | new node in `graph/builder.py` + one rule in `Supervisor.route()` |
 | use an LLM supervisor | replace `Supervisor.route()` |
 | resume runs across processes | pass a persistent checkpointer with `serde=state_serializer()` |
+
+
+## Implementation status
+
+| Component | What it does | How | Status |
+|---|---|---|---|
+| Supervisor | Decides the next step | Rule-based routing (`Supervisor.route()`), bounded loops | Implemented |
+| Data Collection Agent | Loads suppliers, fills indicators from providers | JSON / CSV sources, provider interface | Implemented |
+| Scoring Agent | Ratings, dimension scores, class, escalation rules, completeness | Pure functions, configurable YAML | Implemented |
+| Calibration Agent | Fits weights to expert judgements | Constrained ridge least squares (SciPy), cross-validated acceptance, diagnostics | Implemented; validated on **synthetic** labels only |
+| Action & Recommendation Agent | Actions per class, dimension and factor | Rule-based action framework from YAML | Implemented |
+| Human Review | Approve weights, override classes, defer | LangGraph `interrupt()`; CLI prompt or Approvals page | Implemented (in-memory checkpointer; no persistence across sessions by default) |
+| Weight store, history, audit trail | Versioned weights, snapshots, corrections, disputes, append-only log | YAML / JSONL files | Implemented |
+| Scoring trace | Why one supplier got its score and class | Derived from the engine's results; contributions add up to the score | Implemented |
+| Correction & dispute | Data corrections and expert overrides with reason, before/after, confirmation; disputes | Deterministic recomputation of both views | Implemented; single user, names not verified |
+| WGI political stability | Country indicator | From your own World Bank CSV download | Implemented; `--wgi-mock` uses **fictional** values |
+| Live provider APIs (WGI online, ESG platform, ERP, credit agency) | External data | Interfaces raise `NotImplementedError` | Placeholder |
+| Supplier Review Agent (optional) | Explains the trace: summary, drivers, risk vs. performance, action proposals, open questions, each citing trace entries | **LLM** (Claude via the Anthropic SDK), structured output, validated against the trace; on explicit request only | Implemented; **experimental**, tested with mocked responses plus a real smoke test |
+| LLM supervisor, document extraction | Route steps, extract indicators from documents | — | Planned, not implemented |
+
+The risk template uses four dimensions (severity, financial stability, supply chain risk,
+ESG & compliance); the performance template uses five (delivery, quality, commercial,
+cooperation, stability & compliance). They share criteria such as credit risk, ESG and compliance.
+See the [scoring model](scoring-model.md), [calibration](calibration.md) and
+[data providers](data-providers.md). For setup and output-validation limits, see
+[optional LLM explanation](llm-explanation.md).

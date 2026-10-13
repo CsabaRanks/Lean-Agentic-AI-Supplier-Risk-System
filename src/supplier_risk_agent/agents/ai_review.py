@@ -69,12 +69,20 @@ class AIReviewAgent:
             sid = self._check_request(state, request)
             reviewer = self.reviewer or reviewer_from_env()
             details["provider"] = reviewer.settings.describe()
-            draft, served_by = reviewer.review(SYSTEM_PROMPT, USER_TEMPLATE.format(payload=payload_json(payload)))
+            language = request.get("language", "en")
+            if language not in {"de", "en"}:
+                raise LLMReviewError("Unsupported review language; expected de or en")
+            output_language = {"de": "German", "en": "English"}[language]
+            prompt = SYSTEM_PROMPT + (
+                f"\nWrite every free-text answer field in {output_language}. "
+                "Keep criterion keys, trace IDs, view keys and priority enums unchanged.")
+            draft, served_by = reviewer.review(prompt, USER_TEMPLATE.format(payload=payload_json(payload)))
             problems = validate_review(draft, payload)
             if problems:
                 raise LLMReviewError("The answer failed validation: " + "; ".join(problems))
             reviews[sid] = AIReviewResult(
                 supplier_id=sid,
+                language=language,
                 provider=reviewer.settings.provider,
                 model=served_by or reviewer.settings.model,
                 created_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
