@@ -1,5 +1,10 @@
 # Supplier Workspace: erste UI-Version
 
+Der aktuelle englische Produkteinstieg steht in der [README](../README.md),
+mit einem [englischen Demo-Durchlauf](demo-guide.md) und
+[aktuellen Produktansichten](../README.md#see-it-in-action).
+Die folgenden Prüfnotizen bewahren auch die früheren UI-Stände als Entwicklungsnachweis.
+
 Die Oberfläche bleibt eine lokale Streamlit-Anwendung. Sie nutzt das offizielle Theme,
 Container, Tabellen, Status-Badges, Formulare und aufklappbare Details. Es gibt kein
 injiziertes CSS und keine Abhängigkeit von internen Streamlit-DOM-Strukturen im Produkt.
