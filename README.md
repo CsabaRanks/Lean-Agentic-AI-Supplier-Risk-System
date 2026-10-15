@@ -4,6 +4,12 @@
 [Scoring basis and rationale](research/comparison-matrix.md) ·
 [Commercial-platform sources](research/saas-references.md) · [Repository sources](research/github-references.md).*
 
+[![Watch the 42-second product demo · Synthetic demo data](docs/video/thumbnails/supplier-risk-youtube-thumbnail.jpg)](https://youtu.be/PbGzJOmzwV0)
+
+*Watch the 42-second product demo · Synthetic demo data*
+
+[Watch the product demo on YouTube](https://youtu.be/PbGzJOmzwV0)
+
 # Lean Agentic AI - Supplier Risk System
 
 **Assess supplier risk and performance together, understand each result, and correct assumptions with confidence.**
